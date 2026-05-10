@@ -41,6 +41,7 @@
     if (!user || !user.email) window.location.href = 'index.html';
 
     const selectedPath = localStorage.getItem('selectedPath');
+    const selectedLearningMode = localStorage.getItem('selectedLearningMode') || 'Instance Learning';
     if (!selectedPath) window.location.href = 'classes.html';
 
     const subjectBank = {
@@ -60,6 +61,9 @@
     }
 
     document.getElementById('title').textContent = `${selectedPath} Subjects`;
+    document.querySelector('.sub').textContent = selectedLearningMode === 'Deep Dive'
+      ? 'Choose a subject, then schedule a topic across your planned study days.'
+      : 'Choose one subject to continue to topic selection.';
     document.getElementById('subjectsGrid').innerHTML = subjectBank[pathType(selectedPath)].map(subject => `
       <button class="subject" onclick="chooseSubject('${subject.replace(/'/g, "\\'")}')">
         <h2>${subject}</h2>
@@ -69,7 +73,7 @@
 
     function chooseSubject(subject) {
       localStorage.setItem('selectedSubject', subject);
-      window.location.href = 'topics-page.html';
+      window.location.href = selectedLearningMode === 'Deep Dive' ? 'deep-dive.html' : 'topics-page.html';
     }
   </script>
 </body>

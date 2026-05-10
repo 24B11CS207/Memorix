@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorix - Deep Dive</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --purple:#7c5cfc; --blue:#38bdf8; --green:#22c55e; --red:#f87171; --yellow:#fbbf24; --text:#fff; --text2:#9ca3af; --glass:rgba(18,20,40,.72); --border:rgba(124,92,252,.24); }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; }
+    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); z-index:4; }
+    .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    a { color:#fff; text-decoration:none; }
+    .back { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; }
+    .wrap { max-width:1180px; margin:auto; }
+    h1 { font-size:42px; text-align:center; margin-bottom:10px; }
+    .sub { text-align:center; color:var(--text2); margin-bottom:30px; line-height:1.7; }
+    .panel, .card { border:1px solid var(--border); border-radius:18px; background:var(--glass); padding:20px; }
+    .setup { display:grid; grid-template-columns:1fr 180px auto; gap:12px; margin-bottom:18px; }
+    input { min-height:52px; border:1px solid rgba(255,255,255,.14); border-radius:14px; background:rgba(255,255,255,.07); color:#fff; padding:0 16px; font-size:16px; outline:none; }
+    button { border:1px solid rgba(255,255,255,.12); border-radius:13px; background:rgba(255,255,255,.06); color:white; padding:12px 15px; cursor:pointer; transition:.25s; }
+    button:hover:not(:disabled) { background:rgba(124,92,252,.2); border-color:#a78bfa; transform:translateY(-2px); }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .primary { background:linear-gradient(135deg,var(--purple),#4f46e5); border:0; }
+    .topics, .timeline, .review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:16px; }
+    .topic { text-align:left; }
+    .muted { color:var(--text2); line-height:1.7; }
+    .tag { display:inline-block; margin-bottom:10px; padding:5px 10px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--text2); font-size:12px; }
+    .tag.done { background:rgba(34,197,94,.14); color:#86efac; }
+    .tag.failed { background:rgba(248,113,113,.14); color:#fca5a5; }
+    .tag.available { background:rgba(251,191,36,.14); color:#fde68a; }
+    .card h2 { font-size:20px; margin-bottom:8px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .hidden { display:none; }
+    .quiz { margin-top:20px; }
+    .q { margin-top:12px; padding:14px; border-radius:13px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.1); }
+    label { display:block; margin-top:8px; color:var(--text2); cursor:pointer; }
+    .result { margin-top:16px; font-weight:600; }
+    .explain { margin-top:10px; padding:12px; border-radius:12px; background:rgba(56,189,248,.08); border:1px solid rgba(56,189,248,.18); color:#dbeafe; line-height:1.7; }
+    @media(max-width:760px){ nav{padding:0 20px;} h1{font-size:32px;} .setup{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Memorix</div>
+    <a class="back" href="subjects.html">Change Subject</a>
+  </nav>
+
+  <main class="wrap">
+    <h1 id="title">Deep Dive</h1>
+    <p class="sub">Select a topic, enter your course duration, and Memorix will spread modules and reviews across your schedule.</p>
+
+    <section class="panel" id="setupPanel">
+      <div class="setup">
+        <input id="topicSearch" type="search" placeholder="Search or type topic">
+        <input id="daysInput" type="number" min="1" max="60" placeholder="Days">
+        <button class="primary" onclick="createPlan()">Create Schedule</button>
+      </div>
+      <div class="topics" id="topics"></div>
+    </section>
+
+    <section id="planPanel" class="hidden">
+      <div class="panel">
+        <h2 id="planTitle">Schedule</h2>
+        <p class="muted" id="planSummary"></p>
+        <div class="actions">
+          <button onclick="resetPlan()">Choose Another Topic</button>
+        </div>
+      </div>
+      <h2 style="margin-top:24px;">Modules</h2>
+      <div class="timeline" id="modules"></div>
+      <h2 style="margin-top:24px;">Scheduled Reviews</h2>
+      <div class="review-grid" id="reviews"></div>
+      <div class="quiz hidden" id="quizPanel"></div>
+    </section>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
+    if (!user || !user.email) window.location.href = 'index.html';
+
+    const selectedPath = localStorage.getItem('selectedPath');
+    const selectedSubject = localStorage.getItem('selectedSubject');
+    if (!selectedPath) window.location.href = 'classes.html';
+    if (!selectedSubject) window.location.href = 'subjects.html';
+
+    const topicBank = {
+      Mathematics: ['Fractions', 'Algebra', 'Trigonometry', 'Calculus', 'Probability'],
+      Science: ['Photosynthesis', 'Atoms', 'Force', 'Electricity', 'Human Body'],
+      English: ['Grammar', 'Tenses', 'Essay Writing', 'Comprehension', 'Vocabulary'],
+      'Social Studies': ['Indian History', 'Geography', 'Civics', 'Economics', 'Constitution'],
+      'Computer Basics': ['MS Office', 'Internet Basics', 'Keyboard Skills', 'Scratch Programming'],
+      Physics: ['Mechanics', 'Waves', 'Optics', 'Thermodynamics', 'Current Electricity'],
+      Chemistry: ['Organic Chemistry', 'Chemical Bonding', 'Acids and Bases', 'Periodic Table'],
+      Botany: ['Plant Kingdom', 'Photosynthesis', 'Plant Anatomy', 'Genetics'],
+      Zoology: ['Human Heart', 'Nervous System', 'Digestion', 'Respiration'],
+      Programming: ['C Basics', 'Python Basics', 'Loops', 'Functions', 'OOP'],
+      'Data Structures': ['Arrays', 'Linked List', 'Stack', 'Queue', 'Trees'],
+      DBMS: ['ER Model', 'SQL', 'Normalization', 'Transactions'],
+      Anatomy: ['Human Heart', 'Bones', 'Muscles', 'Nervous System'],
+      Accounting: ['Journal Entries', 'Ledger', 'Trial Balance', 'Final Accounts'],
+      Reasoning: ['Number Series', 'Coding Decoding', 'Blood Relations', 'Directions']
+    };
+    const fallbackTopics = ['Introduction', 'Basics', 'Important Concepts', 'Practice Questions'];
+    const topics = topicBank[selectedSubject] || fallbackTopics;
+    const planKey = `deep-dive-plan-${selectedPath}-${selectedSubject}`;
+    let activeReviewIndex = null;
+    let activeQuestions = [];
+
+    document.getElementById('title').textContent = `${selectedSubject} Deep Dive`;
+    renderTopics(topics);
+    loadPlan();
+
+    document.getElementById('topicSearch').addEventListener('input', event => {
+      const term = event.target.value.toLowerCase();
+      renderTopics(topics.filter(topic => topic.toLowerCase().includes(term)));
+    });
+
+    function renderTopics(list) {
+      document.getElementById('topics').innerHTML = list.map(topic => `
+        <button class="topic card" onclick="selectTopic('${escapeText(topic)}')">
+          <h2>${topic}</h2>
+          <p class="muted">Schedule ${topic} for slow learning and reviews.</p>
+        </button>
+      `).join('');
+    }
+
+    function escapeText(text) {
+      return text.replace(/'/g, "\\'");
+    }
+
+    function selectTopic(topic) {
+      document.getElementById('topicSearch').value = topic;
+      document.getElementById('daysInput').focus();
+    }
+
+    function createPlan() {
+      const topic = document.getElementById('topicSearch').value.trim();
+      const days = Math.max(1, Math.min(60, Number(document.getElementById('daysInput').value || 0)));
+      if (!topic) return document.getElementById('topicSearch').focus();
+      if (!days) return document.getElementById('daysInput').focus();
+
+      const moduleNames = ['Basics', 'Core Concepts', 'Examples', 'Application Practice', 'Final Revision'];
+      const modules = moduleNames.map((name, index) => {
+        const startDay = Math.floor((index * days) / moduleNames.length) + 1;
+        const endDay = Math.max(startDay, Math.floor(((index + 1) * days) / moduleNames.length));
+        return { name, startDay, endDay, completed: false };
+      });
+
+      const reviewCount = Math.min(6, Math.max(1, Math.ceil(days / 2)));
+      const reviews = Array.from({ length: reviewCount }, (_, index) => ({
+        day: Math.max(1, Math.ceil(((index + 1) * days) / reviewCount)),
+        status: index === 0 ? 'available' : 'locked',
+        score: null,
+        wrong: []
+      }));
+
+      const plan = { topic, days, modules, reviews, createdAt: new Date().toISOString() };
+      savePlan(plan);
+      renderPlan(plan);
+    }
+
+    function loadPlan() {
+      const saved = localStorage.getItem(planKey);
+      if (!saved) return;
+      try {
+        renderPlan(JSON.parse(saved));
+      } catch {
+        localStorage.removeItem(planKey);
+      }
+    }
+
+    function savePlan(plan) {
+      localStorage.setItem(planKey, JSON.stringify(plan));
+    }
+
+    function currentPlan() {
+      return JSON.parse(localStorage.getItem(planKey));
+    }
+
+    function renderPlan(plan) {
+      document.getElementById('setupPanel').classList.add('hidden');
+      document.getElementById('planPanel').classList.remove('hidden');
+      document.getElementById('planTitle').textContent = `${plan.topic} Deep Dive Schedule`;
+      document.getElementById('planSummary').textContent = `${plan.days} day course with ${plan.modules.length} modules and ${plan.reviews.length} scheduled reviews. Reviews unlock in order. If a review fails, later reviews stay locked until you pass it.`;
+
+      document.getElementById('modules').innerHTML = plan.modules.map((module, index) => `
+        <section class="card">
+          <span class="tag ${module.completed ? 'done' : ''}">${module.completed ? 'Completed' : `Day ${module.startDay}-${module.endDay}`}</span>
+          <h2>Module ${index + 1}: ${plan.topic} ${module.name}</h2>
+          <p class="muted">${moduleText(index, plan.topic)}</p>
+          <div class="actions">
+            <button class="primary" onclick="completeModule(${index})" ${module.completed ? 'disabled' : ''}>${module.completed ? 'Completed' : 'Mark Learned'}</button>
+          </div>
+        </section>
+      `).join('');
+
+      document.getElementById('reviews').innerHTML = plan.reviews.map((review, index) => {
+        const labelClass = review.status === 'passed' ? 'done' : review.status === 'failed' ? 'failed' : review.status === 'available' ? 'available' : '';
+        const canOpen = review.status === 'available' || review.status === 'failed';
+        return `
+          <section class="card">
+            <span class="tag ${labelClass}">${review.status === 'locked' ? 'Locked' : review.status}</span>
+            <h2>Review ${index + 1}</h2>
+            <p class="muted">Scheduled around day ${review.day}. Score 80% or more to unlock the next review.</p>
+            ${review.score !== null ? `<p class="muted">Last score: ${review.score}%</p>` : ''}
+            <div class="actions">
+              <button class="primary" onclick="startReview(${index})" ${canOpen ? '' : 'disabled'}>${review.status === 'failed' ? 'Retry Review' : 'Start Review'}</button>
+            </div>
+          </section>
+        `;
+      }).join('');
+    }
+
+    function moduleText(index, topic) {
+      return [
+        `Build meaning, keywords, and the base idea of ${topic}.`,
+        `Study rules, structure, and relationships in ${topic}.`,
+        `Work through solved examples and identify patterns.`,
+        `Apply ${topic} to mixed and exam-style situations.`,
+        `Revise weak points and prepare for review questions.`
+      ][index];
+    }
+
+    function completeModule(index) {
+      const plan = currentPlan();
+      plan.modules[index].completed = true;
+      savePlan(plan);
+      renderPlan(plan);
+    }
+
+    function startReview(index) {
+      const plan = currentPlan();
+      const previousFailed = plan.reviews.findIndex((review, reviewIndex) => reviewIndex < index && review.status === 'failed');
+      if (previousFailed !== -1) return;
+      activeReviewIndex = index;
+      activeQuestions = buildReviewQuestions(plan.topic, index);
+      document.getElementById('quizPanel').classList.remove('hidden');
+      document.getElementById('quizPanel').innerHTML = `
+        <div class="panel">
+          <h2>${plan.topic} Review ${index + 1}</h2>
+          <p class="muted">Answer all 5 questions. Passing this review unlocks the next scheduled review.</p>
+          ${activeQuestions.map((item, qIndex) => `
+            <section class="q">
+              <p>${qIndex + 1}. ${item.q}</p>
+              ${item.options.map((option, optionIndex) => `
+                <label><input type="radio" name="r${qIndex}" value="${optionIndex}"> ${option}</label>
+              `).join('')}
+            </section>
+          `).join('')}
+          <div class="actions">
+            <button class="primary" onclick="submitReview()">Submit Review</button>
+          </div>
+          <div class="result" id="reviewResult"></div>
+        </div>
+      `;
+      document.getElementById('quizPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function buildReviewQuestions(topic, reviewIndex) {
+      const base = [
+        { q: `What should you understand first in ${topic}?`, options: ['Meaning and key idea', 'Only option order', 'Only decoration', 'Nothing'], answer: 0 },
+        { q: `Why are reviews important in ${topic}?`, options: ['They reveal weak points', 'They remove learning', 'They skip practice', 'They hide mistakes'], answer: 0 },
+        { q: `What should you do after a wrong answer in ${topic}?`, options: ['Read the explanation and correct the idea', 'Ignore it', 'Repeat the same mistake', 'Change topic immediately'], answer: 0 },
+        { q: `A deep understanding of ${topic} means you can:`, options: ['Explain why an answer is correct', 'Memorize only letters', 'Skip examples', 'Avoid questions'], answer: 0 },
+        { q: `Before moving to the next review, you should:`, options: ['Fix mistakes from this review', 'Forget feedback', 'Guess faster', 'Avoid revision'], answer: 0 },
+        { q: `Which practice style helps with ${topic}?`, options: ['Slow review with correction', 'Random clicking', 'Only rereading titles', 'Ignoring conditions'], answer: 0 },
+        { q: `What makes an answer reliable in ${topic}?`, options: ['It matches the concept and condition', 'It is longest', 'It appears first', 'It is guessed'], answer: 0 }
+      ];
+      return shuffle(base).slice(0, 5).map(shuffleOptions);
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function shuffleOptions(question) {
+      const correct = question.options[question.answer];
+      const options = shuffle(question.options);
+      return { ...question, options, answer: options.indexOf(correct) };
+    }
+
+    function submitReview() {
+      let score = 0;
+      let answered = 0;
+      const wrong = [];
+      activeQuestions.forEach((item, index) => {
+        const selected = document.querySelector(`input[name="r${index}"]:checked`);
+        if (!selected) return;
+        answered++;
+        if (Number(selected.value) === item.answer) {
+          score++;
+        } else {
+          wrong.push({
+            question: item.q,
+            chosen: item.options[Number(selected.value)],
+            correct: item.options[item.answer],
+            explanation: `The correct answer is "${item.options[item.answer]}" because it checks the real concept. Your selected answer does not match the condition in the question, so revise this point before moving forward.`
+          });
+        }
+      });
+
+      const result = document.getElementById('reviewResult');
+      if (answered < activeQuestions.length) {
+        result.style.color = '#fbbf24';
+        result.textContent = `Please answer all questions. Completed ${answered}/5.`;
+        return;
+      }
+
+      const percent = Math.round((score / activeQuestions.length) * 100);
+      const plan = currentPlan();
+      const passed = percent >= 80;
+      plan.reviews[activeReviewIndex].status = passed ? 'passed' : 'failed';
+      plan.reviews[activeReviewIndex].score = percent;
+      plan.reviews[activeReviewIndex].wrong = wrong;
+      if (passed && plan.reviews[activeReviewIndex + 1] && plan.reviews[activeReviewIndex + 1].status === 'locked') {
+        plan.reviews[activeReviewIndex + 1].status = 'available';
+      }
+      savePlan(plan);
+
+      result.style.color = passed ? '#86efac' : '#fca5a5';
+      result.innerHTML = passed
+        ? `Passed ${percent}%. Next review unlocked.`
+        : `Score ${percent}%. Later reviews stay locked until you pass this review. ${wrong.map(item => `
+            <div class="explain">
+              <strong>${item.question}</strong><br>
+              Your answer: ${item.chosen}<br>
+              Correct answer: ${item.correct}<br>
+              ${item.explanation}
+            </div>
+          `).join('')}`;
+      renderPlan(plan);
+    }
+
+    function resetPlan() {
+      localStorage.removeItem(planKey);
+      document.getElementById('planPanel').classList.add('hidden');
+      document.getElementById('setupPanel').classList.remove('hidden');
+      document.getElementById('quizPanel').classList.add('hidden');
+      document.getElementById('topicSearch').value = '';
+      document.getElementById('daysInput').value = '';
+    }
+  </script>
+</body>
+</html>
