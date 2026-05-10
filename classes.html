@@ -96,7 +96,8 @@
     function choosePath(path) {
       localStorage.setItem('selectedPath', path);
       localStorage.setItem('selectedSubject', path);
-      window.location.href = 'topics-page.html';
+      localStorage.removeItem('selectedLearningMode');
+      window.location.href = 'learning-mode.html';
     }
   </script>
 </body>

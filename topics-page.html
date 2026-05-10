@@ -41,12 +41,12 @@
 <body>
   <nav>
     <div class="logo">Memorix</div>
-    <a class="back" href="classes.html">Change Class</a>
+    <a class="back" href="learning-mode.html">Change Mode</a>
   </nav>
 
   <main class="wrap">
     <h1 id="title">Select Topic</h1>
-    <p class="sub">Search or select a topic. Memorix will create 5 locked learning modules.</p>
+    <p class="sub" id="subtitle">Search or select a topic. Memorix will create 5 locked learning modules.</p>
     <div class="search-row">
       <input id="topicSearch" type="search" placeholder="Search topic">
       <button class="primary" onclick="buildModules()">Create Modules</button>
@@ -60,6 +60,7 @@
     if (!user || !user.email) window.location.href = 'index.html';
     const selectedPath = localStorage.getItem('selectedPath');
     let selectedSubject = localStorage.getItem('selectedSubject');
+    const selectedLearningMode = localStorage.getItem('selectedLearningMode') || 'Instant Learning';
     if (!selectedPath) window.location.href = 'classes.html';
     if (!selectedSubject) {
       selectedSubject = selectedPath;
@@ -101,7 +102,10 @@
     }
 
     const topicContext = localStorage.getItem('selectedSubject') || selectedPath;
-    document.getElementById('title').textContent = `${selectedPath} Topics`;
+    document.getElementById('title').textContent = `${selectedPath} ${selectedLearningMode}`;
+    document.getElementById('subtitle').textContent = selectedLearningMode === 'Deep Dive'
+      ? 'Choose a topic for a deeper module path with careful study and stronger practice.'
+      : 'Search or select a topic. Memorix will create 5 locked learning modules.';
     const topics = topicBank[topicContext] || pathTopics(selectedPath);
     renderSuggestions(topics);
 

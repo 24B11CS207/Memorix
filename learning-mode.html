@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorix - Learning Mode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --purple:#7c5cfc; --blue:#38bdf8; --green:#22c55e; --text:#fff; --text2:#9ca3af; --glass:rgba(18,20,40,.72); --border:rgba(124,92,252,.24); }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; }
+    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); }
+    .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    a { color:#fff; text-decoration:none; }
+    .back { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; }
+    .wrap { max-width:920px; margin:auto; }
+    h1 { font-size:44px; text-align:center; margin-bottom:10px; }
+    .sub { text-align:center; color:var(--text2); margin-bottom:34px; line-height:1.7; }
+    .modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+    .mode { min-height:250px; border:1px solid var(--border); border-radius:22px; background:var(--glass); color:#fff; padding:26px; cursor:pointer; text-align:left; transition:.25s; box-shadow:0 0 28px rgba(124,92,252,.14); }
+    .mode:hover { transform:translateY(-5px); border-color:#a78bfa; background:rgba(124,92,252,.18); }
+    .icon { width:54px; height:54px; border-radius:16px; display:grid; place-items:center; margin-bottom:18px; font-size:26px; background:linear-gradient(135deg,var(--purple),#4f46e5); }
+    .deep .icon { background:linear-gradient(135deg,var(--green),var(--blue)); }
+    .mode h2 { font-size:25px; margin-bottom:10px; }
+    .mode p { color:var(--text2); line-height:1.7; }
+    .tag { display:inline-block; margin-top:20px; border-radius:999px; padding:7px 11px; background:rgba(255,255,255,.08); color:#dbeafe; font-size:13px; }
+    @media(max-width:760px){ nav{padding:0 20px;} h1{font-size:34px;} .modes{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Memorix</div>
+    <a class="back" href="classes.html">Change Class</a>
+  </nav>
+
+  <main class="wrap">
+    <h1 id="title">Choose Learning Mode</h1>
+    <p class="sub">Pick how you want to continue. Instant Learning opens topics and modules immediately.</p>
+
+    <div class="modes">
+      <button class="mode" onclick="chooseMode('Instant Learning')">
+        <div class="icon">⚡</div>
+        <h2>Instant Learning</h2>
+        <p>Quickly select a topic, generate modules, learn one module, and take the module test.</p>
+        <span class="tag">Topics and modules</span>
+      </button>
+
+      <button class="mode deep" onclick="chooseMode('Deep Dive')">
+        <div class="icon">◎</div>
+        <h2>Deep Dive</h2>
+        <p>Use the same topic flow with a slower, stronger study path for detailed practice.</p>
+        <span class="tag">Detailed learning path</span>
+      </button>
+    </div>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
+    if (!user || !user.email) window.location.href = 'index.html';
+
+    const selectedPath = localStorage.getItem('selectedPath');
+    if (!selectedPath) window.location.href = 'classes.html';
+
+    document.getElementById('title').textContent = `${selectedPath}: Choose Learning Mode`;
+
+    function chooseMode(mode) {
+      localStorage.setItem('selectedLearningMode', mode);
+      window.location.href = 'topics-page.html';
+    }
+  </script>
+</body>
+</html>
