@@ -57,7 +57,13 @@
 
     document.getElementById('title').textContent = `Module ${moduleIndex + 1} Test: ${topic} ${moduleNames[moduleIndex] || ''}`;
 
-    const questions = buildQuestions(moduleIndex, topic, selectedSubject).map((item, index) => ({
+    const TEST_QUESTION_COUNT = 10;
+    const questionHistoryKey = `test-history-${selectedPath}-${selectedSubject}-${topic}-${moduleIndex}`;
+    const questions = selectQuestionSet(
+      buildQuestions(moduleIndex, topic, selectedSubject),
+      questionHistoryKey,
+      TEST_QUESTION_COUNT
+    ).map((item, index) => ({
       ...item,
       q: `${index + 1}. ${item.q}`
     }));
@@ -75,6 +81,105 @@
       const key = `unlocked-${selectedPath}-${selectedSubject}-${topic}`;
       const current = Number(localStorage.getItem(key) || '0');
       localStorage.setItem(key, String(Math.max(current, moduleIndex + 1)));
+    }
+
+    function shuffleItems(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function shuffleQuestionOptions(item) {
+      const correctOption = item.options[item.answer];
+      const shuffledOptions = shuffleItems(item.options);
+      return {
+        ...item,
+        options: shuffledOptions,
+        answer: shuffledOptions.indexOf(correctOption)
+      };
+    }
+
+    function selectQuestionSet(questionBank, historyKey, count) {
+      const historyLimit = Math.min(questionBank.length - count, count * 2);
+      const recentQuestions = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      const freshQuestions = questionBank.filter(item => !recentQuestions.includes(item.q));
+      const source = freshQuestions.length >= count ? freshQuestions : questionBank;
+      const selected = shuffleItems(source).slice(0, count).map(shuffleQuestionOptions);
+      const updatedHistory = [...selected.map(item => item.q), ...recentQuestions]
+        .filter((item, index, arr) => arr.indexOf(item) === index)
+        .slice(0, Math.max(historyLimit, count));
+      localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
+      return selected;
+    }
+
+    function expandQuestionBank(baseQuestions, index, topicName, subjectName) {
+      const moduleFocus = moduleNames[index] || 'Learning';
+      const extraQuestions = [
+        {
+          q: `Which action is most useful before taking another ${moduleFocus} test on ${topicName}?`,
+          options: ['Review mistakes and test again with attention', 'Repeat the same wrong method', 'Skip the topic completely', 'Choose answers by position'],
+          answer: 0
+        },
+        {
+          q: `What should you do if a ${topicName} question looks different from the examples?`,
+          options: ['Find the concept clues before answering', 'Assume it is unrelated', 'Pick the longest option', 'Ignore the wording'],
+          answer: 0
+        },
+        {
+          q: `Which answer style is strongest for ${topicName} in ${subjectName}?`,
+          options: ['Clear reason with the correct concept', 'A guess without checking', 'Only one memorized word', 'An unrelated explanation'],
+          answer: 0
+        },
+        {
+          q: `Why should you compare wrong and correct options in ${topicName}?`,
+          options: ['It shows the exact difference between ideas', 'It makes every option correct', 'It removes the need to study', 'It changes the question'],
+          answer: 0
+        },
+        {
+          q: `What is the best way to prepare for a re-attempt in this module?`,
+          options: ['Fix weak points, then answer a fresh set', 'Memorize only option positions', 'Avoid reading explanations', 'Rush through every question'],
+          answer: 0
+        },
+        {
+          q: `When two options seem close in ${topicName}, what should guide your choice?`,
+          options: ['The condition given in the question', 'The option length', 'The first option always', 'A random click'],
+          answer: 0
+        },
+        {
+          q: `Which habit helps you improve after failing a test?`,
+          options: ['Write why each wrong answer was wrong', 'Forget the score only', 'Repeat without reviewing', 'Study an unrelated topic'],
+          answer: 0
+        },
+        {
+          q: `What makes a practice question useful for ${topicName}?`,
+          options: ['It checks understanding from a new angle', 'It has the same wording every time', 'It hides the concept completely', 'It has no correct answer'],
+          answer: 0
+        },
+        {
+          q: `What should you notice in every ${topicName} MCQ?`,
+          options: ['Keyword, condition, and required concept', 'Only punctuation', 'Only option order', 'Only the page color'],
+          answer: 0
+        },
+        {
+          q: `Why should repeated attempts use different questions?`,
+          options: ['They test understanding instead of memory of answers', 'They make learning impossible', 'They remove feedback', 'They guarantee passing without study'],
+          answer: 0
+        },
+        {
+          q: `Which sign shows you are improving in ${topicName}?`,
+          options: ['You can explain why the correct option is right', 'You remember only where option A was', 'You skip all explanations', 'You avoid new questions'],
+          answer: 0
+        },
+        {
+          q: `Before submitting an answer in ${topicName}, what should you check?`,
+          options: ['Whether the option matches the question condition', 'Whether the option is shortest', 'Whether you clicked quickly', 'Whether the question is old'],
+          answer: 0
+        }
+      ];
+      return [...baseQuestions, ...extraQuestions];
     }
 
     function buildQuestions(index, topicName, subjectName) {
@@ -341,7 +446,7 @@
         ]
       ];
 
-      return banks[index] || banks[0];
+      return expandQuestionBank(banks[index] || banks[0], index, topicName, subjectName);
     }
 
     function submitTest() {
@@ -368,7 +473,7 @@
         result.innerHTML = `Passed ${score}/10. Next module unlocked. <br><br><a class="back" href="topics-page.html">Go to Modules</a>`;
       } else {
         result.style.color = '#fca5a5';
-        result.textContent = `Score ${score}/10. Please revise and try again.`;
+        result.innerHTML = `Score ${score}/10. Please revise and try again with a fresh question set. <br><br><button class="primary" type="button" onclick="window.location.reload()">Re-attempt Test</button>`;
       }
     }
   </script>
