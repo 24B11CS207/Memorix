@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorix - Select Subject</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --purple:#7c5cfc; --blue:#38bdf8; --text:#fff; --text2:#9ca3af; --glass:rgba(18,20,40,.72); --border:rgba(124,92,252,.24); }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; }
+    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); }
+    .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    a { color:#fff; text-decoration:none; }
+    .back { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; }
+    .wrap { max-width:1000px; margin:auto; }
+    h1 { font-size:42px; text-align:center; margin-bottom:10px; }
+    .sub { text-align:center; color:var(--text2); margin-bottom:34px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; }
+    .subject { min-height:110px; border:1px solid var(--border); border-radius:20px; background:var(--glass); color:white; padding:22px; cursor:pointer; text-align:left; transition:.25s; }
+    .subject:hover { transform:translateY(-4px); background:rgba(124,92,252,.18); border-color:#a78bfa; }
+    .subject h2 { font-size:21px; margin-bottom:8px; }
+    .subject p { color:var(--text2); line-height:1.5; }
+    @media(max-width:700px){ nav{padding:0 20px;} h1{font-size:32px;} }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Memorix</div>
+    <a class="back" href="classes.html">Change Class</a>
+  </nav>
+
+  <main class="wrap">
+    <h1 id="title">Select Subject</h1>
+    <p class="sub">Choose one subject to continue to topic selection.</p>
+    <div class="grid" id="subjectsGrid"></div>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
+    if (!user || !user.email) window.location.href = 'index.html';
+
+    const selectedPath = localStorage.getItem('selectedPath');
+    if (!selectedPath) window.location.href = 'classes.html';
+
+    const subjectBank = {
+      school: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computer Basics'],
+      intermediate: ['Mathematics', 'Physics', 'Chemistry', 'Botany', 'Zoology', 'Economics', 'Civics', 'Commerce'],
+      engineering: ['Programming', 'Data Structures', 'DBMS', 'Computer Networks', 'Digital Electronics', 'Engineering Maths'],
+      medical: ['Anatomy', 'Physiology', 'Biochemistry', 'Pathology', 'Pharmacology'],
+      general: ['Accounting', 'Business Studies', 'Political Science', 'Statistics', 'Reasoning', 'Aptitude']
+    };
+
+    function pathType(path) {
+      if (path.startsWith('Class')) return 'school';
+      if (path.startsWith('Intermediate')) return 'intermediate';
+      if (path.startsWith('B.Tech')) return 'engineering';
+      if (['MBBS', 'BDS', 'B.Pharmacy', 'Nursing', 'Physiotherapy'].includes(path)) return 'medical';
+      return 'general';
+    }
+
+    document.getElementById('title').textContent = `${selectedPath} Subjects`;
+    document.getElementById('subjectsGrid').innerHTML = subjectBank[pathType(selectedPath)].map(subject => `
+      <button class="subject" onclick="chooseSubject('${subject.replace(/'/g, "\\'")}')">
+        <h2>${subject}</h2>
+        <p>Open topic selection for ${subject}.</p>
+      </button>
+    `).join('');
+
+    function chooseSubject(subject) {
+      localStorage.setItem('selectedSubject', subject);
+      window.location.href = 'topics-page.html';
+    }
+  </script>
+</body>
+</html>

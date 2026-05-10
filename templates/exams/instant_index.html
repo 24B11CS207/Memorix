@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Instant Test — DQMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-4">
+  <h2><i class="bi bi-lightning"></i> Instant Test Mode</h2>
+  <a href="{% url 'exams:history' %}" class="btn btn-outline-light"><i class="bi bi-clock-history"></i> History</a>
+</div>
+<p class="text-muted">15 AI-generated MCQs. One attempt per topic per day.</p>
+
+{% if topics %}
+<div class="row g-3">
+  {% for t in topics %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card p-4 h-100">
+        <h5>{{ t.name }}</h5>
+        <span class="badge bg-secondary">{{ t.difficulty|title }}</span>
+        <a href="{% url 'exams:start' t.id %}" class="btn btn-primary btn-sm mt-3 w-100">Start Instant Test</a>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="glass-card p-5 text-center">
+  <p class="text-muted">You need at least one topic to take an instant test.</p>
+  <a href="{% url 'topics:create' %}" class="btn btn-primary">Create a Topic</a>
+</div>
+{% endif %}
+{% endblock %}

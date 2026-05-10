@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorix - Module Test</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:#fff; padding:105px 22px 60px; }
+    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); }
+    .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,#38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    a, button { color:#fff; text-decoration:none; }
+    .back, button { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; background:rgba(255,255,255,.06); cursor:pointer; }
+    .primary { background:linear-gradient(135deg,#7c5cfc,#4f46e5); border:0; }
+    main { max-width:950px; margin:auto; }
+    h1 { font-size:40px; margin-bottom:10px; }
+    .sub, p, label { color:#9ca3af; line-height:1.8; }
+    .q { margin-top:16px; border:1px solid rgba(124,92,252,.24); border-radius:18px; background:rgba(18,20,40,.72); padding:18px; }
+    .q p { color:#fff; margin-bottom:10px; }
+    label { display:block; margin-top:8px; cursor:pointer; }
+    .actions { margin-top:22px; display:flex; gap:12px; flex-wrap:wrap; }
+    .result { margin-top:18px; font-weight:700; font-size:18px; }
+    @media(max-width:700px){ nav{padding:0 20px;} h1{font-size:32px;} }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Memorix</div>
+    <a class="back" href="topics-page.html">Back to Modules</a>
+  </nav>
+
+  <main>
+    <h1 id="title">Module Test</h1>
+    <p class="sub">Answer all 10 questions. Score 7/10 or more to unlock the next module.</p>
+    <form id="testForm"></form>
+    <div class="actions">
+      <button class="primary" type="button" onclick="submitTest()">Submit Test</button>
+      <a class="back" href="learn-module.html">Back to Learn</a>
+    </div>
+    <div class="result" id="result"></div>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
+    if (!user || !user.email) window.location.href = 'index.html';
+
+    const selectedPath = localStorage.getItem('selectedPath');
+    const selectedSubject = localStorage.getItem('selectedSubject');
+    const topic = localStorage.getItem('selectedTopic');
+    const moduleIndex = Number(localStorage.getItem('selectedModuleIndex') || '0');
+    if (!selectedPath || !selectedSubject || !topic) window.location.href = 'topics-page.html';
+
+    const moduleNames = ['Basics', 'Core Concepts', 'Examples', 'Application Practice', 'Final Revision'];
+    const learnedKey = `learned-${selectedPath}-${selectedSubject}-${topic}-${moduleIndex}`;
+    if (localStorage.getItem(learnedKey) !== 'yes') window.location.href = 'learn-module.html';
+
+    document.getElementById('title').textContent = `Module ${moduleIndex + 1} Test: ${topic} ${moduleNames[moduleIndex] || ''}`;
+
+    const questions = buildQuestions(moduleIndex, topic, selectedSubject).map((item, index) => ({
+      ...item,
+      q: `${index + 1}. ${item.q}`
+    }));
+
+    document.getElementById('testForm').innerHTML = questions.map((item, qIndex) => `
+      <section class="q">
+        <p>${item.q}</p>
+        ${item.options.map((option, optionIndex) => `
+          <label><input type="radio" name="q${qIndex}" value="${optionIndex}"> ${option}</label>
+        `).join('')}
+      </section>
+    `).join('');
+
+    function unlockNext() {
+      const key = `unlocked-${selectedPath}-${selectedSubject}-${topic}`;
+      const current = Number(localStorage.getItem(key) || '0');
+      localStorage.setItem(key, String(Math.max(current, moduleIndex + 1)));
+    }
+
+    function buildQuestions(index, topicName, subjectName) {
+      const banks = [
+        [
+          {
+            q: `What should you understand first when starting ${topicName}?`,
+            options: ['Meaning, keywords, and purpose', 'Only the hardest exam question', 'Unrelated topics first', 'Only the final answer'],
+            answer: 0
+          },
+          {
+            q: `Why are keywords important in ${topicName}?`,
+            options: ['They help form a correct definition and answer', 'They replace understanding completely', 'They are only for decoration', 'They should be skipped in tests'],
+            answer: 0
+          },
+          {
+            q: `A good basic explanation of ${topicName} should include:`,
+            options: ['Definition, simple idea, and one example', 'Only a long paragraph with no meaning', 'Only copied textbook words', 'Only a diagram with no labels'],
+            answer: 0
+          },
+          {
+            q: `Which study method best matches the Basics module?`,
+            options: ['Read, explain in your own words, then recall', 'Memorize without checking meaning', 'Attempt random tests before learning', 'Ignore examples'],
+            answer: 0
+          },
+          {
+            q: `How should you connect ${topicName} with ${subjectName}?`,
+            options: ['Identify where it is used and why it matters', 'Treat it as unrelated to the subject', 'Only learn the spelling', 'Avoid all practice'],
+            answer: 0
+          },
+          {
+            q: `If you cannot explain ${topicName} simply, what should you do?`,
+            options: ['Review the meaning and keywords again', 'Skip to the next module', 'Guess answers in the test', 'Study a different subject only'],
+            answer: 0
+          },
+          {
+            q: `Which is the best first example for ${topicName}?`,
+            options: ['A simple daily-life or textbook situation', 'A confusing unrelated story', 'A question with missing data', 'A memorized answer without context'],
+            answer: 0
+          },
+          {
+            q: `What does the concept map image teach you?`,
+            options: ['Connect meaning, rules, examples, and practice', 'Study only one isolated word', 'Avoid organizing ideas', 'Use no examples'],
+            answer: 0
+          },
+          {
+            q: `What should you do after reading the basic notes?`,
+            options: ['Close notes and explain the idea from memory', 'Immediately forget the topic', 'Never test yourself', 'Only look at headings'],
+            answer: 0
+          },
+          {
+            q: `Which answer shows real understanding of ${topicName}?`,
+            options: ['It explains meaning, use, and an example', 'It only repeats one word', 'It avoids the topic', 'It gives no reason or example'],
+            answer: 0
+          }
+        ],
+        [
+          {
+            q: `What is the main focus of the Core Concepts module for ${topicName}?`,
+            options: ['Parts, rules, relationships, and reasons', 'Only guessing answers', 'Skipping diagrams', 'Memorizing unrelated facts'],
+            answer: 0
+          },
+          {
+            q: `If ${topicName} has a formula, what should you understand?`,
+            options: ['What each symbol means and when to use it', 'Only the shape of the formula', 'Nothing except the final answer', 'Only how to copy it'],
+            answer: 0
+          },
+          {
+            q: `Why should diagrams or labels be studied carefully?`,
+            options: ['They show structure, flow, and relationships', 'They are never used in exams', 'They replace all explanations', 'They should be ignored'],
+            answer: 0
+          },
+          {
+            q: `A two-column table for ${topicName} should contain:`,
+            options: ['Point and reason', 'Question and random guess', 'Topic and unrelated topic', 'Only page numbers'],
+            answer: 0
+          },
+          {
+            q: `What makes a rule useful in ${topicName}?`,
+            options: ['Knowing why it works and where it applies', 'Repeating it without meaning', 'Using it in every unrelated question', 'Never checking exceptions'],
+            answer: 0
+          },
+          {
+            q: `Which action best builds core understanding?`,
+            options: ['Draw the process or map from memory', 'Read headings only', 'Avoid examples', 'Skip all difficult words'],
+            answer: 0
+          },
+          {
+            q: `What should you do when two ideas in ${topicName} seem connected?`,
+            options: ['Explain the relationship between them', 'Separate them without thinking', 'Forget both ideas', 'Choose one randomly'],
+            answer: 0
+          },
+          {
+            q: `Which question checks deeper understanding?`,
+            options: ['Why does this step happen?', 'What is the color of the page?', 'Can I skip this topic?', 'How fast can I click?'],
+            answer: 0
+          },
+          {
+            q: `A complete core-concept answer usually needs:`,
+            options: ['Definition, rule, explanation, and example', 'Only a yes or no', 'Only one copied phrase', 'No conclusion'],
+            answer: 0
+          },
+          {
+            q: `What is the best way to teach one rule from ${topicName}?`,
+            options: ['Say the rule, explain it, and give an example', 'Only say the rule name', 'Avoid the example', 'Use unrelated words'],
+            answer: 0
+          }
+        ],
+        [
+          {
+            q: `What should you notice first in a solved example of ${topicName}?`,
+            options: ['Given data, asked result, and method', 'Only the final answer', 'Only the handwriting', 'Only the question number'],
+            answer: 0
+          },
+          {
+            q: `Why should you hide the solution and try again?`,
+            options: ['It checks whether you can solve independently', 'It makes the topic unrelated', 'It removes the need to learn', 'It guarantees guessing works'],
+            answer: 0
+          },
+          {
+            q: `What is the best habit while studying examples?`,
+            options: ['Write why each step is needed', 'Copy steps without thinking', 'Skip verification', 'Ignore the method'],
+            answer: 0
+          },
+          {
+            q: `How can you create a new example from a solved one?`,
+            options: ['Change one value or condition and solve again', 'Erase the topic name only', 'Copy the same answer', 'Avoid solving it'],
+            answer: 0
+          },
+          {
+            q: `Which example order is most useful?`,
+            options: ['Easy, medium, then exam-style', 'Only hardest first', 'Only unrelated examples', 'No examples at all'],
+            answer: 0
+          },
+          {
+            q: `What does verification mean after solving ${topicName}?`,
+            options: ['Checking if the answer fits the question', 'Writing anything quickly', 'Ignoring units or logic', 'Changing the question'],
+            answer: 0
+          },
+          {
+            q: `What should you compare across many examples?`,
+            options: ['Repeated method and changing question pattern', 'Only page decoration', 'Only answer length', 'Only font size'],
+            answer: 0
+          },
+          {
+            q: `Which phrase shows example-based learning?`,
+            options: ['I know why this method is used here', 'I copied it once', 'I skipped the steps', 'I only remember option A'],
+            answer: 0
+          },
+          {
+            q: `If an example has a twist, what should you identify?`,
+            options: ['The clue that changes the method', 'Only the first word', 'Nothing different', 'The longest option'],
+            answer: 0
+          },
+          {
+            q: `What should your final example practice include?`,
+            options: ['Solve, explain steps, and verify', 'Guess, skip, and move on', 'Copy only', 'Avoid checking'],
+            answer: 0
+          }
+        ],
+        [
+          {
+            q: `What is the main skill in applying ${topicName}?`,
+            options: ['Identifying clues and choosing the correct method', 'Waiting for the answer to be obvious', 'Ignoring the question wording', 'Using one method for everything'],
+            answer: 0
+          },
+          {
+            q: `Why are mixed questions harder?`,
+            options: ['They combine clues from related ideas', 'They have no topic at all', 'They require no thinking', 'They always have the same wording'],
+            answer: 0
+          },
+          {
+            q: `What should you underline in an application question?`,
+            options: ['Clue words and important conditions', 'Every random word equally', 'Only punctuation', 'Nothing'],
+            answer: 0
+          },
+          {
+            q: `Before solving, what should you decide?`,
+            options: ['Which concept or rule applies', 'Which answer looks longest', 'How to skip the question', 'Which topic to forget'],
+            answer: 0
+          },
+          {
+            q: `What is a common trap in ${topicName} application questions?`,
+            options: ['Using a rule without checking conditions', 'Reading the full question', 'Checking the answer', 'Writing a conclusion'],
+            answer: 0
+          },
+          {
+            q: `How do you choose between two possible methods?`,
+            options: ['Compare the question clues with each method', 'Pick randomly', 'Always choose the first one', 'Avoid solving'],
+            answer: 0
+          },
+          {
+            q: `A case-based question usually asks you to:`,
+            options: ['Apply the concept to a situation', 'Only define the title', 'Ignore the situation', 'Copy an unrelated example'],
+            answer: 0
+          },
+          {
+            q: `What should a full application answer include?`,
+            options: ['Clue, method, steps, answer, and conclusion', 'Only the final word', 'Only a diagram title', 'No explanation'],
+            answer: 0
+          },
+          {
+            q: `What helps avoid mistakes in application practice?`,
+            options: ['Reviewing wrong answers and writing corrections', 'Never checking mistakes', 'Changing the topic', 'Skipping all hard questions'],
+            answer: 0
+          },
+          {
+            q: `When should you take the application test?`,
+            options: ['After solving mixed examples independently', 'Before reading anything', 'After only seeing the title', 'Without knowing the topic'],
+            answer: 0
+          }
+        ],
+        [
+          {
+            q: `What is the best final revision method for ${topicName}?`,
+            options: ['Active recall without looking at notes', 'Only rereading silently', 'Skipping weak points', 'Guessing all answers'],
+            answer: 0
+          },
+          {
+            q: `A 10-line summary should include:`,
+            options: ['Definition, rules, example, mistakes, and exam tips', 'Only the topic name repeated', 'Only unrelated facts', 'No examples'],
+            answer: 0
+          },
+          {
+            q: `Why are flashcards useful in final revision?`,
+            options: ['They test quick recall of key points', 'They remove the need to understand', 'They hide all keywords', 'They are only decoration'],
+            answer: 0
+          },
+          {
+            q: `What should you do after a mini-test?`,
+            options: ['Review every wrong answer', 'Ignore the score', 'Delete the topic', 'Never revise again'],
+            answer: 0
+          },
+          {
+            q: `Which sign shows you are ready for the final test?`,
+            options: ['You can explain ${topicName} without notes', 'You only remember the page color', 'You skipped examples', 'You cannot define the topic'],
+            answer: 0
+          },
+          {
+            q: `What should final revision improve?`,
+            options: ['Speed, memory, accuracy, and confidence', 'Confusion and guessing', 'Only handwriting', 'Only page count'],
+            answer: 0
+          },
+          {
+            q: `What should you do with weak points?`,
+            options: ['Fix them before attempting the final test', 'Hide them', 'Ignore them', 'Move to unrelated topics'],
+            answer: 0
+          },
+          {
+            q: `A good last-minute answer structure is:`,
+            options: ['Definition, key points, example, conclusion', 'Only one keyword', 'Only a random example', 'No conclusion'],
+            answer: 0
+          },
+          {
+            q: `Why should you compare ${topicName} with nearby topics?`,
+            options: ['To avoid confusion in MCQs and explanations', 'To make it harder for no reason', 'To skip both topics', 'To forget definitions'],
+            answer: 0
+          },
+          {
+            q: `What is the final step before submitting a test answer?`,
+            options: ['Check whether it answers exactly what was asked', 'Change every answer randomly', 'Ignore the question', 'Leave it incomplete'],
+            answer: 0
+          }
+        ]
+      ];
+
+      return banks[index] || banks[0];
+    }
+
+    function submitTest() {
+      let score = 0;
+      let answered = 0;
+      questions.forEach((item, qIndex) => {
+        const selected = document.querySelector(`input[name="q${qIndex}"]:checked`);
+        if (selected) {
+          answered++;
+          if (Number(selected.value) === item.answer) score++;
+        }
+      });
+
+      const result = document.getElementById('result');
+      if (answered < 10) {
+        result.style.color = '#fbbf24';
+        result.textContent = `Please answer all questions. Completed ${answered}/10.`;
+        return;
+      }
+
+      if (score >= 7) {
+        unlockNext();
+        result.style.color = '#86efac';
+        result.innerHTML = `Passed ${score}/10. Next module unlocked. <br><br><a class="back" href="topics-page.html">Go to Modules</a>`;
+      } else {
+        result.style.color = '#fca5a5';
+        result.textContent = `Score ${score}/10. Please revise and try again.`;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}New Topic — DQMS{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="glass-card p-4">
+      <h2 class="mb-3">Create a New Topic</h2>
+      <p class="text-muted">DQMS will generate 5 AI-powered learning modules and mini-tests for the topic you enter.</p>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">{{ form.name.label }}</label>
+          {{ form.name }}
+          {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.difficulty.label }}</label>
+          {{ form.difficulty }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.description.label }}</label>
+          {{ form.description }}
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <i class="bi bi-magic"></i> Generate Topic & Modules
+        </button>
+        <a href="{% url 'topics:list' %}" class="btn btn-outline-light">Cancel</a>
+      </form>
+      <div id="loadingMsg" class="mt-4 text-center" style="display:none;">
+        <div class="spinner-border text-info"></div>
+        <p class="mt-2 text-muted">AI is generating your learning modules — this may take 15–30 seconds…</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelector('form').addEventListener('submit', () => {
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('loadingMsg').style.display = 'block';
+});
+</script>
+{% endblock %}

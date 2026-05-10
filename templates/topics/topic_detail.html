@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}{{ topic.name }} — DQMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="brand-grad">{{ topic.name }}</h1>
+    <span class="badge bg-secondary me-2">{{ topic.difficulty|title }}</span>
+    <span class="text-muted">{{ topic.completed_modules_count }} of {{ topic.total_modules }} modules complete</span>
+  </div>
+  <div>
+    <a href="{% url 'exams:start' topic.id %}" class="btn btn-warning">
+      <i class="bi bi-lightning"></i> Instant Test
+    </a>
+    <a href="{% url 'revisions:index' %}" class="btn btn-outline-info">
+      <i class="bi bi-arrow-repeat"></i> Schedule Revisions
+    </a>
+  </div>
+</div>
+
+{% if topic.description %}
+<div class="glass-card p-3 mb-4"><p class="mb-0">{{ topic.description }}</p></div>
+{% endif %}
+
+<div class="progress mb-4" style="height:12px;">
+  <div class="progress-bar" style="width:{{ topic.progress_percent }}%; background: linear-gradient(90deg,#6366f1,#ec4899);">
+    {{ topic.progress_percent }}%
+  </div>
+</div>
+
+<h3 class="mb-3">Learning Modules</h3>
+<div class="row g-3">
+  {% for module in topic.modules.all %}
+    <div class="col-md-6">
+      <div class="glass-card p-4 h-100 {% if not module.is_unlocked %}opacity-50{% endif %}">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="badge bg-info">Module {{ forloop.counter }}</span>
+          {% if module.is_completed %}
+            <span class="badge bg-success"><i class="bi bi-check"></i> Completed</span>
+          {% elif not module.is_unlocked %}
+            <span class="badge bg-secondary"><i class="bi bi-lock"></i> Locked</span>
+          {% endif %}
+        </div>
+        <h5>{{ module.title }}</h5>
+        <p class="text-muted small">{{ module.summary|default:module.content|truncatewords:25 }}</p>
+        <div class="text-muted small mb-2">
+          <i class="bi bi-clock"></i> {{ module.reading_minutes }} min read
+        </div>
+        {% if module.is_unlocked %}
+          <a href="{% url 'topics:module' topic.id module.id %}" class="btn btn-sm btn-primary">
+            {% if module.is_completed %}Review{% else %}Start Learning{% endif %}
+          </a>
+        {% else %}
+          <button class="btn btn-sm btn-outline-secondary" disabled>Complete previous module to unlock</button>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="mt-4">
+  <a href="{% url 'topics:delete' topic.id %}" class="btn btn-sm btn-outline-danger">
+    <i class="bi bi-trash"></i> Delete Topic
+  </a>
+</div>
+{% endblock %}

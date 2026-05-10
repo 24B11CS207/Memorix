@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Analytics — DQMS{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-graph-up"></i> Learning Analytics</h2>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6"><div class="glass-card p-3"><small class="text-muted">Total Topics</small><div class="h3 mb-0">{{ total_topics }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="glass-card p-3"><small class="text-muted">Completed</small><div class="h3 mb-0 text-success">{{ completed_topics }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="glass-card p-3"><small class="text-muted">Avg Accuracy</small><div class="h3 mb-0">{{ avg_accuracy }}%</div></div></div>
+  <div class="col-md-3 col-6"><div class="glass-card p-3"><small class="text-muted">Reviews Passed</small><div class="h3 mb-0">{{ reviews_passed }}/{{ reviews_total }}</div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="glass-card p-4">
+      <h5>Topic Mastery (avg score per topic)</h5>
+      <canvas id="masteryChart" height="160"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="glass-card p-4">
+      <h5>Pass / Fail Ratio</h5>
+      <canvas id="passFailChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-lg-7">
+    <div class="glass-card p-4">
+      <h5>14-Day Activity</h5>
+      <canvas id="activityChart" height="160"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="glass-card p-4">
+      <h5>Topics by Difficulty</h5>
+      <canvas id="diffChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const masteryData = {{ mastery_json|safe }};
+const passFail = {{ pass_fail_json|safe }};
+const activity = {{ activity_json|safe }};
+const diff = {{ difficulty_json|safe }};
+
+new Chart(document.getElementById('masteryChart'), {
+  type: 'bar',
+  data: {
+    labels: masteryData.map(m => m.name),
+    datasets: [{ label: 'Avg %', data: masteryData.map(m => m.avg),
+      backgroundColor: 'rgba(99, 102, 241, .6)', borderRadius: 6 }]
+  },
+  options: { responsive: true, plugins:{legend:{display:false}},
+    scales: { y: { beginAtZero: true, max: 100, ticks:{color:'#aaa'}, grid:{color:'rgba(255,255,255,0.05)'} },
+              x: { ticks:{color:'#aaa'}, grid:{display:false} } }
+  }
+});
+
+new Chart(document.getElementById('passFailChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Passed', 'Failed'],
+    datasets: [{ data: [passFail.pass, passFail.fail],
+      backgroundColor: ['#22c55e', '#ef4444'] }]
+  },
+  options: { plugins: { legend: { labels: { color: '#fff' } } } }
+});
+
+new Chart(document.getElementById('activityChart'), {
+  type: 'line',
+  data: {
+    labels: activity.map(a => a.date),
+    datasets: [{ label: 'Activities', data: activity.map(a => a.count),
+      borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,.2)',
+      tension: .35, fill: true, pointRadius: 4 }]
+  },
+  options: { plugins:{legend:{display:false}},
+    scales: { y: { beginAtZero: true, ticks:{color:'#aaa'}, grid:{color:'rgba(255,255,255,0.05)'} },
+              x: { ticks:{color:'#aaa'}, grid:{display:false} } }
+  }
+});
+
+new Chart(document.getElementById('diffChart'), {
+  type: 'pie',
+  data: {
+    labels: diff.map(d => d.difficulty),
+    datasets: [{ data: diff.map(d => d.c),
+      backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'] }]
+  },
+  options: { plugins: { legend: { labels: { color: '#fff' } } } }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Login — DQMS{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="glass-card p-4 mt-5">
+      <h2 class="text-center mb-4 brand-grad">Welcome Back</h2>
+      <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+        <button class="btn btn-primary w-100">Sign in</button>
+      </form>
+      <div class="d-flex justify-content-between mt-3">
+        <a href="{% url 'accounts:signup' %}">Create account</a>
+        <a href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

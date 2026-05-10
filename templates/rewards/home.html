@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Rewards — DQMS{% endblock %}
+{% block content %}
+<h2><i class="bi bi-trophy"></i> Rewards & Badges</h2>
+
+<div class="row g-3 mt-2">
+  <div class="col-md-4">
+    <div class="glass-card p-4 text-center">
+      <h6 class="text-muted">Points</h6>
+      <div class="h1 brand-grad">{{ profile.points }}</div>
+      <span class="badge bg-warning text-dark">{{ profile.badge_level }}</span>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="glass-card p-4 text-center">
+      <h6 class="text-muted">Coins</h6>
+      <div class="h1 brand-grad">{{ profile.coins }}</div>
+      <small class="text-muted">Earn coins by completing topics</small>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="glass-card p-4 text-center">
+      <h6 class="text-muted">Streak</h6>
+      <div class="h1">{{ profile.current_streak }} 🔥</div>
+      <small class="text-muted">Longest: {{ profile.longest_streak }} days</small>
+    </div>
+  </div>
+</div>
+
+<h3 class="mt-5"><i class="bi bi-award"></i> Badges Earned ({{ badges.count }})</h3>
+{% if badges %}
+<div class="row g-3 mt-2">
+  {% for b in badges %}
+    <div class="col-md-3 col-6">
+      <div class="glass-card p-4 text-center badge-card">
+        <div style="font-size:3rem;">{{ b.icon }}</div>
+        <h6>{{ b.name }}</h6>
+        <small class="text-muted">{{ b.earned_at|date:"M j, Y" }}</small>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted mt-2">No badges yet — keep learning to earn your first one!</p>
+{% endif %}
+
+<h3 class="mt-5">Recent Point Activity</h3>
+{% if events %}
+<div class="glass-card p-3 mt-3">
+  <table class="table table-dark table-striped mb-0">
+    <thead><tr><th>Date</th><th>Reason</th><th>Points</th></tr></thead>
+    <tbody>
+      {% for e in events %}
+      <tr>
+        <td>{{ e.created_at|date:"M j, Y H:i" }}</td>
+        <td>{{ e.reason }}</td>
+        <td><span class="text-success">+{{ e.points }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<a href="{% url 'rewards:leaderboard' %}" class="btn btn-outline-info mt-4"><i class="bi bi-bar-chart"></i> View Leaderboard</a>
+{% endblock %}

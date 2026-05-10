@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Notes — DQMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="bi bi-journal-text"></i> My Notes</h2>
+  <a href="{% url 'notes:create' %}" class="btn btn-primary"><i class="bi bi-plus"></i> New Note</a>
+</div>
+
+<form method="get" class="mb-4">
+  <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search notes...">
+</form>
+
+{% if notes %}
+<div class="row g-3">
+  {% for n in notes %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card p-3 h-100">
+        <div class="d-flex justify-content-between mb-2">
+          <h5 class="mb-0">{{ n.title }}</h5>
+          {% if n.topic %}<span class="badge bg-info">{{ n.topic.name }}</span>{% endif %}
+        </div>
+        <p class="text-muted small">{{ n.body|truncatewords:25 }}</p>
+        <small class="text-muted">{{ n.updated_at|date:"M j, Y" }}</small>
+        <div class="mt-3 d-flex gap-2">
+          <a href="{% url 'notes:edit' n.id %}" class="btn btn-sm btn-outline-info">Edit</a>
+          <a href="{% url 'notes:delete' n.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="glass-card p-5 text-center">
+  <i class="bi bi-journal" style="font-size:3rem; opacity:.5;"></i>
+  <p class="text-muted mt-3">No notes yet. Create your first note to capture key insights.</p>
+  <a href="{% url 'notes:create' %}" class="btn btn-primary">Create Note</a>
+</div>
+{% endif %}
+{% endblock %}

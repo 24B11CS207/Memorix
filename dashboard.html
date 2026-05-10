@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorix - AI Learning Platform</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #070816;
+      --bg2: #0f1023;
+      --purple: #7c5cfc;
+      --purple2: #a78bfa;
+      --blue: #38bdf8;
+      --cyan: #22d3ee;
+      --text: #ffffff;
+      --text2: #9ca3af;
+      --glass: rgba(18, 20, 40, 0.65);
+      --border: rgba(124, 92, 252, 0.22);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      min-height: 100%;
+      overflow-y: auto;
+    }
+
+    body {
+      background: linear-gradient(135deg, #060816, #11132b, #1a1040);
+      color: var(--text);
+      overflow-x: hidden;
+      overflow-y: auto;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ANIMATED BACKGROUND */
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(124, 92, 252, 0.18), transparent 25%),
+        radial-gradient(circle at 80% 30%, rgba(56, 189, 248, 0.12), transparent 25%),
+        radial-gradient(circle at 50% 80%, rgba(34, 211, 238, 0.12), transparent 30%);
+      animation: bgMove 12s infinite alternate ease-in-out;
+      z-index: -2;
+    }
+
+    @keyframes bgMove {
+      0% {
+        transform: scale(1) translateY(0px);
+      }
+
+      100% {
+        transform: scale(1.1) translateY(-20px);
+      }
+    }
+
+    /* FLOATING PARTICLES */
+
+    .particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(167, 139, 250, 0.7);
+      box-shadow: 0 0 12px rgba(167, 139, 250, 0.9);
+      animation: floatParticle linear infinite;
+    }
+
+    @keyframes floatParticle {
+      from {
+        transform: translateY(100vh) scale(0.5);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      to {
+        transform: translateY(-100px) scale(1.2);
+        opacity: 0;
+      }
+    }
+
+    /* NAVBAR */
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      height: 75px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 60px;
+      backdrop-filter: blur(14px);
+      background: rgba(7, 8, 22, 0.6);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 1000;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--purple2), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: logoGlow 3s infinite alternate;
+    }
+
+    @keyframes logoGlow {
+      from {
+        filter: drop-shadow(0 0 8px rgba(124, 92, 252, 0.3));
+      }
+
+      to {
+        filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.6));
+      }
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 35px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text2);
+      font-size: 15px;
+      transition: 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .login-btn {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--purple), #4f46e5);
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.4s;
+      box-shadow: 0 0 25px rgba(124, 92, 252, 0.45);
+    }
+
+    .login-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 0 45px rgba(124, 92, 252, 0.75);
+    }
+
+    /* HERO */
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 130px 20px 80px;
+      position: relative;
+    }
+
+    .hero-content {
+      max-width: 950px;
+      animation: fadeUp 1.2s ease;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      border-radius: 30px;
+      background: rgba(124, 92, 252, 0.12);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      color: var(--purple2);
+      margin-bottom: 28px;
+      animation: floatTag 3s infinite ease-in-out;
+    }
+
+    @keyframes floatTag {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+      }
+    }
+
+    .hero h1 {
+      font-size: 72px;
+      line-height: 1.15;
+      margin-bottom: 30px;
+      background: linear-gradient(135deg, #fff, var(--purple2), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 21px;
+      line-height: 1.9;
+      color: var(--text2);
+      margin-bottom: 45px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      padding: 16px 36px;
+      border-radius: 15px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.4s;
+    }
+
+    .primary-btn {
+      border: none;
+      background: linear-gradient(135deg, var(--purple), #4f46e5);
+      color: white;
+      box-shadow: 0 0 35px rgba(124, 92, 252, 0.45);
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 55px rgba(124, 92, 252, 0.8);
+    }
+
+    .secondary-btn {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: transparent;
+      color: white;
+    }
+
+    .secondary-btn:hover {
+      border-color: var(--purple2);
+      background: rgba(124, 92, 252, 0.08);
+    }
+
+    /* STATS SECTION */
+
+    .stats {
+      padding: 80px 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .stat-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 35px;
+      backdrop-filter: blur(12px);
+      transition: 0.4s;
+      box-shadow: 0 0 25px rgba(124, 92, 252, 0.12);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 0 45px rgba(124, 92, 252, 0.3);
+    } 
+
+    .stat-card h2 {
+      font-size: 42px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--purple2), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-card p {
+      color: var(--text2);
+      line-height: 1.7;
+    }
+
+    /* FEATURE SECTION */
+
+    .features {
+      padding: 100px 20px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 48px;
+      margin-bottom: 70px;
+      background: linear-gradient(135deg, #fff, var(--purple2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .feature-grid {
+      max-width: 1200px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+    }
+
+    .feature-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 35px;
+      transition: 0.4s;
+      backdrop-filter: blur(14px);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 0 40px rgba(124, 92, 252, 0.3);
+    }
+
+    .feature-icon {
+      font-size: 42px;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 14px;
+      font-size: 24px;
+    }
+
+    .feature-card p {
+      color: var(--text2);
+      line-height: 1.8;
+    }
+
+    /* EDUCATION CATEGORIES */
+
+    .education {
+      padding: 40px 20px 100px;
+    }
+
+    .education-subtitle {
+      max-width: 760px;
+      margin: -45px auto 45px;
+      text-align: center;
+      color: var(--text2);
+      line-height: 1.8;
+      font-size: 17px;
+    }
+
+    .education-grid {
+      max-width: 1200px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 26px;
+    }
+
+    .education-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 0 28px rgba(124, 92, 252, 0.14);
+      transition: 0.35s;
+    }
+
+    .education-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 0 42px rgba(56, 189, 248, 0.25);
+    }
+
+    .education-card h3 {
+      font-size: 23px;
+      margin-bottom: 8px;
+    }
+
+    .education-card p {
+      color: var(--text2);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .category-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .category-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 9px 13px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      transition: 0.25s;
+    }
+
+    .category-chip:hover {
+      background: rgba(124, 92, 252, 0.22);
+      border-color: rgba(167, 139, 250, 0.55);
+      transform: translateY(-2px);
+    }
+
+    .category-chip.active {
+      background: linear-gradient(135deg, var(--purple), #2563eb);
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 0 22px rgba(56, 189, 248, 0.25);
+    }
+
+    .topic-planner {
+      max-width: 1200px;
+      margin: 34px auto 0;
+      display: none;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      backdrop-filter: blur(14px);
+    }
+
+    .topic-planner.show {
+      display: block;
+    }
+
+    .planner-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+
+    .planner-head h3 {
+      font-size: 26px;
+      margin-bottom: 7px;
+    }
+
+    .planner-head p,
+    .module-card p,
+    .test-box p {
+      color: var(--text2);
+      line-height: 1.7;
+    }
+
+    .topic-search-wrap {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .topic-search {
+      width: 100%;
+      min-height: 52px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.07);
+      color: white;
+      padding: 0 16px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .topic-search:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+    }
+
+    .suggestions,
+    .modules-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .suggestions {
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      margin-bottom: 22px;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .mode-card {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.06);
+      color: white;
+      padding: 20px;
+      cursor: pointer;
+      text-align: left;
+      transition: 0.25s;
+    }
+
+    .mode-card:hover,
+    .mode-card.active {
+      border-color: var(--blue);
+      background: rgba(56, 189, 248, 0.14);
+      transform: translateY(-2px);
+    }
+
+    .mode-card h4 {
+      font-size: 19px;
+      margin-bottom: 8px;
+    }
+
+    .mode-card p,
+    .section-label {
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    .section-label {
+      margin: 18px 0 12px;
+      font-size: 15px;
+    }
+
+    .suggestion-btn,
+    .module-btn {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.06);
+      color: white;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: 0.25s;
+      text-align: left;
+    }
+
+    .suggestion-btn:hover,
+    .module-btn:hover {
+      border-color: var(--purple2);
+      background: rgba(124, 92, 252, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .modules-grid {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .module-card {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .module-card.locked {
+      opacity: 0.48;
+      filter: grayscale(0.3);
+    }
+
+    .module-status {
+      display: inline-flex;
+      margin-bottom: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text2);
+      font-size: 12px;
+    }
+
+    .module-status.unlocked {
+      background: rgba(34, 197, 94, 0.14);
+      color: #86efac;
+    }
+
+    .module-card h4 {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .module-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .module-btn.primary {
+      background: linear-gradient(135deg, var(--purple), #4f46e5);
+      border-color: transparent;
+      text-align: center;
+    }
+
+    .module-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .test-box {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .test-box.show {
+      display: block;
+    }
+
+    .learning-box {
+      display: none;
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(34, 211, 238, 0.08);
+      border: 1px solid rgba(34, 211, 238, 0.18);
+    }
+
+    .learning-box.show {
+      display: block;
+    }
+
+    .learning-box h5 {
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: #bfdbfe;
+    }
+
+    .learning-box ul {
+      padding-left: 20px;
+      margin: 10px 0 0;
+      color: var(--text2);
+      line-height: 1.8;
+    }
+
+    .learning-box strong {
+      color: white;
+    }
+
+    .lesson-block {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .lesson-block h6 {
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: #93c5fd;
+    }
+
+    .lesson-block p {
+      margin-bottom: 0;
+    }
+
+    .source-note {
+      margin-top: 12px;
+      color: var(--text2);
+      font-size: 13px;
+    }
+
+    .test-option {
+      display: block;
+      margin-top: 9px;
+      color: var(--text2);
+      cursor: pointer;
+    }
+
+    .question-card {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .question-card p {
+      margin-bottom: 8px;
+      color: white;
+    }
+
+    .result-text {
+      margin-top: 12px;
+      color: #86efac;
+      font-weight: 600;
+    }
+
+    /* RESPONSIVE */
+
+    @media(max-width:768px) {
+
+      nav {
+        padding: 0 20px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero h1 {
+        font-size: 44px;
+      }
+
+      .hero p {
+        font-size: 17px;
+      }
+
+      .section-title {
+        font-size: 34px;
+      }
+
+      .education-subtitle {
+        margin-top: -35px;
+      }
+
+      .topic-search-wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- PARTICLES -->
+
+  <div class="particle" style="left:5%; animation-duration:12s;"></div>
+  <div class="particle" style="left:15%; animation-duration:16s;"></div>
+  <div class="particle" style="left:28%; animation-duration:10s;"></div>
+  <div class="particle" style="left:40%; animation-duration:14s;"></div>
+  <div class="particle" style="left:55%; animation-duration:18s;"></div>
+  <div class="particle" style="left:70%; animation-duration:13s;"></div>
+  <div class="particle" style="left:82%; animation-duration:15s;"></div>
+  <div class="particle" style="left:92%; animation-duration:11s;"></div>
+
+  <!-- NAVBAR -->
+
+  <nav>
+
+    <div class="logo">⚡ Memorix</div>
+
+    <div class="nav-links">
+      <a href="#">Home</a>
+      <a href="#categories" class="auth-link">Categories</a>
+      <a href="#categories" class="auth-link">Education</a>
+      <a href="#">About</a>
+    </div>
+
+    <a class="login-btn" href="index.html">Login</a>
+
+  </nav>
+
+  <!-- HERO -->
+
+  <section class="hero">
+
+    <div class="hero-content">
+
+      <div class="tag">
+        <div class="dot"></div>
+        AI-Powered Smart Learning
+      </div>
+
+      <h1>
+        Welcome to Memorix<br>
+        AI Learning Platform
+      </h1>
+
+      <p>
+        Experience futuristic AI-powered education with adaptive practice,
+        intelligent revision, smooth analytics, and personalized learning
+        paths designed for next-generation students.
+      </p>
+
+      <div class="hero-buttons">
+
+        <button class="primary-btn" onclick="window.location.href='index.html'">
+          🚀 Start Learning
+        </button>
+
+        <button class="secondary-btn" onclick="document.getElementById('categories').scrollIntoView({ behavior: 'smooth' })">
+          Explore Features
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- EDUCATION CATEGORIES -->
+
+  <section class="education" id="categories" style="display:none;">
+    <h2 class="section-title">Choose Your Education Path</h2>
+    <p class="education-subtitle">
+      Select your class, stream, branch, or degree to begin learning with AI-generated modules and practice.
+    </p>
+
+    <div class="education-grid">
+      <div class="education-card">
+        <h3>1st to 10th Class</h3>
+        <p>School learning paths for every class.</p>
+        <div class="category-list">
+          <a class="category-chip" href="#" data-path="Class 1">Class 1</a>
+          <a class="category-chip" href="#" data-path="Class 2">Class 2</a>
+          <a class="category-chip" href="#" data-path="Class 3">Class 3</a>
+          <a class="category-chip" href="#" data-path="Class 4">Class 4</a>
+          <a class="category-chip" href="#" data-path="Class 5">Class 5</a>
+          <a class="category-chip" href="#" data-path="Class 6">Class 6</a>
+          <a class="category-chip" href="#" data-path="Class 7">Class 7</a>
+          <a class="category-chip" href="#" data-path="Class 8">Class 8</a>
+          <a class="category-chip" href="#" data-path="Class 9">Class 9</a>
+          <a class="category-chip" href="#" data-path="Class 10">Class 10</a>
+        </div>
+      </div>
+
+      <div class="education-card">
+        <h3>Intermediate</h3>
+        <p>Pick your stream and start focused preparation.</p>
+        <div class="category-list">
+          <a class="category-chip" href="#" data-path="Intermediate MPC">MPC</a>
+          <a class="category-chip" href="#" data-path="Intermediate BiPC">BiPC</a>
+          <a class="category-chip" href="#" data-path="Intermediate HEC">HEC</a>
+          <a class="category-chip" href="#" data-path="Intermediate CEC">CEC</a>
+          <a class="category-chip" href="#" data-path="Intermediate MEC">MEC</a>
+        </div>
+      </div>
+
+      <div class="education-card">
+        <h3>B.Tech Branches</h3>
+        <p>Engineering branches with subject-wise learning paths.</p>
+        <div class="category-list">
+          <a class="category-chip" href="#" data-path="B.Tech CSE">CSE</a>
+          <a class="category-chip" href="#" data-path="B.Tech AI & ML">AI & ML</a>
+          <a class="category-chip" href="#" data-path="B.Tech Data Science">Data Science</a>
+          <a class="category-chip" href="#" data-path="B.Tech ECE">ECE</a>
+          <a class="category-chip" href="#" data-path="B.Tech EEE">EEE</a>
+          <a class="category-chip" href="#" data-path="B.Tech Mechanical">Mechanical</a>
+          <a class="category-chip" href="#" data-path="B.Tech Civil">Civil</a>
+          <a class="category-chip" href="#" data-path="B.Tech IT">IT</a>
+          <a class="category-chip" href="#" data-path="B.Tech Chemical">Chemical</a>
+          <a class="category-chip" href="#" data-path="B.Tech Biotech">Biotech</a>
+        </div>
+      </div>
+
+      <div class="education-card">
+        <h3>Medical</h3>
+        <p>Medical and health science education paths.</p>
+        <div class="category-list">
+          <a class="category-chip" href="#" data-path="MBBS">MBBS</a>
+          <a class="category-chip" href="#" data-path="BDS">BDS</a>
+          <a class="category-chip" href="#" data-path="B.Pharmacy">B.Pharmacy</a>
+          <a class="category-chip" href="#" data-path="Nursing">Nursing</a>
+          <a class="category-chip" href="#" data-path="Physiotherapy">Physiotherapy</a>
+        </div>
+      </div>
+
+      <div class="education-card">
+        <h3>Other Education</h3>
+        <p>More degree and exam preparation categories.</p>
+        <div class="category-list">
+          <a class="category-chip" href="#" data-path="B.Sc">B.Sc</a>
+          <a class="category-chip" href="#" data-path="B.Com">B.Com</a>
+          <a class="category-chip" href="#" data-path="B.A">B.A</a>
+          <a class="category-chip" href="#" data-path="BBA">BBA</a>
+          <a class="category-chip" href="#" data-path="Law">Law</a>
+          <a class="category-chip" href="#" data-path="Competitive Exams">Competitive Exams</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="topic-planner" id="topicPlanner">
+      <div class="planner-head">
+        <div>
+          <h3 id="selectedPathTitle">Select a Path</h3>
+          <p>Choose a learning mode, pick a subject, then search one topic to schedule it into modules.</p>
+        </div>
+      </div>
+
+      <div class="mode-grid" id="modeGrid"></div>
+
+      <div id="subjectArea" style="display:none;">
+        <p class="section-label">Select subject</p>
+        <div class="suggestions" id="subjectSuggestions"></div>
+      </div>
+
+      <div id="topicArea" style="display:none;">
+        <p class="section-label" id="topicAreaLabel">Search topic</p>
+        <div class="topic-search-wrap">
+          <input class="topic-search" id="topicSearch" type="search" placeholder="Search a topic, e.g. Algebra, Human Heart, Data Structures">
+          <button class="primary-btn" id="buildPlanBtn" type="button">Schedule Topic</button>
+        </div>
+
+        <div class="suggestions" id="topicSuggestions"></div>
+      </div>
+
+      <div class="modules-grid" id="modulesGrid"></div>
+    </div>
+  </section>
+
+  <script>
+    let loggedInUser = null;
+    try {
+      loggedInUser = JSON.parse(localStorage.getItem('eduUser'));
+    } catch {
+      localStorage.removeItem('eduUser');
+    }
+
+    const categoriesSection = document.getElementById('categories');
+    const authLinks = document.querySelectorAll('.auth-link');
+    if (loggedInUser && loggedInUser.email) {
+      categoriesSection.style.display = 'block';
+      authLinks.forEach(link => link.style.display = 'inline');
+    } else {
+      categoriesSection.style.display = 'none';
+      authLinks.forEach(link => link.style.display = 'none');
+    }
+
+    const subjectBank = {
+      school: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computer Basics'],
+      intermediate: ['Mathematics', 'Physics', 'Chemistry', 'Botany', 'Zoology', 'Economics', 'Civics', 'Commerce'],
+      engineering: ['Programming', 'Data Structures', 'DBMS', 'Computer Networks', 'Digital Electronics', 'Engineering Maths'],
+      medical: ['Anatomy', 'Physiology', 'Biochemistry', 'Pathology', 'Pharmacology'],
+      general: ['Accounting', 'Business Studies', 'Political Science', 'Statistics', 'Reasoning', 'Aptitude']
+    };
+
+    const topicBank = {
+      Mathematics: ['Fractions', 'Algebra', 'Trigonometry', 'Calculus', 'Probability'],
+      Science: ['Photosynthesis', 'Atoms', 'Force', 'Electricity', 'Human Body'],
+      English: ['Grammar', 'Tenses', 'Essay Writing', 'Comprehension', 'Vocabulary'],
+      'Social Studies': ['Indian History', 'Geography', 'Civics', 'Economics', 'Constitution'],
+      'Computer Basics': ['MS Office', 'Internet Basics', 'Keyboard Skills', 'Scratch Programming'],
+      Physics: ['Mechanics', 'Waves', 'Optics', 'Thermodynamics', 'Current Electricity'],
+      Chemistry: ['Organic Chemistry', 'Chemical Bonding', 'Acids and Bases', 'Periodic Table'],
+      Botany: ['Plant Kingdom', 'Photosynthesis', 'Plant Anatomy', 'Genetics'],
+      Zoology: ['Human Heart', 'Nervous System', 'Digestion', 'Respiration'],
+      Economics: ['Demand and Supply', 'National Income', 'Market Structure', 'Budget'],
+      Civics: ['Democracy', 'Constitution', 'Rights', 'Government'],
+      Commerce: ['Accounting Basics', 'Journal Entries', 'Ledger', 'Balance Sheet'],
+      Programming: ['C Basics', 'Python Basics', 'Loops', 'Functions', 'OOP'],
+      'Data Structures': ['Arrays', 'Linked List', 'Stack', 'Queue', 'Trees'],
+      DBMS: ['ER Model', 'SQL', 'Normalization', 'Transactions'],
+      'Computer Networks': ['OSI Model', 'TCP/IP', 'Routing', 'Network Security'],
+      'Digital Electronics': ['Logic Gates', 'Flip Flops', 'Counters', 'Multiplexers'],
+      'Engineering Maths': ['Matrices', 'Differential Equations', 'Laplace Transform', 'Vector Calculus'],
+      Anatomy: ['Human Heart', 'Bones', 'Muscles', 'Nervous System'],
+      Physiology: ['Blood Circulation', 'Respiration', 'Digestion', 'Kidney Function'],
+      Biochemistry: ['Proteins', 'Carbohydrates', 'Enzymes', 'Metabolism'],
+      Pathology: ['Inflammation', 'Cell Injury', 'Immunity', 'Infection'],
+      Pharmacology: ['Drug Action', 'Antibiotics', 'Dosage', 'Side Effects'],
+      Accounting: ['Journal Entries', 'Ledger', 'Trial Balance', 'Final Accounts'],
+      'Business Studies': ['Management', 'Marketing', 'Entrepreneurship', 'Finance'],
+      'Political Science': ['State', 'Democracy', 'Political Parties', 'Public Policy'],
+      Statistics: ['Mean Median Mode', 'Correlation', 'Probability', 'Charts'],
+      Reasoning: ['Number Series', 'Coding Decoding', 'Blood Relations', 'Directions'],
+      Aptitude: ['Percentages', 'Profit and Loss', 'Time and Work', 'Ratios']
+    };
+
+    let selectedPath = '';
+    let selectedMode = '';
+    let selectedSubject = '';
+
+    function pathType(path) {
+      if (path.startsWith('Class')) return 'school';
+      if (path.startsWith('Intermediate')) return 'intermediate';
+      if (path.startsWith('B.Tech')) return 'engineering';
+      if (['MBBS', 'BDS', 'B.Pharmacy', 'Nursing', 'Physiotherapy'].includes(path)) return 'medical';
+      return 'general';
+    }
+
+    function openPlanner(path, chip) {
+      selectedPath = path;
+      selectedMode = '';
+      selectedSubject = '';
+      document.querySelectorAll('.category-chip').forEach(item => item.classList.remove('active'));
+      chip.classList.add('active');
+      document.getElementById('selectedPathTitle').textContent = `${path} Learning Setup`;
+      document.getElementById('topicPlanner').classList.add('show');
+      document.getElementById('subjectArea').style.display = 'none';
+      document.getElementById('topicArea').style.display = 'none';
+      document.getElementById('modulesGrid').innerHTML = '';
+      renderModes();
+      document.getElementById('topicPlanner').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderModes() {
+      document.getElementById('modeGrid').innerHTML = `
+        <button class="mode-card" type="button" onclick="selectMode('Instant Learning', this)">
+          <h4>Instant Learning</h4>
+          <p>Quick subject selection and 5 focused modules for one topic.</p>
+        </button>
+        <button class="mode-card" type="button" onclick="selectMode('Deep Dive', this)">
+          <h4>Deep Dive</h4>
+          <p>A stronger roadmap with deeper explanation modules for the selected topic.</p>
+        </button>
+      `;
+    }
+
+    function selectMode(mode, button) {
+      selectedMode = mode;
+      selectedSubject = '';
+      document.querySelectorAll('.mode-card').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      document.getElementById('subjectArea').style.display = 'block';
+      document.getElementById('topicArea').style.display = 'none';
+      document.getElementById('modulesGrid').innerHTML = '';
+      renderSubjects(subjectBank[pathType(selectedPath)]);
+      document.getElementById('subjectArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderSubjects(subjects) {
+      document.getElementById('subjectSuggestions').innerHTML = subjects.map(subject =>
+        `<button class="suggestion-btn" type="button" onclick="selectSubject('${subject.replace(/'/g, "\\'")}')">${subject}</button>`
+      ).join('');
+    }
+
+    function selectSubject(subject) {
+      selectedSubject = subject;
+      document.getElementById('topicArea').style.display = 'block';
+      document.getElementById('topicAreaLabel').textContent = `Search topic in ${subject}`;
+      document.getElementById('topicSearch').value = '';
+      document.getElementById('modulesGrid').innerHTML = '';
+      renderSuggestions(topicBank[subject] || []);
+      document.getElementById('topicArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => document.getElementById('topicSearch').focus(), 300);
+    }
+
+    function renderSuggestions(topics) {
+      document.getElementById('topicSuggestions').innerHTML = topics.map(topic =>
+        `<button class="suggestion-btn" type="button" onclick="selectTopic('${topic.replace(/'/g, "\\'")}')">${topic}</button>`
+      ).join('');
+    }
+
+    function selectTopic(topic) {
+      document.getElementById('topicSearch').value = topic;
+      buildModules(topic);
+    }
+
+    function buildModules(topic) {
+      if (!selectedPath || !selectedMode || !selectedSubject) return;
+      const cleanTopic = topic.trim();
+      if (!cleanTopic) {
+        document.getElementById('topicSearch').focus();
+        return;
+      }
+
+      const modules = [
+        { title: `Module 1: ${cleanTopic} Basics`, desc: `Start ${selectedMode} for ${selectedPath} ${selectedSubject}: meaning, key terms, and foundations.` },
+        { title: `Module 2: Core Concepts`, desc: `Learn the main formulas, diagrams, rules, or theory points in ${cleanTopic}.` },
+        { title: `Module 3: Examples`, desc: `Study solved examples from ${selectedSubject} and understand the step-by-step method.` },
+        { title: `Module 4: Practice`, desc: `Apply ${cleanTopic} to exam-style questions and common mistakes.` },
+        { title: `Module 5: Final Revision`, desc: `Revise the topic and complete a test to check your understanding.` }
+      ];
+
+      document.getElementById('modulesGrid').innerHTML = modules.map((module, index) => `
+        <div class="module-card ${index === 0 ? '' : 'locked'}" id="module-${index}">
+          <span class="module-status ${index === 0 ? 'unlocked' : ''}" id="status-${index}">${index === 0 ? 'Unlocked' : 'Locked'}</span>
+          <h4>${module.title}</h4>
+          <p>${module.desc}</p>
+          <div class="module-actions">
+            <button class="module-btn primary" id="learnBtn-${index}" type="button" onclick="learnModule(${index}, '${cleanTopic.replace(/'/g, "\\'")}')" ${index === 0 ? '' : 'disabled'}>Learn Module</button>
+            <button class="module-btn" id="testBtn-${index}" type="button" onclick="showTest(${index}, '${cleanTopic.replace(/'/g, "\\'")}')" disabled>Take Test</button>
+          </div>
+          <div class="learning-box" id="learning-${index}"></div>
+          <div class="test-box" id="test-${index}"></div>
+        </div>
+      `).join('');
+    }
+
+    const studyCache = {};
+
+    async function fetchStudyData(topic) {
+      const cacheKey = topic.toLowerCase();
+      if (studyCache[cacheKey]) return studyCache[cacheKey];
+
+      const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(topic)}&format=json&origin=*`;
+      const searchRes = await fetch(searchUrl);
+      if (!searchRes.ok) throw new Error('Search API failed');
+      const searchData = await searchRes.json();
+      const bestTitle = searchData.query?.search?.[0]?.title || topic;
+
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(bestTitle)}`;
+      const summaryRes = await fetch(summaryUrl);
+      if (!summaryRes.ok) throw new Error('Summary API failed');
+      const summaryData = await summaryRes.json();
+
+      const data = {
+        title: summaryData.title || bestTitle,
+        extract: summaryData.extract || '',
+        description: summaryData.description || '',
+        url: summaryData.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(bestTitle)}`
+      };
+      studyCache[cacheKey] = data;
+      return data;
+    }
+
+    function splitSentences(text) {
+      return text
+        .split(/(?<=[.!?])\s+/)
+        .map(sentence => sentence.trim())
+        .filter(Boolean);
+    }
+
+    function fallbackStudyData(topic) {
+      return {
+        title: topic,
+        description: `${selectedSubject || 'Subject'} topic`,
+        extract: `${topic} is an important topic in ${selectedSubject || 'this subject'}. Start with the definition, then understand the main concepts, examples, applications, and final revision questions.`,
+        url: ''
+      };
+    }
+
+    function buildOnlineLearningContent(index, topic, data) {
+      const subject = selectedSubject || 'subject';
+      const path = selectedPath || 'selected path';
+      const sentences = splitSentences(data.extract);
+      const topicHint = data.description || sentences[0] || `${topic} concept`;
+
+      const lessons = [
+        {
+          heading: `Basic Introduction to ${data.title}`,
+          explanation: `${data.title} is studied in ${subject} as a key idea that helps you understand the chapter step by step. Start by learning what the topic means, where it is used, and which words are repeated often. Keep this module simple: definition first, then one small example.`,
+          example: `Example: If the topic is ${topic}, write: "${topic} means..." and then add one daily-life or textbook situation where it appears. For a math topic, use very small numbers first. For science, draw a simple labeled diagram.`,
+          practice: `Write the definition of ${topic} in 2 lines and list 3 important keywords from ${subject}.`,
+          points: [
+            `<strong>Focus:</strong> Meaning, keywords, and basic use.`,
+            `<strong>Online hint:</strong> ${topicHint}.`,
+            `<strong>Depth:</strong> Beginner level. Do not jump to hard questions yet.`
+          ]
+        },
+        {
+          heading: `Core Concepts of ${data.title}`,
+          explanation: `Now go deeper into the main concept. Learn the rule, process, formula, diagram, or theory behind ${topic}. Break the topic into small parts and understand why each part is needed.`,
+          example: `Example: Create a "concept map" for ${topic}. Put the topic name in the center, then connect 4 branches: definition, formula/process, diagram/structure, and use case.`,
+          practice: `Explain ${topic} aloud as if teaching a friend. If you pause, that part needs revision.`,
+          points: [
+            `<strong>Focus:</strong> Main rules and connected sub-points.`,
+            `<strong>Method:</strong> Learn one sub-point, then test yourself before moving to the next.`,
+            `<strong>Depth:</strong> Concept level. Start asking why and how.`
+          ]
+        },
+        {
+          heading: `Examples and Step-by-Step Practice`,
+          explanation: `This module turns theory into practice. Study one solved example slowly, then try a similar example without seeing the solution. The goal is to understand the method, not just the final answer.`,
+          example: `Worked example idea: Take one question on ${topic}. Step 1: identify what is given. Step 2: choose the rule or concept. Step 3: solve or explain. Step 4: check if the answer matches the question.`,
+          practice: `Try 3 questions: one easy, one medium, and one slightly tricky. Mark the step where you make mistakes.`,
+          points: [
+            `<strong>Focus:</strong> Solved examples and repeated patterns.`,
+            `<strong>Method:</strong> Read, solve, compare, correct.`,
+            `<strong>Depth:</strong> Practice level. Accuracy matters more than speed.`
+          ]
+        },
+        {
+          heading: `Application Level Learning`,
+          explanation: `Now use ${topic} in mixed and application-based questions. This is where learning becomes deeper: you connect this topic with previous chapters and real exam patterns.`,
+          example: `Application example: Ask, "Where can ${topic} be used outside this chapter?" Then connect it with one related topic in ${subject}. For exams, combine definition + concept + example in one answer.`,
+          practice: `Create 2 application questions yourself and answer them. This improves deep understanding.`,
+          points: [
+            `<strong>Focus:</strong> Mixed questions and real usage.`,
+            `<strong>Method:</strong> Compare ${topic} with related topics and note differences.`,
+            `<strong>Depth:</strong> Application level. Think beyond memorization.`
+          ]
+        },
+        {
+          heading: `Deep Revision and Test Readiness`,
+          explanation: `This final module prepares you for tests. Compress the whole topic into short notes, revise weak points, and check if you can recall the concept without help.`,
+          example: `Revision example: Make a 5-line summary of ${topic}: definition, key rule, one example, one common mistake, and one exam tip.`,
+          practice: `Close your notes and write everything you remember about ${topic}. Then compare and fill the gaps.`,
+          points: [
+            `<strong>Focus:</strong> Recall, revision, and exam readiness.`,
+            `<strong>Method:</strong> Summary notes plus self-test.`,
+            `<strong>Depth:</strong> Final level. You should be able to teach the topic to someone else.`
+          ]
+        }
+      ];
+      return lessons[index] || lessons[0];
+    }
+
+    function learningContent(index, topic) {
+      const subject = selectedSubject || 'subject';
+      const path = selectedPath || 'selected path';
+      const lessons = [
+        {
+          heading: `Basic Introduction to ${topic}`,
+          points: [
+            `<strong>What it means:</strong> Learn the simple definition of ${topic} in ${subject}.`,
+            `<strong>Why it matters:</strong> Understand where this topic is used in ${path}.`,
+            `<strong>First step:</strong> Memorize the key words, symbols, names, or basic idea before solving questions.`
+          ]
+        },
+        {
+          heading: `Core Concepts of ${topic}`,
+          points: [
+            `<strong>Main rules:</strong> Study the important formulas, diagrams, laws, or theory points.`,
+            `<strong>Connections:</strong> Link this topic with the previous basics so it feels logical.`,
+            `<strong>Mini goal:</strong> Explain the topic in your own words without seeing notes.`
+          ]
+        },
+        {
+          heading: `Examples and Step-by-Step Practice`,
+          points: [
+            `<strong>Worked examples:</strong> Start with solved questions and observe each step carefully.`,
+            `<strong>Pattern finding:</strong> Notice repeated question types from ${subject}.`,
+            `<strong>Practice:</strong> Try 3 to 5 similar questions after understanding the method.`
+          ]
+        },
+        {
+          heading: `Application Level Learning`,
+          points: [
+            `<strong>Apply the idea:</strong> Use ${topic} in mixed or real exam-style questions.`,
+            `<strong>Common mistakes:</strong> Check units, definitions, signs, steps, and assumptions.`,
+            `<strong>Deeper thinking:</strong> Ask why each step works, not only what the answer is.`
+          ]
+        },
+        {
+          heading: `Deep Revision and Test Readiness`,
+          points: [
+            `<strong>Revise:</strong> Summarize ${topic} into short notes or a quick mind map.`,
+            `<strong>Recall:</strong> Close notes and write the main points from memory.`,
+            `<strong>Final check:</strong> Take the module test and repeat weak parts before moving ahead.`
+          ]
+        }
+      ];
+      return lessons[index] || lessons[0];
+    }
+
+    async function learnModule(index, topic) {
+      const learnBtn = document.getElementById(`learnBtn-${index}`);
+      if (learnBtn.disabled) return;
+
+      const testBtn = document.getElementById(`testBtn-${index}`);
+      const learningBox = document.getElementById(`learning-${index}`);
+      learningBox.classList.add('show');
+      learningBox.innerHTML = `<h5>Preparing lesson...</h5><p>Checking online study references and creating an original explanation for ${topic}.</p>`;
+
+      let data;
+      try {
+        data = await fetchStudyData(`${topic} ${selectedSubject || ''}`);
+      } catch (error) {
+        data = fallbackStudyData(topic);
+      }
+
+      const lesson = buildOnlineLearningContent(index, topic, data);
+
+      learningBox.classList.add('show');
+      learningBox.innerHTML = `
+        <h5>${lesson.heading}</h5>
+        <p>This module guides you at level ${index + 1}. Each next module goes deeper than the previous one.</p>
+        <div class="lesson-block">
+          <h6>Explanation</h6>
+          <p>${lesson.explanation}</p>
+        </div>
+        <div class="lesson-block">
+          <h6>Example</h6>
+          <p>${lesson.example}</p>
+        </div>
+        <div class="lesson-block">
+          <h6>Practice Task</h6>
+          <p>${lesson.practice}</p>
+        </div>
+        <ul>${lesson.points.map(point => `<li>${point}</li>`).join('')}</ul>
+        ${data.url ? `<p class="source-note">Online reference checked. Lesson text and examples are generated originally for your selected module.</p>` : ''}
+      `;
+
+      testBtn.disabled = false;
+      testBtn.textContent = 'Take Test Now';
+      learningBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function generateQuestions(index, topic) {
+      const levelNames = ['basics', 'core concepts', 'examples', 'applications', 'revision'];
+      const level = levelNames[index] || 'module';
+      return Array.from({ length: 10 }, (_, qIndex) => ({
+        question: `${qIndex + 1}. In ${level} of ${topic}, what is the best learning action?`,
+        options: [
+          `Understand the idea, use an example, and practice it`,
+          `Skip the explanation and only memorize answers`,
+          `Study an unrelated chapter first`,
+          `Avoid testing until the full course is over`
+        ],
+        answer: 0
+      }));
+    }
+
+    function showTest(index, topic) {
+      const testBox = document.getElementById(`test-${index}`);
+      const learnBtn = document.getElementById(`learnBtn-${index}`);
+      if (learnBtn.disabled) return;
+
+      const questions = generateQuestions(index, topic);
+      testBox.classList.add('show');
+      testBox.innerHTML = `
+        <p><strong>Module Test:</strong> Answer 10 questions. Score 7/10 or more to unlock the next module.</p>
+        ${questions.map((q, qIndex) => `
+          <div class="question-card">
+            <p>${q.question}</p>
+            ${q.options.map((option, optionIndex) => `
+              <label class="test-option">
+                <input type="radio" name="q-${index}-${qIndex}" value="${optionIndex}">
+                ${option}
+              </label>
+            `).join('')}
+          </div>
+        `).join('')}
+        <button class="module-btn primary" type="button" onclick="submitTest(${index})" style="margin-top:14px;">Submit Test</button>
+        <div class="result-text" id="result-${index}"></div>
+      `;
+    }
+
+    function submitTest(index) {
+      const result = document.getElementById(`result-${index}`);
+      let score = 0;
+      let answered = 0;
+
+      for (let qIndex = 0; qIndex < 10; qIndex++) {
+        const chosen = document.querySelector(`input[name="q-${index}-${qIndex}"]:checked`);
+        if (chosen) {
+          answered++;
+          if (chosen.value === '0') score++;
+        }
+      }
+
+      if (answered < 10) {
+        result.style.color = '#fbbf24';
+        result.textContent = `Please answer all 10 questions. Answered: ${answered}/10.`;
+        return;
+      }
+
+      if (score >= 7) {
+        result.style.color = '#86efac';
+        result.textContent = `Passed: ${score}/10. Next module unlocked.`;
+        unlockModule(index + 1);
+      } else {
+        result.style.color = '#fca5a5';
+        result.textContent = `Score: ${score}/10. Review this module and try again to unlock the next module.`;
+      }
+    }
+
+    function unlockModule(index) {
+      const moduleCard = document.getElementById(`module-${index}`);
+      const learnBtn = document.getElementById(`learnBtn-${index}`);
+      const status = document.getElementById(`status-${index}`);
+      if (!moduleCard || !learnBtn || !status) return;
+
+      moduleCard.classList.remove('locked');
+      learnBtn.disabled = false;
+      status.textContent = 'Unlocked';
+      status.classList.add('unlocked');
+      moduleCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    document.querySelectorAll('.category-chip').forEach(chip => {
+      chip.addEventListener('click', event => {
+        event.preventDefault();
+        openPlanner(chip.dataset.path, chip);
+      });
+    });
+
+    document.getElementById('buildPlanBtn').addEventListener('click', () => {
+      buildModules(document.getElementById('topicSearch').value);
+    });
+
+    document.getElementById('topicSearch').addEventListener('input', event => {
+      const term = event.target.value.toLowerCase();
+      const base = topicBank[selectedSubject] || [];
+      renderSuggestions(base.filter(topic => topic.toLowerCase().includes(term)).slice(0, 8));
+    });
+  </script>
+
+</body>
+
+</html>

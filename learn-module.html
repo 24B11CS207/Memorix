@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorix - Learn Module</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:#fff; padding:105px 22px 60px; }
+    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); }
+    .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,#38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    a, button { color:#fff; text-decoration:none; }
+    .back, button { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; background:rgba(255,255,255,.06); cursor:pointer; }
+    .primary { background:linear-gradient(135deg,#7c5cfc,#4f46e5); border:0; }
+    main { max-width:1080px; margin:auto; }
+    h1 { font-size:40px; margin-bottom:10px; }
+    .sub, p, li { color:#9ca3af; line-height:1.8; }
+    .card { margin-top:22px; border:1px solid rgba(124,92,252,.24); border-radius:22px; background:rgba(18,20,40,.72); padding:24px; }
+    .hero { display:grid; grid-template-columns:1.25fr .75fr; gap:20px; align-items:stretch; }
+    .block { margin-top:16px; padding:18px; border-radius:14px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.1); }
+    .hero .block { margin-top:0; }
+    h2 { font-size:20px; margin-bottom:10px; color:#93c5fd; }
+    h3 { font-size:16px; margin-bottom:8px; color:#ddd6fe; }
+    ul { padding-left:22px; margin-top:10px; }
+    .lead { color:#e5e7eb; font-size:17px; }
+    .tag-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+    .tag { border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:6px 10px; color:#bfdbfe; background:rgba(56,189,248,.1); font-size:12px; }
+    .visual-grid, .example-grid, .practice-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px; }
+    .visual, .example, .mini { min-height:100%; padding:16px; border-radius:14px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.1); }
+    .visual svg { width:100%; min-height:170px; display:block; margin-bottom:12px; border-radius:12px; background:rgba(6,8,22,.72); }
+    .step-list { counter-reset:steps; list-style:none; padding-left:0; }
+    .step-list li { position:relative; padding-left:42px; margin-top:12px; }
+    .step-list li::before { counter-increment:steps; content:counter(steps); position:absolute; left:0; top:2px; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; color:#fff; background:linear-gradient(135deg,#7c5cfc,#38bdf8); font-weight:700; }
+    .formula { color:#fff; border-left:3px solid #38bdf8; padding:12px 14px; margin-top:12px; background:rgba(56,189,248,.08); border-radius:10px; }
+    .actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:22px; }
+    @media(max-width:900px){ .hero, .visual-grid, .example-grid, .practice-grid{grid-template-columns:1fr;} }
+    @media(max-width:700px){ body{padding-inline:16px;} nav{padding:0 20px;} h1{font-size:32px;} .card{padding:18px;} }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Memorix</div>
+    <a class="back" href="topics-page.html">Back to Modules</a>
+  </nav>
+
+  <main>
+    <h1 id="title">Learn Module</h1>
+    <p class="sub" id="sub"></p>
+    <section class="card" id="lesson"></section>
+    <div class="actions">
+      <button class="primary" onclick="goTest()">Take Test</button>
+      <a class="back" href="topics-page.html">Back to Modules</a>
+    </div>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
+    if (!user || !user.email) window.location.href = 'index.html';
+
+    const selectedPath = localStorage.getItem('selectedPath');
+    const selectedSubject = localStorage.getItem('selectedSubject');
+    const topic = localStorage.getItem('selectedTopic');
+    const moduleIndex = Number(localStorage.getItem('selectedModuleIndex') || '0');
+    if (!selectedPath || !selectedSubject || !topic) window.location.href = 'topics-page.html';
+
+    const moduleNames = ['Basics', 'Core Concepts', 'Examples', 'Application Practice', 'Final Revision'];
+    const modulePlans = [
+      {
+        goal: 'Build a clear foundation before touching difficult questions.',
+        depth: 'In this module, treat the topic like a new city. First learn the main roads: meaning, keywords, purpose, and the basic pattern. Do not rush to memorize isolated facts. A strong basic idea tells you what the topic is about, where it is used, and what kind of question usually appears from it.',
+        angle: 'Definition -> Keywords -> Simple picture -> First example',
+        examples: ['daily-life connection', 'textbook definition rewrite', 'one easy recall question'],
+        practice: ['Write the definition in your own words.', 'Circle 5 keywords that must appear in a good answer.', 'Explain the topic to a beginner in 4 sentences.']
+      },
+      {
+        goal: 'Understand the internal logic: rules, parts, formulas, causes, effects, or process.',
+        depth: 'Now move below the surface. Every topic has a structure: parts connect to other parts, rules control what can happen, and exceptions show where students make mistakes. Read slowly enough to ask why each point is true. If a formula exists, understand what each symbol means. If a diagram exists, learn the labels and the direction of flow.',
+        angle: 'Parts -> Rules -> Relationships -> Why it works',
+        examples: ['concept map', 'rule with exception', 'diagram or formula breakdown'],
+        practice: ['Make a two-column table: point and reason.', 'Draw the process or concept map from memory.', 'Teach one rule aloud with an example.']
+      },
+      {
+        goal: 'Learn through many solved examples and recognize question patterns.',
+        depth: 'Examples convert theory into skill. The important habit is not copying the final answer, but noticing the method: what is given, what is asked, which concept applies, what steps are repeated, and how the answer is checked. One topic can produce many question styles, so compare examples side by side.',
+        angle: 'Given data -> Method -> Steps -> Verification',
+        examples: ['easy solved example', 'medium example with one twist', 'exam-style example'],
+        practice: ['Solve one example after hiding the solution.', 'Write why each step was needed.', 'Change one value or condition and solve again.']
+      },
+      {
+        goal: 'Apply the topic in mixed, practical, and exam-like situations.',
+        depth: 'Application means using the topic when the question does not directly announce what to do. You must identify clues, connect related ideas, choose a method, and avoid traps. This module should feel closer to the real exam: mixed wording, extra information, and problems that require explanation.',
+        angle: 'Clues -> Strategy -> Full answer -> Common traps',
+        examples: ['word problem', 'case-based question', 'mixed-topic question'],
+        practice: ['Underline clue words in a question.', 'List two possible methods and choose the better one.', 'Write one mistake students make and the correction.']
+      },
+      {
+        goal: 'Revise for speed, memory, accuracy, and test readiness.',
+        depth: 'Final revision is active recall, not rereading. Close the notes and rebuild the topic from memory: definition, diagram, rule, examples, mistakes, and exam tips. Then check what you missed. The aim is to make the topic quick to retrieve and easy to explain under pressure.',
+        angle: 'Recall -> Compress -> Test -> Fix weak points',
+        examples: ['one-page summary', 'flashcard set', 'last-minute exam answer'],
+        practice: ['Write a 10-line summary without notes.', 'Make 5 flashcards.', 'Attempt a mini-test and review every wrong answer.']
+      }
+    ];
+
+    const lesson = modulePlans[moduleIndex] || modulePlans[0];
+    const safeTopic = escapeHtml(topic);
+    const safeSubject = escapeHtml(selectedSubject);
+    const safePath = escapeHtml(selectedPath);
+    document.getElementById('title').textContent = `Module ${moduleIndex + 1}: ${topic} ${moduleNames[moduleIndex] || ''}`;
+    document.getElementById('sub').textContent = `${selectedPath} > ${selectedSubject}`;
+    document.getElementById('lesson').innerHTML = `
+      <div class="hero">
+        <div class="block">
+          <h2>Big Explanation</h2>
+          <p class="lead">${safeTopic} is an important part of ${safeSubject} because it helps you understand a pattern, solve questions, and explain ideas clearly.</p>
+          <p>${escapeHtml(lesson.depth)}</p>
+          <p>For this level, focus on: <strong>${escapeHtml(lesson.angle)}</strong>. A good answer should not sound like memorized lines only. It should show meaning, structure, example, and correct use.</p>
+          <div class="tag-row">
+            <span class="tag">${safeSubject}</span>
+            <span class="tag">Module ${moduleIndex + 1}</span>
+            <span class="tag">${escapeHtml(moduleNames[moduleIndex] || 'Learning')}</span>
+          </div>
+        </div>
+        <div class="block">
+          <h2>Module Goal</h2>
+          <p>${escapeHtml(lesson.goal)}</p>
+          <div class="formula">Study rule: read once, explain once, draw once, solve once, then recall without looking.</div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Visual Learning Images</h2>
+        <div class="visual-grid">
+          ${visualCards(safeTopic, lesson).join('')}
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Detailed Notes</h2>
+        <ol class="step-list">
+          <li><strong>Meaning:</strong> ${safeTopic} should first be understood in simple language. Ask: what is it, what does it describe, and why does it matter in ${safeSubject}?</li>
+          <li><strong>Parts:</strong> Break ${safeTopic} into smaller pieces such as terms, rules, steps, causes, effects, formulas, examples, or diagrams.</li>
+          <li><strong>Connections:</strong> Link the topic with what you already know. Most exam questions check relationships, not isolated facts.</li>
+          <li><strong>Use:</strong> Practice where to apply the idea. A strong student can identify ${safeTopic} even when the question uses different wording.</li>
+          <li><strong>Check:</strong> After answering, verify whether your explanation includes the keyword, correct logic, and a complete conclusion.</li>
+        </ol>
+      </div>
+
+      <div class="block">
+        <h2>Lots Of Examples</h2>
+        <div class="example-grid">
+          ${exampleCards(safeTopic, safeSubject, lesson).join('')}
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Practice Tasks</h2>
+        <div class="practice-grid">
+          ${lesson.practice.map((task, index) => `
+            <div class="mini">
+              <h3>Task ${index + 1}</h3>
+              <p>${escapeHtml(task)}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Common Mistakes</h2>
+        <ul>
+          <li>Reading the topic only once and thinking it is mastered.</li>
+          <li>Memorizing definitions without understanding the keywords.</li>
+          <li>Skipping diagrams, formulas, labels, or step order.</li>
+          <li>Solving examples by copying instead of explaining each step.</li>
+          <li>Not reviewing wrong answers after practice.</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h2>Quick Revision Before Test</h2>
+        <ul>
+          <li>Say the definition of ${safeTopic} without looking.</li>
+          <li>Draw or describe the main visual in less than one minute.</li>
+          <li>Give one easy example and one exam-style example.</li>
+          <li>List two mistakes and how to avoid them.</li>
+          <li>Take the module test only after you can explain the topic in your own words.</li>
+        </ul>
+      </div>
+    `;
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    function visualCards(topicName, plan) {
+      return [
+        `
+          <div class="visual">
+            <svg viewBox="0 0 320 190" role="img" aria-label="Concept map for ${topicName}">
+              <defs><linearGradient id="g1" x1="0" x2="1"><stop stop-color="#7c5cfc"/><stop offset="1" stop-color="#38bdf8"/></linearGradient></defs>
+              <circle cx="160" cy="94" r="42" fill="url(#g1)" opacity=".9"/>
+              <text x="160" y="91" text-anchor="middle" fill="white" font-size="13" font-weight="700">${topicName.slice(0, 18)}</text>
+              <text x="160" y="109" text-anchor="middle" fill="white" font-size="11">main idea</text>
+              <g fill="#111827" stroke="#93c5fd" stroke-width="2">
+                <rect x="18" y="24" width="90" height="38" rx="12"/><rect x="212" y="24" width="90" height="38" rx="12"/>
+                <rect x="18" y="128" width="90" height="38" rx="12"/><rect x="212" y="128" width="90" height="38" rx="12"/>
+              </g>
+              <g stroke="#64748b" stroke-width="2"><line x1="118" y1="58" x2="132" y2="70"/><line x1="202" y1="58" x2="188" y2="70"/><line x1="118" y1="135" x2="132" y2="120"/><line x1="202" y1="135" x2="188" y2="120"/></g>
+              <g fill="#dbeafe" font-size="12" text-anchor="middle"><text x="63" y="48">meaning</text><text x="257" y="48">rules</text><text x="63" y="152">examples</text><text x="257" y="152">practice</text></g>
+            </svg>
+            <h3>Concept Map</h3>
+            <p>Keep the main topic in the center and connect meaning, rules, examples, and practice around it.</p>
+          </div>
+        `,
+        `
+          <div class="visual">
+            <svg viewBox="0 0 320 190" role="img" aria-label="Learning flow for ${topicName}">
+              <g fill="none" stroke="#38bdf8" stroke-width="3"><path d="M55 95 H265"/><path d="M250 80 L267 95 L250 110"/></g>
+              <g fill="#111827" stroke="#a78bfa" stroke-width="2">
+                <circle cx="58" cy="95" r="31"/><circle cx="160" cy="95" r="31"/><circle cx="262" cy="95" r="31"/>
+              </g>
+              <g fill="#fff" font-size="12" text-anchor="middle" font-weight="700">
+                <text x="58" y="91">Learn</text><text x="58" y="107">idea</text>
+                <text x="160" y="91">See</text><text x="160" y="107">example</text>
+                <text x="262" y="91">Solve</text><text x="262" y="107">alone</text>
+              </g>
+              <text x="160" y="36" text-anchor="middle" fill="#bfdbfe" font-size="16" font-weight="700">Best study flow</text>
+              <text x="160" y="160" text-anchor="middle" fill="#9ca3af" font-size="12">${escapeHtml(plan.angle)}</text>
+            </svg>
+            <h3>Study Flow</h3>
+            <p>Do not jump directly to the test. Move from idea to example to independent solving.</p>
+          </div>
+        `,
+        `
+          <div class="visual">
+            <svg viewBox="0 0 320 190" role="img" aria-label="Exam answer structure for ${topicName}">
+              <g fill="#111827" stroke="#38bdf8" stroke-width="2">
+                <rect x="48" y="28" width="224" height="30" rx="10"/>
+                <rect x="66" y="76" width="188" height="30" rx="10"/>
+                <rect x="84" y="124" width="152" height="30" rx="10"/>
+              </g>
+              <g fill="#e0f2fe" font-size="13" text-anchor="middle" font-weight="700">
+                <text x="160" y="48">definition + keywords</text>
+                <text x="160" y="96">steps or explanation</text>
+                <text x="160" y="144">example + conclusion</text>
+              </g>
+              <g stroke="#a78bfa" stroke-width="2"><line x1="160" y1="58" x2="160" y2="76"/><line x1="160" y1="106" x2="160" y2="124"/></g>
+            </svg>
+            <h3>Answer Structure</h3>
+            <p>A complete answer usually needs keywords, logic, an example, and a closing line.</p>
+          </div>
+        `
+      ];
+    }
+
+    function exampleCards(topicName, subjectName, plan) {
+      const labels = plan.examples;
+      return [
+        `
+          <div class="example">
+            <h3>Example 1: Simple Understanding</h3>
+            <p>Question: Explain ${topicName} in simple words.</p>
+            <p>Answer: ${topicName} is a concept in ${subjectName} that should be explained through its meaning, important terms, and one clear situation where it is used.</p>
+          </div>
+        `,
+        `
+          <div class="example">
+            <h3>Example 2: ${escapeHtml(labels[0])}</h3>
+            <p>Take a familiar situation and connect it to ${topicName}. Then write what happens first, what changes, and what result is produced.</p>
+          </div>
+        `,
+        `
+          <div class="example">
+            <h3>Example 3: ${escapeHtml(labels[1])}</h3>
+            <p>Make a small table with two columns: important point and explanation. This helps you turn memorized notes into a proper answer.</p>
+          </div>
+        `,
+        `
+          <div class="example">
+            <h3>Example 4: ${escapeHtml(labels[2])}</h3>
+            <p>Read a question, underline clue words, choose the related rule, solve step by step, and check whether your final line answers exactly what was asked.</p>
+          </div>
+        `,
+        `
+          <div class="example">
+            <h3>Example 5: Compare And Contrast</h3>
+            <p>Compare ${topicName} with a nearby topic. Write one similarity and two differences. This prevents confusion in multiple-choice questions.</p>
+          </div>
+        `,
+        `
+          <div class="example">
+            <h3>Example 6: Exam Answer</h3>
+            <p>Start with a direct definition, add 3 important points, include one example or diagram, and end with why the topic is useful in ${subjectName}.</p>
+          </div>
+        `
+      ];
+    }
+
+    function goTest() {
+      localStorage.setItem(`learned-${selectedPath}-${selectedSubject}-${topic}-${moduleIndex}`, 'yes');
+      window.location.href = 'module-test.html';
+    }
+  </script>
+</body>
+</html>

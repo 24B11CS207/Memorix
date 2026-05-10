@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memorix — Access</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-deep: #060912;
+            --bg-card: rgba(12, 18, 38, 0.72);
+            --border-glow: rgba(99, 179, 255, 0.18);
+            --accent-blue: #3b9eff;
+            --accent-cyan: #00e5ff;
+            --accent-violet: #9f6fff;
+            --text-primary: #e8f0ff;
+            --text-muted: #7a8db3;
+            --input-bg: rgba(255, 255, 255, 0.04);
+            --input-border: rgba(99, 179, 255, 0.20);
+            --input-focus: rgba(59, 158, 255, 0.50);
+            --error: #ff5c8a;
+            --success: #00e5b0;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ── Animated gradient background ── */
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59, 158, 255, 0.13) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 90%, rgba(159, 111, 255, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0, 229, 255, 0.05) 0%, transparent 70%),
+                #060912;
+        }
+
+        .bg-canvas::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle, rgba(99, 179, 255, 0.07) 1px, transparent 1px);
+            background-size: 36px 36px;
+            animation: gridShift 22s linear infinite;
+        }
+
+        @keyframes gridShift {
+            to {
+                background-position: 36px 36px;
+            }
+        }
+
+        /* floating orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(70px);
+            animation: float 14s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 380px;
+            height: 380px;
+            background: rgba(59, 158, 255, 0.10);
+            top: -120px;
+            left: -80px;
+            animation-duration: 18s;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: rgba(159, 111, 255, 0.12);
+            bottom: -80px;
+            right: -60px;
+            animation-duration: 13s;
+            animation-delay: -4s;
+        }
+
+        .orb-3 {
+            width: 220px;
+            height: 220px;
+            background: rgba(0, 229, 255, 0.08);
+            top: 50%;
+            left: 70%;
+            animation-duration: 20s;
+            animation-delay: -9s;
+        }
+
+        @keyframes float {
+            from {
+                transform: translate(0, 0) scale(1);
+            }
+
+            to {
+                transform: translate(30px, 20px) scale(1.06);
+            }
+        }
+
+        /* ── Card ── */
+        .auth-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 460px;
+            padding: 1.25rem;
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: 24px;
+            padding: 2.8rem 2.6rem;
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            box-shadow:
+                0 0 0 1px rgba(99, 179, 255, 0.06),
+                0 30px 60px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        /* brand */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(59, 158, 255, 0.4);
+        }
+
+        .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        /* headings */
+        .form-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.75rem;
+            line-height: 1.1;
+            color: var(--text-primary);
+        }
+
+        .form-subtitle {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            margin-top: 4px;
+        }
+
+        /* ── Panel transition ── */
+        .panel {
+            display: block;
+            animation: none;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        .panel.fade-out {
+            animation: panelOut 0.32s ease forwards;
+        }
+
+        .panel.fade-in {
+            animation: panelIn 0.38s ease forwards;
+        }
+
+        @keyframes panelOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-18px) scale(0.97);
+            }
+        }
+
+        @keyframes panelIn {
+            from {
+                opacity: 0;
+                transform: translateY(22px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ── Inputs ── */
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+            z-index: 2;
+            transition: color 0.2s;
+        }
+
+        .input-group-custom:focus-within .input-icon {
+            color: var(--accent-blue);
+        }
+
+        .form-control-glass {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            padding: 0.82rem 3rem 0.82rem 2.85rem;
+            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+        }
+
+        .form-control-glass::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-control-glass:focus {
+            background: rgba(59, 158, 255, 0.06);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px var(--input-focus), 0 0 20px rgba(59, 158, 255, 0.1);
+        }
+
+        .form-control-glass.is-invalid {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(255, 92, 138, 0.22);
+        }
+
+        .form-control-glass.is-valid {
+            border-color: var(--success);
+            box-shadow: 0 0 0 3px rgba(0, 229, 176, 0.18);
+        }
+
+        .toggle-pw {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0;
+            font-size: 1rem;
+            z-index: 2;
+            transition: color 0.2s;
+        }
+
+        .toggle-pw:hover {
+            color: var(--accent-blue);
+        }
+
+        .field-error {
+            font-size: 0.78rem;
+            color: var(--error);
+            margin-top: 4px;
+            padding-left: 4px;
+            display: none;
+        }
+
+        .field-error.show {
+            display: block;
+            animation: errSlide 0.2s ease;
+        }
+
+        @keyframes errSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* alert banners */
+        .alert-glass {
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            font-size: 0.88rem;
+            margin-bottom: 1.1rem;
+            border: 1px solid;
+            display: none;
+            animation: alertIn 0.28s ease;
+        }
+
+        @keyframes alertIn {
+            from {
+                opacity: 0;
+                transform: scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .alert-glass.show {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .alert-glass.error {
+            background: rgba(255, 92, 138, 0.10);
+            border-color: rgba(255, 92, 138, 0.30);
+            color: #ffb3c8;
+        }
+
+        .alert-glass.success {
+            background: rgba(0, 229, 176, 0.08);
+            border-color: rgba(0, 229, 176, 0.28);
+            color: #80ffdf;
+        }
+
+        /* label */
+        .field-label {
+            font-size: 0.80rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* ── Buttons ── */
+        .btn-glow {
+            width: 100%;
+            padding: 0.82rem;
+            border: none;
+            border-radius: 13px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.02em;
+            transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+        }
+
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.12) 50%, transparent 100%);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+
+        .btn-glow:hover::before {
+            transform: translateX(100%);
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-glow:active {
+            transform: translateY(0);
+        }
+
+        .btn-glow:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary-glow {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, #1a6fd4 100%);
+            color: #fff;
+            box-shadow: 0 4px 24px rgba(59, 158, 255, 0.38), 0 0 0 1px rgba(59, 158, 255, 0.2);
+        }
+
+        .btn-primary-glow:hover {
+            box-shadow: 0 8px 32px rgba(59, 158, 255, 0.55), 0 0 0 1px rgba(59, 158, 255, 0.35);
+        }
+
+        /* ── Extras ── */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 1.3rem 0;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+        }
+
+        .extras-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        .remember-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .custom-check {
+            width: 16px;
+            height: 16px;
+            border-radius: 5px;
+            border: 1.5px solid var(--input-border);
+            background: var(--input-bg);
+            accent-color: var(--accent-blue);
+            cursor: pointer;
+        }
+
+        .remember-wrap span {
+            color: var(--text-muted);
+        }
+
+        .forgot-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+            color: var(--accent-cyan);
+        }
+
+        .switch-text {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .switch-link {
+            color: var(--accent-blue);
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .switch-link:hover {
+            color: var(--accent-cyan);
+            text-decoration: underline;
+        }
+
+        /* pw strength */
+        .pw-strength {
+            margin-top: 6px;
+        }
+
+        .strength-bar {
+            height: 3px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.07);
+            overflow: hidden;
+            margin-bottom: 3px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            border-radius: 4px;
+            width: 0;
+            transition: width 0.4s ease, background 0.4s ease;
+        }
+
+        .strength-label {
+            font-size: 0.73rem;
+            color: var(--text-muted);
+        }
+
+        /* spinner */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner-ring {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.65s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        /* success icon */
+        @keyframes checkPop {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            70% {
+                transform: scale(1.2);
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .check-icon {
+            animation: checkPop 0.45s ease;
+        }
+
+        /* responsive */
+        @media (max-width: 480px) {
+            .glass-card {
+                padding: 2rem 1.4rem;
+                border-radius: 20px;
+            }
+
+            .form-title {
+                font-size: 1.45rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Ambient background -->
+    <div class="bg-canvas"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- Main card -->
+    <div class="auth-wrapper">
+        <div class="glass-card">
+
+            <!-- Brand -->
+            <div class="brand">
+                <div class="brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                <span class="brand-name">Memorix</span>
+            </div>
+
+            <!-- ════ LOGIN PANEL ════ -->
+            <div id="loginPanel" class="panel">
+                <h1 class="form-title">Welcome back</h1>
+                <p class="form-subtitle">Sign in to continue learning</p>
+
+                <div class="divider" style="margin-top:1.6rem;"><span>credentials</span></div>
+
+                <div id="loginAlert" class="alert-glass error" role="alert">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span id="loginAlertMsg"></span>
+                </div>
+
+                <!-- Email -->
+                <label class="field-label" for="loginEmail">Email address</label>
+                <div class="input-group-custom">
+                    <i class="bi bi-envelope input-icon"></i>
+                    <input type="email" id="loginEmail" class="form-control-glass" placeholder="you@example.com"
+                        autocomplete="email" />
+                </div>
+                <div id="loginEmailErr" class="field-error">Please enter a valid email address.</div>
+
+                <!-- Password -->
+                <label class="field-label" for="loginPassword" style="margin-top:0.3rem;">Password</label>
+                <div class="input-group-custom">
+                    <i class="bi bi-lock input-icon"></i>
+                    <input type="password" id="loginPassword" class="form-control-glass" placeholder="••••••••"
+                        autocomplete="current-password" />
+                    <button class="toggle-pw" onclick="togglePw('loginPassword',this)" type="button" tabindex="-1"
+                        aria-label="Toggle password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div id="loginPasswordErr" class="field-error">Password is required.</div>
+
+                <!-- Extras -->
+                <div class="extras-row" style="margin-top:0.5rem;">
+                    <label class="remember-wrap">
+                        <input type="checkbox" id="rememberMe" class="custom-check" />
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="forgot-link">Forgot password?</a>
+                </div>
+
+                <button class="btn-glow btn-primary-glow" id="loginBtn" onclick="handleLogin()">
+                    Sign In
+                </button>
+
+                <p class="switch-text">
+                    Don't have an account? <a class="switch-link" onclick="switchTo('register')">Register now</a>
+                </p>
+            </div><!-- /loginPanel -->
+
+            <!-- ════ REGISTER PANEL ════ -->
+            <div id="registerPanel" class="panel" style="display:none;">
+                <h1 class="form-title">Create account</h1>
+                <p class="form-subtitle">Join thousands of learners today</p>
+
+                <div class="divider" style="margin-top:1.6rem;"><span>your info</span></div>
+
+                <div id="regAlert" class="alert-glass error" role="alert">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span id="regAlertMsg"></span>
+                </div>
+                <div id="regSuccessAlert" class="alert-glass success" role="alert">
+                    <i class="bi bi-check-circle-fill check-icon"></i>
+                    <span>Account created! Redirecting to login…</span>
+                </div>
+
+                <!-- Full Name -->
+                <label class="field-label" for="regName">Full name</label>
+                <div class="input-group-custom">
+                    <i class="bi bi-person input-icon"></i>
+                    <input type="text" id="regName" class="form-control-glass" placeholder="Jane Doe"
+                        autocomplete="name" />
+                </div>
+                <div id="regNameErr" class="field-error">Full name is required.</div>
+
+                <!-- Email -->
+                <label class="field-label" for="regEmail" style="margin-top:0.3rem;">Email address</label>
+                <div class="input-group-custom">
+                    <i class="bi bi-envelope input-icon"></i>
+                    <input type="email" id="regEmail" class="form-control-glass" placeholder="you@example.com"
+                        autocomplete="email" />
+                </div>
+                <div id="regEmailErr" class="field-error">Please enter a valid email address.</div>
+
+                <!-- Password -->
+                <label class="field-label" for="regPassword" style="margin-top:0.3rem;">Password</label>
+                <div class="input-group-custom">
+                    <i class="bi bi-lock input-icon"></i>
+                    <input type="password" id="regPassword" class="form-control-glass" placeholder="Min. 8 characters"
+                        autocomplete="new-password" oninput="checkStrength(this.value)" />
+                    <button class="toggle-pw" onclick="togglePw('regPassword',this)" type="button" tabindex="-1"
+                        aria-label="Toggle password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div class="pw-strength">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <span class="strength-label" id="strengthLabel">Enter a password</span>
+                </div>
+                <div id="regPasswordErr" class="field-error">Password must be at least 8 characters.</div>
+
+                <!-- Confirm Password -->
+                <label class="field-label" for="regConfirm" style="margin-top:0.6rem;">Confirm password</label>
+                <div class="input-group-custom">
+                    <i class="bi bi-shield-lock input-icon"></i>
+                    <input type="password" id="regConfirm" class="form-control-glass" placeholder="••••••••"
+                        autocomplete="new-password" />
+                    <button class="toggle-pw" onclick="togglePw('regConfirm',this)" type="button" tabindex="-1"
+                        aria-label="Toggle password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div id="regConfirmErr" class="field-error">Passwords do not match.</div>
+
+                <button class="btn-glow btn-primary-glow" id="registerBtn" onclick="handleRegister()"
+                    style="margin-top:1.2rem;">
+                    Create Account
+                </button>
+
+                <p class="switch-text">
+                    Already have an account? <a class="switch-link" onclick="switchTo('login')">Sign in</a>
+                </p>
+            </div><!-- /registerPanel -->
+
+        </div><!-- /glass-card -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        'use strict';
+
+        /* ── Session persistence ── */
+        (function checkSession() {
+            try {
+                const user = JSON.parse(localStorage.getItem('eduUser'));
+                if (user && user.email) {
+                    // Uncomment to auto-redirect on cached session:
+                    // window.location.href = 'education-selection.html';
+                }
+            } catch { localStorage.removeItem('eduUser'); }
+        })();
+
+        /* ── Panel switch ── */
+        function switchTo(target) {
+            const fromEl = target === 'register' ? loginPanel : registerPanel;
+            const toEl = target === 'register' ? registerPanel : loginPanel;
+
+            fromEl.classList.add('fade-out');
+            fromEl.addEventListener('animationend', () => {
+                fromEl.style.display = 'none';
+                fromEl.classList.remove('fade-out');
+                toEl.style.display = 'block';
+                toEl.classList.add('fade-in');
+                toEl.addEventListener('animationend', () => toEl.classList.remove('fade-in'), { once: true });
+                clearAlerts();
+            }, { once: true });
+        }
+
+        /* ── Helpers ── */
+        function val(id) { return document.getElementById(id).value.trim(); }
+        function el(id) { return document.getElementById(id); }
+        function isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+        const usersKey = 'memorixUsers';
+
+        function getUsers() {
+            try {
+                return JSON.parse(localStorage.getItem(usersKey)) || [];
+            } catch {
+                localStorage.removeItem(usersKey);
+                return [];
+            }
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem(usersKey, JSON.stringify(users));
+        }
+
+        function setError(inputId, errId, show) {
+            el(inputId).classList.toggle('is-invalid', show);
+            el(errId).classList.toggle('show', show);
+        }
+
+        function showAlert(alertId, msgId, message, type = 'error') {
+            const a = el(alertId);
+            if (msgId) el(msgId).textContent = message;
+            a.className = `alert-glass ${type} show`;
+        }
+
+        function clearAlerts() {
+            ['loginAlert', 'regAlert', 'regSuccessAlert'].forEach(id => {
+                el(id).className = `alert-glass ${el(id).classList.contains('success') ? 'success' : 'error'}`;
+            });
+        }
+
+        function setBtn(btnId, loading, label) {
+            const btn = el(btnId);
+            btn.disabled = loading;
+            btn.innerHTML = loading
+                ? `<span class="spinner-ring"></span>${label}`
+                : label;
+        }
+
+        function togglePw(inputId, btn) {
+            const inp = el(inputId);
+            const isHidden = inp.type === 'password';
+            inp.type = isHidden ? 'text' : 'password';
+            btn.querySelector('i').className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+        }
+
+        /* ── Password strength ── */
+        function checkStrength(pw) {
+            const fill = el('strengthFill');
+            const label = el('strengthLabel');
+            let score = 0;
+            if (pw.length >= 8) score++;
+            if (/[A-Z]/.test(pw)) score++;
+            if (/[0-9]/.test(pw)) score++;
+            if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+            const levels = [
+                { pct: '0%', color: 'transparent', text: 'Enter a password' },
+                { pct: '25%', color: '#ff5c8a', text: 'Weak' },
+                { pct: '50%', color: '#ffad5c', text: 'Fair' },
+                { pct: '75%', color: '#ffe066', text: 'Good' },
+                { pct: '100%', color: 'var(--success)', text: 'Strong 🔒' },
+            ];
+            const l = pw.length === 0 ? levels[0] : levels[score] || levels[1];
+            fill.style.width = l.pct;
+            fill.style.background = l.color;
+            label.textContent = pw.length === 0 ? 'Enter a password' : l.text;
+            label.style.color = l.color === 'transparent' ? 'var(--text-muted)' : l.color;
+        }
+
+        /* ── LOGIN ── */
+        async function handleLogin() {
+            const email = val('loginEmail');
+            const password = val('loginPassword');
+            let valid = true;
+
+            setError('loginEmail', 'loginEmailErr', !isEmail(email));
+            setError('loginPassword', 'loginPasswordErr', !password);
+            if (!isEmail(email) || !password) return;
+
+            setBtn('loginBtn', true, 'Signing in…');
+            el('loginAlert').className = 'alert-glass error';
+
+            try {
+                const res = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    if (el('rememberMe').checked) {
+                        localStorage.setItem('eduUser', JSON.stringify(data.user ?? data));
+                    }
+                    setBtn('loginBtn', false, '✓ Success!');
+                    setTimeout(() => { window.location.href = 'education-selection.html'; }, 700);
+                } else {
+                    showAlert('loginAlert', 'loginAlertMsg', data.message || 'Invalid credentials. Please try again.');
+                    setBtn('loginBtn', false, 'Sign In');
+                }
+            } catch (err) {
+                showAlert('loginAlert', 'loginAlertMsg', 'Unable to connect to server. Please try again later.');
+                setBtn('loginBtn', false, 'Sign In');
+            }
+        }
+
+        /* ── REGISTER ── */
+        async function handleRegister() {
+            const name = val('regName');
+            const email = val('regEmail');
+            const password = val('regPassword');
+            const confirm = val('regConfirm');
+
+            setError('regName', 'regNameErr', !name);
+            setError('regEmail', 'regEmailErr', !isEmail(email));
+            setError('regPassword', 'regPasswordErr', password.length < 8);
+            setError('regConfirm', 'regConfirmErr', password !== confirm || !confirm);
+
+            if (!name || !isEmail(email) || password.length < 8 || password !== confirm) return;
+
+            setBtn('registerBtn', true, 'Creating Account…');
+            el('regAlert').className = 'alert-glass error';
+            el('regSuccessAlert').className = 'alert-glass success';
+
+            try {
+                const res = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password }),
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    el('regSuccessAlert').className = 'alert-glass success show';
+                    setBtn('registerBtn', false, '✓ Account Created!');
+                    setTimeout(() => switchTo('login'), 2000);
+                } else {
+                    showAlert('regAlert', 'regAlertMsg', data.message || 'Registration failed. Please try again.');
+                    setBtn('registerBtn', false, 'Create Account');
+                }
+            } catch (err) {
+                showAlert('regAlert', 'regAlertMsg', 'Unable to connect to server. Please try again later.');
+                setBtn('registerBtn', false, 'Create Account');
+            }
+        }
+
+        /* ── Enter key support ── */
+        function handleLogin() {
+            const email = val('loginEmail');
+            const password = val('loginPassword');
+
+            setError('loginEmail', 'loginEmailErr', !isEmail(email));
+            setError('loginPassword', 'loginPasswordErr', !password);
+            if (!isEmail(email) || !password) return;
+
+            setBtn('loginBtn', true, 'Signing in...');
+            el('loginAlert').className = 'alert-glass error';
+
+            const user = getUsers().find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+            if (!user) {
+                showAlert('loginAlert', 'loginAlertMsg', 'Invalid email or password. Create an account first.');
+                setBtn('loginBtn', false, 'Sign In');
+                return;
+            }
+
+            localStorage.setItem('eduUser', JSON.stringify({ name: user.name, email: user.email }));
+            setBtn('loginBtn', false, 'Success!');
+            setTimeout(() => { window.location.href = 'classes.html'; }, 700);
+        }
+
+        function handleRegister() {
+            const name = val('regName');
+            const email = val('regEmail');
+            const password = val('regPassword');
+            const confirm = val('regConfirm');
+
+            setError('regName', 'regNameErr', !name);
+            setError('regEmail', 'regEmailErr', !isEmail(email));
+            setError('regPassword', 'regPasswordErr', password.length < 8);
+            setError('regConfirm', 'regConfirmErr', password !== confirm || !confirm);
+
+            if (!name || !isEmail(email) || password.length < 8 || password !== confirm) return;
+
+            setBtn('registerBtn', true, 'Creating Account...');
+            el('regAlert').className = 'alert-glass error';
+            el('regSuccessAlert').className = 'alert-glass success';
+
+            const users = getUsers();
+            const exists = users.some(u => u.email.toLowerCase() === email.toLowerCase());
+            if (exists) {
+                showAlert('regAlert', 'regAlertMsg', 'An account with this email already exists. Please sign in.');
+                setBtn('registerBtn', false, 'Create Account');
+                return;
+            }
+
+            users.push({ name, email, password, createdAt: new Date().toISOString() });
+            saveUsers(users);
+            localStorage.setItem('eduUser', JSON.stringify({ name, email }));
+            el('regSuccessAlert').className = 'alert-glass success show';
+            setBtn('registerBtn', false, 'Account Created!');
+            setTimeout(() => { window.location.href = 'classes.html'; }, 900);
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Enter') return;
+            if (el('loginPanel').style.display !== 'none') handleLogin();
+            else handleRegister();
+        });
+
+        /* ── Live validation clear ── */
+        ['loginEmail', 'loginPassword', 'regName', 'regEmail', 'regPassword', 'regConfirm'].forEach(id => {
+            el(id).addEventListener('input', function () {
+                this.classList.remove('is-invalid');
+                const errEl = el(id + 'Err');
+                if (errEl) errEl.classList.remove('show');
+            });
+        });
+    </script>
+</body>
+
+</html>

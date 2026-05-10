@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Revision Plan — {{ plan.topic.name }}{% endblock %}
+{% block content %}
+<a href="{% url 'revisions:index' %}" class="text-muted text-decoration-none mb-3 d-inline-block">
+  <i class="bi bi-arrow-left"></i> Back to Revisions
+</a>
+<h2>{{ plan.topic.name }} — {{ plan.total_reviews }}-Review Plan</h2>
+
+<div class="glass-card p-4 mt-3">
+  <div class="timeline">
+    {% for s in sessions %}
+      <div class="timeline-item d-flex align-items-center mb-3">
+        <div class="me-3">
+          {% if s.status == 'passed' %}
+            <span class="timeline-dot bg-success"><i class="bi bi-check"></i></span>
+          {% elif s.status == 'failed' %}
+            <span class="timeline-dot bg-danger"><i class="bi bi-x"></i></span>
+          {% elif s.is_due %}
+            <span class="timeline-dot bg-warning"><i class="bi bi-clock"></i></span>
+          {% else %}
+            <span class="timeline-dot bg-secondary">{{ s.review_number }}</span>
+          {% endif %}
+        </div>
+        <div class="flex-grow-1">
+          <div class="d-flex justify-content-between">
+            <div>
+              <strong>Review #{{ s.review_number }}</strong>
+              <small class="text-muted ms-2">Scheduled: {{ s.scheduled_date }}</small>
+            </div>
+            <div>
+              {% if s.status == 'passed' %}<span class="text-success">Passed at {{ s.score_percent }}%</span>
+              {% elif s.status == 'failed' %}<span class="text-danger">Failed ({{ s.score_percent }}%, attempts: {{ s.attempts }})</span>
+              {% elif s.is_due %}
+                <a href="{% url 'revisions:take_review' s.id %}" class="btn btn-sm btn-warning">Take Now</a>
+              {% else %}
+                <span class="text-muted small">Not due yet</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+  .timeline-dot { width:36px; height:36px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; }
+</style>
+{% endblock %}

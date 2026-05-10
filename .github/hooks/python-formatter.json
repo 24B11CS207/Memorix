@@ -1,0 +1,11 @@
+{
+  "hooks": [
+    {
+      "event": "PostToolUse",
+      "tool": "replace_string_in_file",
+      "condition": "filePath.endsWith('.py')",
+      "command": "black --line-length 88 {{filePath}}",
+      "description": "Auto-format Python files with Black after editing"
+    }
+  ]
+}

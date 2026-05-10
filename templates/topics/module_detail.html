@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}{{ module.title }} — DQMS{% endblock %}
+{% block content %}
+<nav class="mb-3">
+  <a href="{% url 'topics:detail' topic.id %}" class="text-muted text-decoration-none">
+    <i class="bi bi-arrow-left"></i> Back to {{ topic.name }}
+  </a>
+</nav>
+
+<div class="glass-card p-4">
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+      <span class="badge bg-info mb-2">Module {{ module.order|add:1 }}</span>
+      <h1>{{ module.title }}</h1>
+      <span class="text-muted"><i class="bi bi-clock"></i> {{ module.reading_minutes }} min read</span>
+    </div>
+    <button class="btn btn-outline-info" id="speakBtn" onclick="speak()">
+      <i class="bi bi-volume-up"></i> Read Aloud
+    </button>
+  </div>
+
+  <div class="content-area" id="contentArea">
+    <p class="lead">{{ module.content|linebreaks }}</p>
+
+    {% if module.key_points %}
+    <h4 class="mt-4">Key Points</h4>
+    <ul>
+      {% for kp in module.key_points %}<li>{{ kp }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if module.examples %}
+    <h4 class="mt-4">Examples</h4>
+    <ol>
+      {% for ex in module.examples %}<li>{{ ex }}</li>{% endfor %}
+    </ol>
+    {% endif %}
+
+    {% if module.summary %}
+    <div class="alert alert-info mt-4 glass-card">
+      <strong>Summary:</strong> {{ module.summary }}
+    </div>
+    {% endif %}
+  </div>
+
+  <hr>
+  <div class="d-flex justify-content-between mt-3">
+    <a href="{% url 'topics:detail' topic.id %}" class="btn btn-outline-light">Back</a>
+    <a href="{% url 'topics:module_quiz' topic.id module.id %}" class="btn btn-primary">
+      Take Mini-Test <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let speaking = false;
+function speak() {
+  if (!('speechSynthesis' in window)) { alert('Voice not supported'); return; }
+  if (speaking) { speechSynthesis.cancel(); speaking = false; document.getElementById('speakBtn').innerHTML = '<i class="bi bi-volume-up"></i> Read Aloud'; return; }
+  const text = document.getElementById('contentArea').innerText;
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95;
+  speechSynthesis.speak(u);
+  speaking = true;
+  document.getElementById('speakBtn').innerHTML = '<i class="bi bi-stop-circle"></i> Stop';
+  u.onend = () => { speaking = false; document.getElementById('speakBtn').innerHTML = '<i class="bi bi-volume-up"></i> Read Aloud'; };
+}
+</script>
+{% endblock %}

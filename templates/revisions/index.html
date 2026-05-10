@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Revisions — DQMS{% endblock %}
+{% block content %}
+<h2><i class="bi bi-arrow-repeat"></i> Long Knowledge Preparation Mode</h2>
+<p class="text-muted">Spaced-repetition revisions with AI-generated MCQs.</p>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="glass-card p-4">
+      <h5>Start a New Revision Plan</h5>
+      <form method="post" action="{% url 'revisions:create_plan' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Topic</label>
+          <select name="topic_id" class="form-select" required>
+            <option value="">— Select topic —</option>
+            {% for t in topics %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Schedule</label>
+          <select name="total_reviews" class="form-select">
+            <option value="4">4 Reviews — Day 1, 3, 6, 10</option>
+            <option value="5">5 Reviews — Day 1, 3, 6, 10, 15</option>
+            <option value="6">6 Reviews — Day 1, 3, 6, 10, 15, 21</option>
+          </select>
+        </div>
+        <button class="btn btn-primary w-100">Create Plan</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="glass-card p-4">
+      <h5>Reviews Due Today</h5>
+      {% if due_sessions %}
+        <ul class="list-unstyled">
+          {% for s in due_sessions %}
+            <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+              <div>
+                <strong>{{ s.plan.topic.name }}</strong> — Review #{{ s.review_number }}
+                <small class="text-muted d-block">Scheduled: {{ s.scheduled_date }}</small>
+              </div>
+              <a href="{% url 'revisions:take_review' s.id %}" class="btn btn-sm btn-warning">Take Now</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted small">No reviews due today. 🎉</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<h3 class="mt-5">Active Plans</h3>
+{% if plans %}
+<div class="row g-3">
+  {% for p in plans %}
+    <div class="col-md-6">
+      <div class="glass-card p-3">
+        <div class="d-flex justify-content-between">
+          <h5 class="mb-1">{{ p.topic.name }}</h5>
+          {% if p.is_completed %}<span class="badge bg-success">Completed</span>{% endif %}
+        </div>
+        <small class="text-muted">{{ p.total_reviews }} reviews, started {{ p.started_at|date:"M j" }}</small>
+        <a href="{% url 'revisions:plan_detail' p.id %}" class="btn btn-sm btn-outline-info mt-2">View Plan</a>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">No active revision plans.</p>
+{% endif %}
+{% endblock %}

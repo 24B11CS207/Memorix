@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorix - Select Class</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#070816; --purple:#7c5cfc; --blue:#38bdf8; --text:#fff; --text2:#9ca3af; --glass:rgba(18,20,40,.72); --border:rgba(124,92,252,.24); }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; }
+    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); }
+    .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .logout { color:#fff; text-decoration:none; border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; }
+    .wrap { max-width:1180px; margin:auto; }
+    h1 { font-size:44px; text-align:center; margin-bottom:12px; }
+    .sub { text-align:center; color:var(--text2); margin-bottom:38px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:22px; }
+    .card { background:var(--glass); border:1px solid var(--border); border-radius:22px; padding:24px; box-shadow:0 0 28px rgba(124,92,252,.14); }
+    .card h2 { font-size:22px; margin-bottom:12px; }
+    .chips { display:flex; flex-wrap:wrap; gap:10px; }
+    button { border:1px solid rgba(255,255,255,.12); border-radius:12px; background:rgba(255,255,255,.06); color:#fff; padding:10px 14px; cursor:pointer; transition:.25s; }
+    button:hover { background:rgba(124,92,252,.22); border-color:#a78bfa; transform:translateY(-2px); }
+    @media(max-width:700px){ nav{padding:0 20px;} h1{font-size:34px;} }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Memorix</div>
+    <a class="logout" href="dashboard.html">Home</a>
+  </nav>
+
+  <main class="wrap">
+    <h1>Select Your Learning Path</h1>
+    <p class="sub">Choose your class, stream, branch, or education path to continue.</p>
+
+    <div class="grid">
+      <section class="card">
+        <h2>1st to 10th Class</h2>
+        <div class="chips">
+          <button onclick="choosePath('Class 1')">Class 1</button>
+          <button onclick="choosePath('Class 2')">Class 2</button>
+          <button onclick="choosePath('Class 3')">Class 3</button>
+          <button onclick="choosePath('Class 4')">Class 4</button>
+          <button onclick="choosePath('Class 5')">Class 5</button>
+          <button onclick="choosePath('Class 6')">Class 6</button>
+          <button onclick="choosePath('Class 7')">Class 7</button>
+          <button onclick="choosePath('Class 8')">Class 8</button>
+          <button onclick="choosePath('Class 9')">Class 9</button>
+          <button onclick="choosePath('Class 10')">Class 10</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Intermediate</h2>
+        <div class="chips">
+          <button onclick="choosePath('Intermediate MPC')">MPC</button>
+          <button onclick="choosePath('Intermediate BiPC')">BiPC</button>
+          <button onclick="choosePath('Intermediate HEC')">HEC</button>
+          <button onclick="choosePath('Intermediate CEC')">CEC</button>
+          <button onclick="choosePath('Intermediate MEC')">MEC</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>B.Tech</h2>
+        <div class="chips">
+          <button onclick="choosePath('B.Tech CSE')">CSE</button>
+          <button onclick="choosePath('B.Tech AI & ML')">AI & ML</button>
+          <button onclick="choosePath('B.Tech Data Science')">Data Science</button>
+          <button onclick="choosePath('B.Tech ECE')">ECE</button>
+          <button onclick="choosePath('B.Tech EEE')">EEE</button>
+          <button onclick="choosePath('B.Tech Mechanical')">Mechanical</button>
+          <button onclick="choosePath('B.Tech Civil')">Civil</button>
+          <button onclick="choosePath('B.Tech IT')">IT</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Medical & Other</h2>
+        <div class="chips">
+          <button onclick="choosePath('MBBS')">MBBS</button>
+          <button onclick="choosePath('BDS')">BDS</button>
+          <button onclick="choosePath('B.Pharmacy')">B.Pharmacy</button>
+          <button onclick="choosePath('B.Sc')">B.Sc</button>
+          <button onclick="choosePath('B.Com')">B.Com</button>
+          <button onclick="choosePath('B.A')">B.A</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
+    if (!user || !user.email) window.location.href = 'index.html';
+    function choosePath(path) {
+      localStorage.setItem('selectedPath', path);
+      localStorage.removeItem('selectedSubject');
+      window.location.href = 'subjects.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Result — Instant Test{% endblock %}
+{% block content %}
+<div class="glass-card p-5 text-center mb-4">
+  {% if test.score_percent >= 80 %}
+    <i class="bi bi-trophy-fill text-warning" style="font-size:4rem;"></i>
+    <h2 class="text-success mt-3">Passed!</h2>
+  {% else %}
+    <i class="bi bi-x-circle text-danger" style="font-size:4rem;"></i>
+    <h2 class="text-danger mt-3">Below threshold</h2>
+  {% endif %}
+  <h1 class="display-3 brand-grad">{{ test.score_percent }}%</h1>
+  <div class="row mt-3 text-center">
+    <div class="col-md-4"><small class="text-muted">Correct</small><div class="h4">{{ test.correct_count }}/{{ test.total_questions }}</div></div>
+    <div class="col-md-4"><small class="text-muted">Time</small><div class="h4">{{ test.time_taken_seconds }}s</div></div>
+    <div class="col-md-4"><small class="text-muted">Topic</small><div class="h5">{{ test.topic.name }}</div></div>
+  </div>
+  <a href="{% url 'exams:instant' %}" class="btn btn-primary mt-3">Back to Instant Tests</a>
+</div>
+
+<h3>Review Your Answers</h3>
+{% for r in review_items %}
+  <div class="glass-card p-4 mb-3" style="border-left: 4px solid {% if r.is_correct %}#22c55e{% else %}#ef4444{% endif %};">
+    <div class="d-flex justify-content-between mb-2">
+      <strong>Q{{ r.index|add:1 }}.</strong>
+      {% if r.is_correct %}<span class="badge bg-success">Correct</span>{% else %}<span class="badge bg-danger">Wrong</span>{% endif %}
+    </div>
+    <p>{{ r.question }}</p>
+    <ul class="list-unstyled">
+      {% for opt in r.options %}
+        <li class="mb-1
+          {% if forloop.counter0 == r.correct_index %}text-success fw-bold{% endif %}
+          {% if forloop.counter0 == r.chosen_index and not r.is_correct %}text-danger text-decoration-line-through{% endif %}
+        ">
+          {% if forloop.counter0 == r.correct_index %}<i class="bi bi-check-circle"></i>{% endif %}
+          {% if forloop.counter0 == r.chosen_index and not r.is_correct %}<i class="bi bi-x-circle"></i>{% endif %}
+          {{ opt }}
+        </li>
+      {% endfor %}
+    </ul>
+    {% if r.explanation %}
+      <div class="alert alert-info mt-2 mb-0">
+        <i class="bi bi-robot"></i> <strong>AI Explanation:</strong> {{ r.explanation }}
+      </div>
+    {% endif %}
+    {% if r.confusion_note and not r.is_correct %}
+      <div class="alert alert-warning mt-2 mb-0">
+        <i class="bi bi-lightbulb"></i> <strong>Concept clarification:</strong> {{ r.confusion_note }}
+      </div>
+    {% endif %}
+  </div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}My Topics — DQMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>My Topics</h2>
+  <a href="{% url 'topics:create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> New Topic</a>
+</div>
+
+<form class="row g-2 mb-4" method="get">
+  <div class="col-md-6">
+    <input type="search" name="q" class="form-control" placeholder="Search topics..." value="{{ request.GET.q }}">
+  </div>
+  <div class="col-md-3">
+    <select name="difficulty" class="form-select">
+      <option value="">All difficulties</option>
+      <option value="easy" {% if request.GET.difficulty == 'easy' %}selected{% endif %}>Easy</option>
+      <option value="medium" {% if request.GET.difficulty == 'medium' %}selected{% endif %}>Medium</option>
+      <option value="hard" {% if request.GET.difficulty == 'hard' %}selected{% endif %}>Hard</option>
+    </select>
+  </div>
+  <div class="col-md-3"><button class="btn btn-outline-light w-100">Filter</button></div>
+</form>
+
+{% if topics %}
+<div class="row g-3">
+  {% for topic in topics %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card p-4 h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between">
+          <span class="badge bg-{% if topic.difficulty == 'easy' %}success{% elif topic.difficulty == 'medium' %}warning text-dark{% else %}danger{% endif %}">{{ topic.difficulty|title }}</span>
+          {% if topic.is_completed %}<span class="badge bg-success"><i class="bi bi-check"></i> Done</span>{% endif %}
+        </div>
+        <h5 class="mt-3">{{ topic.name }}</h5>
+        <p class="text-muted small flex-grow-1">{{ topic.description|default:'No description' |truncatewords:18 }}</p>
+        <div class="mb-2">
+          <small class="text-muted">{{ topic.completed_modules_count }}/{{ topic.total_modules }} modules</small>
+          <div class="progress" style="height: 6px;">
+            <div class="progress-bar" style="width: {{ topic.progress_percent }}%; background: linear-gradient(90deg, #6366f1, #ec4899);"></div>
+          </div>
+        </div>
+        <a href="{% url 'topics:detail' topic.id %}" class="btn btn-sm btn-outline-primary mt-2">Open</a>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% if is_paginated %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">«</a></li>
+    {% endif %}
+    <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">»</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="glass-card p-5 text-center">
+  <i class="bi bi-book" style="font-size:3rem; opacity:.5;"></i>
+  <h4 class="mt-3">No topics yet</h4>
+  <p class="text-muted">Create your first topic — DQMS will generate AI-powered learning modules for you.</p>
+  <a href="{% url 'topics:create' %}" class="btn btn-primary">Create Your First Topic</a>
+</div>
+{% endif %}
+
+{% endblock %}

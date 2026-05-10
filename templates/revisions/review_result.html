@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="glass-card p-5 text-center mb-4">
+  {% if session.status == 'passed' %}
+    <i class="bi bi-trophy-fill text-warning" style="font-size:4rem;"></i>
+    <h2 class="text-success mt-3">Review Passed!</h2>
+  {% else %}
+    <i class="bi bi-x-circle text-danger" style="font-size:4rem;"></i>
+    <h2 class="text-danger mt-3">Review Failed — schedule shifted by 1 day</h2>
+  {% endif %}
+  <h1 class="display-3 brand-grad">{{ session.score_percent }}%</h1>
+  <p class="text-muted">Pass mark: 80%</p>
+  <a href="{% url 'revisions:plan_detail' session.plan.id %}" class="btn btn-primary mt-2">Back to Plan</a>
+</div>
+
+<h3>Review Your Answers</h3>
+{% for r in review_items %}
+  <div class="glass-card p-4 mb-3" style="border-left: 4px solid {% if r.is_correct %}#22c55e{% else %}#ef4444{% endif %};">
+    <strong>Q{{ r.index|add:1 }}.</strong>
+    {% if r.is_correct %}<span class="badge bg-success">Correct</span>{% else %}<span class="badge bg-danger">Wrong</span>{% endif %}
+    <p class="mt-2">{{ r.question }}</p>
+    <ul class="list-unstyled">
+      {% for opt in r.options %}
+        <li class="mb-1
+          {% if forloop.counter0 == r.correct_index %}text-success fw-bold{% endif %}
+          {% if forloop.counter0 == r.chosen_index and not r.is_correct %}text-danger text-decoration-line-through{% endif %}">{{ opt }}</li>
+      {% endfor %}
+    </ul>
+    {% if r.explanation %}<div class="alert alert-info mt-2 mb-0"><i class="bi bi-robot"></i> {{ r.explanation }}</div>{% endif %}
+  </div>
+{% endfor %}
+{% endblock %}

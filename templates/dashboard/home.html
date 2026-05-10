@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — DQMS{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="brand-grad mb-0">Welcome back, {{ user.first_name|default:user.username }}!</h1>
+    <p class="text-muted mb-0">Here's your learning at a glance.</p>
+  </div>
+  <a href="{% url 'topics:create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> New Topic
+  </a>
+</div>
+
+<!-- Education categories -->
+<section class="mb-4">
+  <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+    <div>
+      <h2 class="h4 mb-1">Choose Your Education Path</h2>
+      <p class="text-muted mb-0">Start with your class, stream, branch, or degree. DQMS will generate modules for it.</p>
+    </div>
+  </div>
+  <div class="row g-3">
+    {% for category in education_categories %}
+      <div class="col-xl-4 col-lg-6">
+        <div class="glass-card p-4 h-100 education-card">
+          <div class="d-flex align-items-start gap-3 mb-3">
+            <div class="education-icon">
+              <i class="bi {{ category.icon }}"></i>
+            </div>
+            <div>
+              <h3 class="h5 mb-1">{{ category.title }}</h3>
+              <p class="text-muted small mb-0">{{ category.subtitle }}</p>
+            </div>
+          </div>
+          <div class="education-pill-grid">
+            {% for item in category.items %}
+              <a
+                class="education-pill"
+                href="{% url 'topics:create' %}?name={{ item.name|urlencode }}&description={{ item.description|urlencode }}&difficulty={{ item.difficulty|urlencode }}"
+              >
+                {{ item.name }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- KPI cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Total Topics</div><div class="h2 mb-0">{{ total_topics }}</div></div>
+        <i class="bi bi-book fs-2 text-info"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Completed</div><div class="h2 mb-0 text-success">{{ completed_topics }}</div></div>
+        <i class="bi bi-check2-circle fs-2 text-success"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Pending</div><div class="h2 mb-0 text-warning">{{ pending_topics }}</div></div>
+        <i class="bi bi-hourglass-split fs-2 text-warning"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Accuracy</div><div class="h2 mb-0">{{ avg_accuracy }}%</div></div>
+        <i class="bi bi-bullseye fs-2 text-primary"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Streak / coins / reviews -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Daily Streak</div><div class="h2 mb-0">{{ user_streak }} <small class="text-muted">days</small></div></div>
+        <i class="bi bi-fire fs-2 text-danger"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Reviews Done</div><div class="h2 mb-0">{{ reviews_completed }}/{{ reviews_total }}</div></div>
+        <i class="bi bi-arrow-repeat fs-2 text-success"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Due Today</div><div class="h2 mb-0 text-warning">{{ reviews_due_today }}</div></div>
+        <i class="bi bi-calendar-event fs-2 text-warning"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Badge Level</div><div class="h2 mb-0">{{ user_badge_level }}</div></div>
+        <i class="bi bi-trophy-fill fs-2 text-warning"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="glass-card p-4">
+      <h5 class="mb-3">7-Day Activity</h5>
+      <canvas id="weekChart" height="100"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="glass-card p-4">
+      <h5>Recent Badges</h5>
+      {% if badges %}
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          {% for b in badges %}
+            <div class="badge-chip">{{ b.icon }} {{ b.name }}</div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted small">No badges yet — finish a topic or pass an instant test to earn one!</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-md-6">
+    <div class="glass-card p-4">
+      <h5><i class="bi bi-star-fill text-success"></i> Strong Topics</h5>
+      {% if strong_topics %}
+        <ul class="list-unstyled mt-3">
+          {% for t, score in strong_topics %}
+            <li class="d-flex justify-content-between mb-2">
+              <a href="{% url 'topics:detail' t.id %}" class="text-decoration-none">{{ t.name }}</a>
+              <span class="text-success">{{ score }}%</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted small">Take some instant tests to discover your strengths.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="glass-card p-4">
+      <h5><i class="bi bi-exclamation-triangle text-warning"></i> Weak Topics</h5>
+      {% if weak_topics %}
+        <ul class="list-unstyled mt-3">
+          {% for t, score in weak_topics %}
+            <li class="d-flex justify-content-between mb-2">
+              <a href="{% url 'topics:detail' t.id %}" class="text-decoration-none">{{ t.name }}</a>
+              <span class="text-warning">{{ score }}%</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted small">No weak areas detected yet — keep practicing!</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const labels = [{% for d in last7 %}"{{ d.date }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const data = [{% for d in last7 %}{{ d.count }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+new Chart(document.getElementById('weekChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{
+      label: 'Activities',
+      data,
+      backgroundColor: 'rgba(99, 102, 241, .6)',
+      borderColor: 'rgba(99, 102, 241, 1)',
+      borderWidth: 2, borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      x: { ticks: { color: '#aaa' }, grid: { display: false } }
+    }
+  }
+});
+</script>
+{% endblock %}

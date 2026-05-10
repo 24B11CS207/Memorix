@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Instant Test — {{ test.topic.name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2 class="mb-0">Instant Test: {{ test.topic.name }}</h2>
+    <small class="text-muted">{{ test.total_questions }} questions • Pass at 80%</small>
+  </div>
+  <div class="glass-card px-3 py-2">
+    <i class="bi bi-stopwatch"></i> <span id="timer">00:00</span>
+  </div>
+</div>
+
+<form method="post" id="quizForm">
+  {% csrf_token %}
+  <input type="hidden" name="time_taken" id="timeTakenInput" value="0">
+  {% for q in test.questions %}
+    <div class="glass-card p-4 mb-3">
+      <h5>Q{{ forloop.counter }}. {{ q.question }}</h5>
+      <div class="mt-3">
+        {% for opt in q.options %}
+          <div class="form-check option-row mb-2">
+            <input class="form-check-input" type="radio"
+                   name="q_{{ forloop.parentloop.counter0 }}"
+                   value="{{ forloop.counter0 }}"
+                   id="iq{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" required>
+            <label class="form-check-label" for="iq{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}">
+              {{ opt }}
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+  <button type="submit" class="btn btn-primary btn-lg">Submit Test</button>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let seconds = 0;
+const timerEl = document.getElementById('timer');
+setInterval(() => {
+  seconds += 1;
+  const m = String(Math.floor(seconds/60)).padStart(2,'0');
+  const s = String(seconds%60).padStart(2,'0');
+  timerEl.textContent = `${m}:${s}`;
+  document.getElementById('timeTakenInput').value = seconds;
+}, 1000);
+</script>
+{% endblock %}
