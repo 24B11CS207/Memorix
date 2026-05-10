@@ -177,6 +177,42 @@
             letter-spacing: -0.5px;
         }
 
+        .welcome-panel {
+            text-align: center;
+            padding: 0.4rem 0 0.2rem;
+        }
+
+        .welcome-icon {
+            width: 74px;
+            height: 74px;
+            border-radius: 20px;
+            margin: 0 auto 1.25rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #fff;
+            box-shadow: 0 0 34px rgba(59, 158, 255, 0.42);
+        }
+
+        .app-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-violet));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-copy {
+            color: var(--text-muted);
+            margin: 0.8rem 0 1.8rem;
+            line-height: 1.7;
+        }
+
         /* headings */
         .form-title {
             font-family: 'Syne', sans-serif;
@@ -587,6 +623,10 @@
             .form-title {
                 font-size: 1.45rem;
             }
+
+            .app-name {
+                font-size: 2.35rem;
+            }
         }
     </style>
 </head>
@@ -604,13 +644,20 @@
         <div class="glass-card">
 
             <!-- Brand -->
-            <div class="brand">
+            <div class="brand" id="authBrand" style="display:none;">
                 <div class="brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
                 <span class="brand-name">Memorix</span>
             </div>
 
             <!-- ════ LOGIN PANEL ════ -->
-            <div id="loginPanel" class="panel">
+            <div id="welcomePanel" class="panel welcome-panel">
+                <div class="welcome-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                <h1 class="app-name">Memorix</h1>
+                <p class="welcome-copy">Learn by modules, take smart tests, and unlock your next topic step by step.</p>
+                <button class="btn-glow btn-primary-glow" onclick="showLogin()">Get Started</button>
+            </div>
+
+            <div id="loginPanel" class="panel" style="display:none;">
                 <h1 class="form-title">Welcome back</h1>
                 <p class="form-subtitle">Sign in to continue learning</p>
 
@@ -756,6 +803,20 @@
         })();
 
         /* ── Panel switch ── */
+        function showLogin() {
+            const fromEl = el('welcomePanel');
+            const toEl = el('loginPanel');
+            fromEl.classList.add('fade-out');
+            fromEl.addEventListener('animationend', () => {
+                fromEl.style.display = 'none';
+                fromEl.classList.remove('fade-out');
+                el('authBrand').style.display = 'flex';
+                toEl.style.display = 'block';
+                toEl.classList.add('fade-in');
+                toEl.addEventListener('animationend', () => toEl.classList.remove('fade-in'), { once: true });
+            }, { once: true });
+        }
+
         function switchTo(target) {
             const fromEl = target === 'register' ? loginPanel : registerPanel;
             const toEl = target === 'register' ? registerPanel : loginPanel;
@@ -984,6 +1045,7 @@
 
         document.addEventListener('keydown', e => {
             if (e.key !== 'Enter') return;
+            if (el('welcomePanel').style.display !== 'none') return showLogin();
             if (el('loginPanel').style.display !== 'none') handleLogin();
             else handleRegister();
         });

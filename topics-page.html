@@ -41,7 +41,7 @@
 <body>
   <nav>
     <div class="logo">Memorix</div>
-    <a class="back" href="subjects.html">Change Subject</a>
+    <a class="back" href="classes.html">Change Class</a>
   </nav>
 
   <main class="wrap">
@@ -59,9 +59,12 @@
     const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
     if (!user || !user.email) window.location.href = 'index.html';
     const selectedPath = localStorage.getItem('selectedPath');
-    const selectedSubject = localStorage.getItem('selectedSubject');
+    let selectedSubject = localStorage.getItem('selectedSubject');
     if (!selectedPath) window.location.href = 'classes.html';
-    if (!selectedSubject) window.location.href = 'subjects.html';
+    if (!selectedSubject) {
+      selectedSubject = selectedPath;
+      localStorage.setItem('selectedSubject', selectedPath);
+    }
 
     const topicBank = {
       Mathematics: ['Fractions', 'Algebra', 'Trigonometry', 'Calculus', 'Probability'],
@@ -81,8 +84,25 @@
       Reasoning: ['Number Series', 'Coding Decoding', 'Blood Relations', 'Directions']
     };
 
-    document.getElementById('title').textContent = `${selectedSubject} Topics`;
-    const topics = topicBank[selectedSubject] || ['Introduction', 'Basics', 'Important Concepts', 'Practice Questions'];
+    function pathTopics(path) {
+      if (path.startsWith('Class')) {
+        return ['Mathematics', 'Science', 'English Grammar', 'Social Studies', 'Computer Basics', 'General Knowledge'];
+      }
+      if (path.startsWith('Intermediate')) {
+        return ['Mathematics', 'Physics', 'Chemistry', 'Botany', 'Zoology', 'Commerce', 'Economics'];
+      }
+      if (path.startsWith('B.Tech')) {
+        return ['Programming', 'Data Structures', 'DBMS', 'Computer Networks', 'Engineering Maths', 'Digital Electronics'];
+      }
+      if (['MBBS', 'BDS', 'B.Pharmacy'].includes(path)) {
+        return ['Anatomy', 'Physiology', 'Biochemistry', 'Pathology', 'Pharmacology'];
+      }
+      return ['Accounting', 'Business Studies', 'Political Science', 'Statistics', 'Reasoning', 'Aptitude'];
+    }
+
+    const topicContext = localStorage.getItem('selectedSubject') || selectedPath;
+    document.getElementById('title').textContent = `${selectedPath} Topics`;
+    const topics = topicBank[topicContext] || pathTopics(selectedPath);
     renderSuggestions(topics);
 
     document.getElementById('topicSearch').addEventListener('input', event => {

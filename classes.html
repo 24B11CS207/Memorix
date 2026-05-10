@@ -95,8 +95,8 @@
     if (!user || !user.email) window.location.href = 'index.html';
     function choosePath(path) {
       localStorage.setItem('selectedPath', path);
-      localStorage.removeItem('selectedSubject');
-      window.location.href = 'subjects.html';
+      localStorage.setItem('selectedSubject', path);
+      window.location.href = 'topics-page.html';
     }
   </script>
 </body>
