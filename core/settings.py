@@ -17,6 +17,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-change-me-in-production')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS', default='*').split(',')
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -64,7 +65,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates', BASE_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,7 +82,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 # Database
-if env('USE_SQLITE'):
+DATABASE_URL = env('DATABASE_URL', default='')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': env.db('DATABASE_URL')
+    }
+elif env('USE_SQLITE'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -147,6 +154,15 @@ AZURE_OPENAI_API_KEY = env('AZURE_OPENAI_API_KEY', default='')
 AZURE_OPENAI_ENDPOINT = env('AZURE_OPENAI_ENDPOINT', default='')
 AZURE_OPENAI_DEPLOYMENT = env('AZURE_OPENAI_DEPLOYMENT', default='gpt-4o-mini')
 AZURE_OPENAI_API_VERSION = env('AZURE_OPENAI_API_VERSION', default='2024-02-15-preview')
+
+# Google Gemini
+GEMINI_API_KEY = env('GEMINI_API_KEY', default='')
+GEMINI_MODEL = env('GEMINI_MODEL', default='gemini-2.5-flash')
+
+# xAI Grok
+XAI_API_KEY = env('XAI_API_KEY', default='')
+XAI_MODEL = env('XAI_MODEL', default='grok-4.3')
+XAI_BASE_URL = env('XAI_BASE_URL', default='https://api.x.ai/v1')
 
 SITE_URL = env('SITE_URL', default='http://127.0.0.1:8000')
 

@@ -21,6 +21,13 @@
 <div class="glass-card p-3 mb-4"><p class="mb-0">{{ topic.description }}</p></div>
 {% endif %}
 
+{% if topic.ai_explanation %}
+<div class="glass-card p-4 mb-4">
+  <h5><i class="bi bi-stars text-info"></i> AI Topic Explanation</h5>
+  <div class="text-muted mb-0">{{ topic.ai_explanation|linebreaks }}</div>
+</div>
+{% endif %}
+
 <div class="progress mb-4" style="height:12px;">
   <div class="progress-bar" style="width:{{ topic.progress_percent }}%; background: linear-gradient(90deg,#6366f1,#ec4899);">
     {{ topic.progress_percent }}%

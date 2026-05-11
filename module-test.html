@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3b9eff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Memorix">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/img/memorix-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/img/memorix-icon.svg">
   <title>Memorix - Module Test</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -122,7 +129,10 @@
 <body>
   <nav>
     <div class="logo">Memorix</div>
-    <a class="back" href="topics-page.html">Back to Modules</a>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a class="back" href="ai-tutor.html">AI Tutor</a>
+      <a class="back" href="topics-page.html">Back to Modules</a>
+    </div>
   </nav>
 
   <main>
@@ -154,23 +164,134 @@
 
     const TEST_QUESTION_COUNT = 10;
     const questionHistoryKey = `test-history-${selectedPath}-${selectedSubject}-${topic}-${moduleIndex}`;
-    const questions = selectQuestionSet(
-      buildQuestions(moduleIndex, topic, selectedSubject),
-      questionHistoryKey,
-      TEST_QUESTION_COUNT
-    ).map((item, index) => ({
-      ...item,
-      q: `${index + 1}. ${item.q}`
-    }));
+    let questions = [];
 
-    document.getElementById('testForm').innerHTML = questions.map((item, qIndex) => `
-      <section class="q">
-        <p>${item.q}</p>
-        ${item.options.map((option, optionIndex) => `
-          <label><input type="radio" name="q${qIndex}" value="${optionIndex}"> ${option}</label>
-        `).join('')}
-      </section>
-    `).join('');
+    loadQuestions();
+
+    async function loadQuestions() {
+      const form = document.getElementById('testForm');
+      const resultEl = document.getElementById('result');
+      form.innerHTML = `
+        <section class="q">
+          <p>Generating fresh questions for ${escapeHtml(topic)}...</p>
+          <label>AI is preparing a new ${escapeHtml(selectedSubject)} test for Module ${moduleIndex + 1}.</label>
+        </section>
+      `;
+      resultEl.textContent = '';
+
+      const recentQuestions = JSON.parse(localStorage.getItem(questionHistoryKey) || '[]');
+      const apiQuestions = await fetchGeneratedQuestions(recentQuestions);
+      const sourceQuestions = apiQuestions.items.length
+        ? apiQuestions.items
+        : selectQuestionSet(
+            buildQuestions(moduleIndex, topic, selectedSubject),
+            questionHistoryKey,
+            TEST_QUESTION_COUNT
+          );
+
+      questions = sourceQuestions.slice(0, TEST_QUESTION_COUNT).map((item, index) => ({
+        ...item,
+        q: `${index + 1}. ${item.q}`
+      }));
+
+      rememberQuestions(questions.map(item => item.q.replace(/^\d+\.\s*/, '')));
+      renderQuestions(questions);
+
+      resultEl.style.color = apiQuestions.items.length ? '#86efac' : '#fbbf24';
+      resultEl.textContent = apiQuestions.items.length
+        ? 'Fresh AI-generated questions loaded.'
+        : `AI questions were unavailable${apiQuestions.error ? `: ${apiQuestions.error}` : ''}. A fresh local question set was loaded.`;
+    }
+
+    async function fetchGeneratedQuestions(history) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      try {
+        const response = await fetch('/ai/api/questions/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            topic,
+            subject: selectedSubject,
+            class_name: selectedPath,
+            module_index: moduleIndex,
+            count: TEST_QUESTION_COUNT,
+            history,
+            retry_hint: history.length > 0
+          })
+        });
+        if (!response.ok) throw new Error(`Question API failed with ${response.status}`);
+
+        const data = await response.json();
+        if (!Array.isArray(data.questions)) {
+          return {
+            items: [],
+            error: data.error || data.detail || 'the AI provider did not return usable questions'
+          };
+        }
+
+        return {
+          items: data.questions
+          .map(normalizeApiQuestion)
+          .filter(Boolean)
+          .map(shuffleQuestionOptions),
+          error: ''
+        };
+      } catch (error) {
+        console.warn('AI question generation failed; using local fallback.', error);
+        const message = error.name === 'AbortError'
+          ? 'the AI request took longer than 60 seconds'
+          : error.message;
+        return { items: [], error: message };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    function normalizeApiQuestion(item) {
+      const options = Array.isArray(item.options) ? item.options.map(String) : [];
+      const answer = Number(item.correct_index);
+      if (!item.question || options.length !== 4 || Number.isNaN(answer) || answer < 0 || answer > 3) {
+        return null;
+      }
+      return {
+        q: String(item.question),
+        options,
+        answer,
+        explanation: String(item.explanation || ''),
+        concept: String(item.concept || topic)
+      };
+    }
+
+    function renderQuestions(items) {
+      document.getElementById('testForm').innerHTML = items.map((item, qIndex) => `
+        <section class="q">
+          <p>${escapeHtml(item.q)}</p>
+          ${item.options.map((option, optionIndex) => `
+            <label><input type="radio" name="q${qIndex}" value="${optionIndex}"> ${escapeHtml(option)}</label>
+          `).join('')}
+        </section>
+      `).join('');
+    }
+
+    function rememberQuestions(questionTexts) {
+      const historyLimit = TEST_QUESTION_COUNT * 6;
+      const recentQuestions = JSON.parse(localStorage.getItem(questionHistoryKey) || '[]');
+      const updatedHistory = [...questionTexts, ...recentQuestions]
+        .filter((item, index, arr) => item && arr.indexOf(item) === index)
+        .slice(0, historyLimit);
+      localStorage.setItem(questionHistoryKey, JSON.stringify(updatedHistory));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
     function unlockNext() {
       const key = `unlocked-${selectedPath}-${selectedSubject}-${topic}`;
@@ -545,6 +666,13 @@
     }
 
     function submitTest() {
+      const resultEl = document.getElementById('result');
+      if (questions.length < TEST_QUESTION_COUNT) {
+        resultEl.style.color = '#fbbf24';
+        resultEl.textContent = 'Questions are still loading. Please wait a moment.';
+        return;
+      }
+
       let score = 0, answered = 0;
       const analysis = [];
 
@@ -560,14 +688,15 @@
           question: item.q.replace(/^\d+\.\s*/, ''),
           userAnswer: item.options[chosenIdx],
           correctAnswer: item.options[item.answer],
-          isCorrect
+          isCorrect,
+          explanation: item.explanation || '',
+          concept: item.concept || ''
         });
       });
 
-      const resultEl = document.getElementById('result');
-      if (answered < 10) {
+      if (answered < TEST_QUESTION_COUNT) {
         resultEl.style.color = '#fbbf24';
-        resultEl.textContent = `Please answer all questions. Completed ${answered}/10.`;
+        resultEl.textContent = `Please answer all questions. Completed ${answered}/${TEST_QUESTION_COUNT}.`;
         return;
       }
 
@@ -657,7 +786,9 @@
             <div class="qa-ok-note">✓ Well done — this reflects exactly the right understanding. Keep applying this principle.</div>
           </div>`;
         }
-        const exp = buildExplanation(item.correctAnswer, item.userAnswer);
+        const exp = item.explanation
+          ? { reason: escapeHtml(item.explanation), tip: `Review ${escapeHtml(item.concept || topic)} in the Learn Module, then retry with fresh generated questions.` }
+          : buildExplanation(item.correctAnswer, item.userAnswer);
         return `<div class="qa-card bad">
           <div class="qa-top">
             <span class="qa-label">Q${item.num}</span>
@@ -755,5 +886,6 @@
       return [...areas].slice(0, 4);
     }
   </script>
+  <script src="/static/js/pwa.js"></script>
 </body>
 </html>

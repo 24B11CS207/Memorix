@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3b9eff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Memorix">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/img/memorix-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/img/memorix-icon.svg">
   <title>Memorix - Select Class</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -224,9 +231,7 @@
       localStorage.removeItem('selectedSubject');
       localStorage.removeItem('selectedTopic');
       localStorage.removeItem('selectedModuleIndex');
-      document.getElementById('modeTitle').textContent = path + ' — Choose Learning Mode';
-      document.getElementById('modeSubtitle').textContent = 'Select how you want to master ' + path + '.';
-      document.getElementById('modeStep').classList.add('show');
+      window.location.href = 'learning-mode.html';
     }
 
     function chooseMode(mode) {
@@ -238,5 +243,6 @@
       document.getElementById('modeStep').classList.remove('show');
     }
   </script>
+  <script src="/static/js/pwa.js"></script>
 </body>
 </html>

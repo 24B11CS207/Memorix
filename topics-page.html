@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3b9eff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Memorix">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/img/memorix-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/img/memorix-icon.svg">
   <title>Memorix - Select Topic</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -74,7 +81,10 @@
 <body>
   <nav>
     <div class="logo">Memorix</div>
-    <a class="back" href="subjects.html">Change Subject</a>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a class="back" href="ai-tutor.html">AI Tutor</a>
+      <a class="back" href="subjects.html">Change Subject</a>
+    </div>
   </nav>
 
   <main class="wrap">
@@ -241,5 +251,6 @@
       }
     }
   </script>
+  <script src="/static/js/pwa.js"></script>
 </body>
 </html>

@@ -121,6 +121,36 @@
   </div>
 </div>
 
+<div class="row g-3 mb-4">
+  <div class="col-md-4 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Retention</div><div class="h2 mb-0">{{ retention_percent }}%</div></div>
+        <i class="bi bi-repeat fs-2 text-info"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 col-6">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div><div class="text-muted small">Review Completion</div><div class="h2 mb-0">{{ review_completion_percent }}%</div></div>
+        <i class="bi bi-calendar-check fs-2 text-success"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 col-12">
+    <div class="glass-card p-3 stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="text-muted small">Tracked Weak Topics</div>
+          <div class="h2 mb-0">{{ tracked_weak_topics|length }}</div>
+        </div>
+        <i class="bi bi-exclamation-diamond fs-2 text-warning"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row g-3">
   <div class="col-lg-8">
     <div class="glass-card p-4">

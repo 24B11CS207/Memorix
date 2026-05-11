@@ -7,6 +7,7 @@ from topics.models import Topic
 from exams.models import InstantTest
 from revisions.models import ReviewSession
 from rewards.models import Badge
+from analytics.services import calculate_user_metrics
 
 
 EDUCATION_CATEGORIES = [
@@ -112,6 +113,7 @@ def dashboard_home(request):
         last7.append({'date': d.strftime('%a'), 'count': c})
 
     badges = Badge.objects.filter(user=user).order_by('-earned_at')[:10]
+    analytics_metrics = calculate_user_metrics(user)
 
     context = {
         'total_topics': total_topics,
@@ -127,5 +129,8 @@ def dashboard_home(request):
         'badges': badges,
         'recent_tests': instant_tests.order_by('-completed_at')[:5],
         'education_categories': EDUCATION_CATEGORIES,
+        'retention_percent': analytics_metrics['retention'],
+        'review_completion_percent': analytics_metrics['review_completion'],
+        'tracked_weak_topics': analytics_metrics['weak_topics'][:5],
     }
     return render(request, 'dashboard/home.html', context)

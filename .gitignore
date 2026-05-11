@@ -13,3 +13,4 @@ media/
 .vscode/
 .DS_Store
 *.swp
+_backup_before_github_replace_*/

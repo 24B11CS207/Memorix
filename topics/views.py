@@ -10,7 +10,12 @@ from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 from .models import Topic, LearningModule, ModuleQuestion, ModuleAttempt
 from .forms import TopicForm
-from ai_engine.services import generate_learning_modules, generate_mcqs, generate_wrong_answer_explanation
+from ai_engine.services import (
+    generate_learning_modules,
+    generate_topic_explanation,
+    generate_unique_mcqs,
+    generate_wrong_answer_explanation,
+)
 from rewards.services import grant_topic_completion_rewards
 from notifications.services import notify_test_completion
 
@@ -34,12 +39,17 @@ def _module_question_to_dict(question, index):
     }
 
 
+def _topic_existing_question_texts(topic):
+    return list(ModuleQuestion.objects.filter(module__topic=topic).values_list('question', flat=True))
+
+
 def _fresh_module_quiz_questions(topic, module, count=5):
-    generated = generate_mcqs(
+    generated = generate_unique_mcqs(
         f"{topic.name} - {module.title}",
         count=count,
         difficulty=topic.difficulty,
         purpose=f"module_quiz_fresh_attempt_{random.randint(1000, 999999)}",
+        previous_questions=_topic_existing_question_texts(topic),
     )
     questions = []
     for index, question in enumerate(generated):
@@ -105,8 +115,15 @@ class TopicCreateView(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         response = super().form_valid(form)
         topic = self.object
+        topic.ai_explanation = generate_topic_explanation(
+            topic.name,
+            topic.difficulty,
+            context=topic.description,
+        )
+        topic.save(update_fields=['ai_explanation', 'updated_at'])
         # Generate modules via AI
         modules_data = generate_learning_modules(topic.name, topic.difficulty, num_modules=5)
+        seen_questions = []
         for i, m in enumerate(modules_data):
             lm = LearningModule.objects.create(
                 topic=topic,
@@ -120,7 +137,13 @@ class TopicCreateView(LoginRequiredMixin, CreateView):
                 is_unlocked=(i == 0),  # only first unlocked
             )
             # Generate 5 mini-test questions for the module
-            mcqs = generate_mcqs(f"{topic.name} - {lm.title}", count=5, difficulty=topic.difficulty, purpose='module_quiz')
+            mcqs = generate_unique_mcqs(
+                f"{topic.name} - {lm.title}",
+                count=5,
+                difficulty=topic.difficulty,
+                purpose='module_quiz',
+                previous_questions=list(seen_questions),
+            )
             for q in mcqs:
                 ModuleQuestion.objects.create(
                     module=lm,
@@ -129,6 +152,7 @@ class TopicCreateView(LoginRequiredMixin, CreateView):
                     correct_index=q['correct_index'],
                     explanation=q.get('explanation', ''),
                 )
+                seen_questions.append(q['question'])
         messages.success(self.request, f"Topic '{topic.name}' created with AI-generated modules.")
         return response
 
@@ -272,7 +296,14 @@ def instance_learning_create(request):
         difficulty=difficulty,
         description=f"Instance learning: {search_term} in {class_name}",
     )
+    topic.ai_explanation = generate_topic_explanation(
+        topic_name,
+        topic.difficulty,
+        context=topic.description,
+    )
+    topic.save(update_fields=['ai_explanation', 'updated_at'])
     modules_data = generate_learning_modules(topic_name, topic.difficulty, num_modules=5)
+    seen_questions = []
     for i, m in enumerate(modules_data):
         lm = LearningModule.objects.create(
             topic=topic,
@@ -285,9 +316,10 @@ def instance_learning_create(request):
             reading_minutes=m.get('reading_minutes', 5),
             is_unlocked=(i == 0),
         )
-        mcqs = generate_mcqs(
+        mcqs = generate_unique_mcqs(
             f"{topic_name} - {lm.title}", count=5,
-            difficulty=topic.difficulty, purpose='module_quiz'
+            difficulty=topic.difficulty, purpose='module_quiz',
+            previous_questions=list(seen_questions),
         )
         for q in mcqs:
             ModuleQuestion.objects.create(
@@ -297,6 +329,7 @@ def instance_learning_create(request):
                 correct_index=q['correct_index'],
                 explanation=q.get('explanation', ''),
             )
+            seen_questions.append(q['question'])
     messages.success(request, f"Started instance learning for '{search_term}'!")
     return redirect('topics:detail', pk=topic.pk)
 

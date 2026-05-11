@@ -10,6 +10,25 @@
   <div class="col-md-3 col-6"><div class="glass-card p-3"><small class="text-muted">Reviews Passed</small><div class="h3 mb-0">{{ reviews_passed }}/{{ reviews_total }}</div></div></div>
 </div>
 
+<div class="row g-3 mb-4">
+  <div class="col-md-4 col-6"><div class="glass-card p-3"><small class="text-muted">Retention</small><div class="h3 mb-0">{{ retention_percent }}%</div></div></div>
+  <div class="col-md-4 col-6"><div class="glass-card p-3"><small class="text-muted">Review Completion</small><div class="h3 mb-0">{{ review_completion_percent }}%</div></div></div>
+  <div class="col-md-4 col-12">
+    <div class="glass-card p-3">
+      <small class="text-muted">Weak Topics</small>
+      {% if weak_topics %}
+        <div class="mt-2">
+          {% for topic in weak_topics|slice:":3" %}
+            <span class="badge bg-warning text-dark me-1">{{ topic.name }} {{ topic.score }}%</span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="h6 mb-0 mt-2 text-success">None tracked</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
 <div class="row g-3">
   <div class="col-lg-7">
     <div class="glass-card p-4">

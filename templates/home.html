@@ -1,55 +1,179 @@
-{% extends 'base.html' %}
-{% block title %}DQMS — AI-powered Mastery Learning{% endblock %}
-{% block content %}
-<div class="hero-section text-center py-5">
-  <h1 class="display-3 fw-bold brand-grad mb-3">Dynamic Question Mastery System</h1>
-  <p class="lead text-muted mb-4">
-    Learn any topic with AI-generated modules, instant tests, and spaced-repetition revisions.
-  </p>
-  {% if user.is_authenticated %}
-    <a href="{% url 'dashboard:home' %}" class="btn btn-lg btn-primary px-5">Go to Dashboard</a>
-  {% else %}
-    <a href="{% url 'accounts:signup' %}" class="btn btn-lg btn-primary px-5 me-2">Get Started Free</a>
-    <a href="{% url 'accounts:login' %}" class="btn btn-lg btn-outline-light px-5">Login</a>
-  {% endif %}
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorix - Access</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #050812;
+      --card: rgba(10, 17, 35, 0.78);
+      --card-border: rgba(67, 142, 235, 0.28);
+      --blue: #3b9eff;
+      --cyan: #03d8ff;
+      --violet: #8d6cff;
+      --text: #eef5ff;
+      --muted: #8da0c2;
+    }
 
-<div class="row g-4 mt-4">
-  <div class="col-md-4">
-    <div class="glass-card p-4 h-100">
-      <h3><i class="bi bi-cpu text-info"></i> AI-Generated Learning</h3>
-      <p class="text-muted">Enter a topic — DQMS auto-creates 5 progressive modules with examples, key points, and mini-tests.</p>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="glass-card p-4 h-100">
-      <h3><i class="bi bi-lightning text-warning"></i> Instant Test Mode</h3>
-      <p class="text-muted">15 randomized MCQs per day. Get AI-powered explanations on every wrong answer.</p>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="glass-card p-4 h-100">
-      <h3><i class="bi bi-arrow-repeat text-success"></i> Spaced Repetition</h3>
-      <p class="text-muted">4, 5, or 6-review schedules (Day 1, 3, 6, 10, 15, 21). Miss a review and the schedule auto-shifts.</p>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="glass-card p-4 h-100">
-      <h3><i class="bi bi-trophy text-warning"></i> Badges & Streaks</h3>
-      <p class="text-muted">Earn Bronze → Diamond badges. Build daily streaks. Track your mastery journey.</p>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="glass-card p-4 h-100">
-      <h3><i class="bi bi-graph-up text-primary"></i> Deep Analytics</h3>
-      <p class="text-muted">Topic mastery charts, weak vs strong topics, and 14-day activity heatmaps.</p>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="glass-card p-4 h-100">
-      <h3><i class="bi bi-robot text-info"></i> AI Tutor Chatbot</h3>
-      <p class="text-muted">Stuck on a concept? Ask the AI tutor. Get immediate, contextual explanations.</p>
-    </div>
-  </div>
-</div>
-{% endblock %}
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(ellipse 70% 52% at 15% 12%, rgba(38, 117, 185, 0.24), transparent 62%),
+        radial-gradient(ellipse 58% 48% at 78% 88%, rgba(82, 63, 164, 0.28), transparent 64%),
+        radial-gradient(ellipse 46% 34% at 50% 58%, rgba(18, 95, 158, 0.12), transparent 66%),
+        var(--bg-deep);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(93, 169, 255, 0.13) 1px, transparent 1.5px);
+      background-size: 45px 45px;
+      opacity: 0.32;
+      pointer-events: none;
+    }
+
+    .welcome-shell {
+      width: min(94vw, 528px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .welcome-card {
+      min-height: 486px;
+      padding: 64px 52px 58px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      box-shadow:
+        0 28px 70px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 0 1px rgba(70, 142, 240, 0.08);
+      backdrop-filter: blur(22px) saturate(150%);
+    }
+
+    .logo-tile {
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 30px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #419dff, var(--violet));
+      box-shadow: 0 0 46px rgba(59, 158, 255, 0.34);
+      color: #fff;
+      font-size: 42px;
+    }
+
+    .logo-tile i {
+      line-height: 1;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(3rem, 10vw, 4.7rem);
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: 0;
+      background: linear-gradient(90deg, var(--blue), var(--cyan) 48%, var(--violet));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    p {
+      max-width: 380px;
+      margin: 24px auto 36px;
+      color: var(--muted);
+      font-size: 21px;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .start-button {
+      width: 100%;
+      min-height: 64px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 16px;
+      color: white;
+      text-decoration: none;
+      font-size: 23px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #43a5fb, #2079d9);
+      box-shadow: 0 12px 28px rgba(31, 130, 230, 0.36);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .start-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(31, 130, 230, 0.44);
+    }
+
+    @media (max-width: 560px) {
+      .welcome-card {
+        min-height: 430px;
+        padding: 44px 28px;
+        border-radius: 24px;
+      }
+
+      .logo-tile {
+        width: 78px;
+        height: 78px;
+        font-size: 35px;
+        margin-bottom: 24px;
+      }
+
+      p {
+        font-size: 18px;
+      }
+
+      .start-button {
+        min-height: 58px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="welcome-shell" aria-label="Memorix welcome">
+    <section class="welcome-card">
+      <div class="logo-tile" aria-hidden="true">
+        <i class="bi bi-mortarboard-fill"></i>
+      </div>
+      <h1>Memorix</h1>
+      <p>Learn by modules, take smart tests, and unlock your next topic step by step.</p>
+      {% if user.is_authenticated %}
+        <a class="start-button" href="{% url 'dashboard:home' %}">Get Started</a>
+      {% else %}
+        <a class="start-button" href="{% url 'accounts:login' %}">Get Started</a>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

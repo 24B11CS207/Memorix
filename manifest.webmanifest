@@ -1,0 +1,20 @@
+{
+  "name": "Memorix AI Learning",
+  "short_name": "Memorix",
+  "description": "AI-powered learning modules, tests, revisions, and deep-dive study plans.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060912",
+  "theme_color": "#3b9eff",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/static/img/memorix-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

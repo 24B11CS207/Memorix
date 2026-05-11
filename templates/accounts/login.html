@@ -1,30 +1,455 @@
-{% extends 'base.html' %}
-{% block title %}Login — DQMS{% endblock %}
-{% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-5">
-    <div class="glass-card p-4 mt-5">
-      <h2 class="text-center mb-4 brand-grad">Welcome Back</h2>
-      <form method="post">
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-        {% endif %}
-        <div class="mb-3">
-          <label class="form-label">Username</label>
-          <input type="text" name="username" class="form-control" required autofocus>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-control" required>
-        </div>
-        <button class="btn btn-primary w-100">Sign in</button>
-      </form>
-      <div class="d-flex justify-content-between mt-3">
-        <a href="{% url 'accounts:signup' %}">Create account</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memorix - Sign In</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050812;
+      --panel: rgba(9, 16, 34, 0.8);
+      --panel-border: rgba(67, 142, 235, 0.28);
+      --input: rgba(18, 31, 58, 0.78);
+      --input-border: rgba(113, 151, 207, 0.28);
+      --blue: #3b9eff;
+      --cyan: #00d8ff;
+      --violet: #8d6cff;
+      --text: #edf4ff;
+      --muted: #8da0c2;
+      --line: rgba(122, 155, 210, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(ellipse 70% 52% at 14% 12%, rgba(38, 117, 185, 0.25), transparent 62%),
+        radial-gradient(ellipse 58% 48% at 80% 90%, rgba(82, 63, 164, 0.3), transparent 64%),
+        radial-gradient(ellipse 46% 34% at 50% 56%, rgba(18, 95, 158, 0.12), transparent 66%),
+        var(--bg);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(93, 169, 255, 0.13) 1px, transparent 1.5px);
+      background-size: 45px 45px;
+      opacity: 0.32;
+      pointer-events: none;
+    }
+
+    .study-float,
+    .study-cards,
+    .study-path {
+      position: fixed;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .study-float {
+      width: 74px;
+      height: 74px;
+      display: grid;
+      place-items: center;
+      border-radius: 22px;
+      color: rgba(218, 229, 250, 0.7);
+      border: 1px solid rgba(93, 130, 208, 0.24);
+      background: rgba(31, 27, 76, 0.45);
+      box-shadow: 0 16px 46px rgba(39, 121, 215, 0.14);
+      font-size: 28px;
+      transform: rotate(-2deg);
+    }
+
+    .float-book { left: 11%; top: 18%; }
+    .float-light { right: 13%; top: 21%; }
+    .float-grade { left: 7%; top: 47%; font: 800 18px/1 "Segoe UI", Arial, sans-serif; }
+    .float-pencil { left: 16%; bottom: 17%; }
+    .float-math { right: 6%; top: 42%; font: 800 18px/1 "Segoe UI", Arial, sans-serif; }
+    .float-award { right: 18%; bottom: 13%; }
+
+    .study-cards {
+      width: 98px;
+      height: 76px;
+    }
+
+    .study-cards::before,
+    .study-cards::after,
+    .study-cards span {
+      content: "";
+      position: absolute;
+      width: 52px;
+      height: 66px;
+      border-radius: 9px;
+      border: 2px solid rgba(168, 220, 255, 0.46);
+      box-shadow: 0 0 24px rgba(0, 216, 255, 0.22);
+    }
+
+    .study-cards::before {
+      left: 0;
+      top: 8px;
+      background: linear-gradient(145deg, rgba(0, 216, 255, 0.78), rgba(59, 158, 255, 0.56));
+      transform: rotate(8deg);
+    }
+
+    .study-cards::after {
+      left: 44px;
+      top: 2px;
+      background: linear-gradient(145deg, rgba(236, 99, 213, 0.74), rgba(141, 108, 255, 0.58));
+      transform: rotate(8deg);
+    }
+
+    .study-cards span {
+      left: 24px;
+      top: 18px;
+      background: linear-gradient(145deg, rgba(0, 216, 255, 0.54), rgba(141, 108, 255, 0.52));
+      transform: rotate(-4deg);
+    }
+
+    .cards-left { left: 26%; top: 28%; transform: scale(0.8); }
+    .cards-right { right: 25%; bottom: 25%; }
+
+    .study-path {
+      width: min(46vw, 900px);
+      left: 28%;
+      top: 44%;
+      opacity: 0.32;
+    }
+
+    .study-path svg {
+      width: 100%;
+      height: 250px;
+      overflow: visible;
+    }
+
+    .study-path path {
+      fill: none;
+      stroke: rgba(0, 216, 255, 0.48);
+      stroke-width: 2;
+      stroke-dasharray: 8 14;
+    }
+
+    .study-path circle {
+      fill: rgba(67, 165, 251, 0.42);
+      stroke: rgba(170, 210, 255, 0.44);
+      stroke-width: 2;
+    }
+
+    .auth-card {
+      position: relative;
+      z-index: 2;
+      width: min(92vw, 528px);
+      min-height: 782px;
+      padding: 56px 52px 50px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 28px;
+      box-shadow:
+        0 28px 72px rgba(0, 0, 0, 0.56),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 0 1px rgba(70, 142, 240, 0.08);
+      backdrop-filter: blur(22px) saturate(150%);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 52px;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #4ca7ff, var(--violet));
+      box-shadow: 0 0 34px rgba(59, 158, 255, 0.42);
+      color: white;
+      font-size: 27px;
+    }
+
+    .brand-name {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0;
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 35px;
+      line-height: 1;
+      letter-spacing: 0;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      margin: 0 0 38px;
+      color: var(--muted);
+      font-size: 19px;
+      font-weight: 500;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 34px;
+      color: var(--muted);
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: var(--line);
+    }
+
+    .error-box {
+      margin: -12px 0 22px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 10px;
+      border-radius: 12px;
+      color: #ffc5d5;
+      background: rgba(255, 83, 129, 0.1);
+      border: 1px solid rgba(255, 83, 129, 0.22);
+    }
+
+    label {
+      display: block;
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .field {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .field i {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8ca2c7;
+      font-size: 22px;
+    }
+
+    .field input {
+      width: 100%;
+      height: 64px;
+      border: 1px solid var(--input-border);
+      border-radius: 15px;
+      padding: 0 54px 0 56px;
+      color: var(--text);
+      outline: none;
+      background: var(--input);
+      font: 500 19px/1 "Segoe UI", Arial, sans-serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field input::placeholder {
+      color: #8798b7;
+    }
+
+    .field input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(59, 158, 255, 0.38);
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      padding: 0;
+      color: #8ca2c7;
+      background: transparent;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 8px 0 28px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .remember {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-transform: none;
+      margin: 0;
+      font: 500 17px/1 "Segoe UI", Arial, sans-serif;
+      color: var(--muted);
+    }
+
+    .remember input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--blue);
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .submit {
+      width: 100%;
+      height: 64px;
+      border: 0;
+      border-radius: 16px;
+      color: white;
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #43a5fb, #2079d9);
+      box-shadow: 0 12px 28px rgba(31, 130, 230, 0.36);
+    }
+
+    .switch {
+      margin: 32px 0 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 17px;
+      font-weight: 500;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        overflow: auto;
+        padding: 24px 0;
+      }
+
+      .auth-card {
+        min-height: auto;
+        padding: 36px 28px;
+      }
+
+      .study-float,
+      .study-cards,
+      .study-path {
+        display: none;
+      }
+
+      .brand {
+        margin-bottom: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="study-float float-book"><i class="bi bi-book"></i></div>
+  <div class="study-float float-light"><i class="bi bi-lightbulb"></i></div>
+  <div class="study-float float-grade">A+</div>
+  <div class="study-float float-pencil"><i class="bi bi-pencil-square"></i></div>
+  <div class="study-float float-math">x+y</div>
+  <div class="study-float float-award"><i class="bi bi-award"></i></div>
+  <div class="study-cards cards-left"><span></span></div>
+  <div class="study-cards cards-right"><span></span></div>
+  <div class="study-path" aria-hidden="true">
+    <svg viewBox="0 0 900 250" preserveAspectRatio="none">
+      <path d="M0 180 C155 20 310 210 450 96 S720 18 900 132"></path>
+      <circle cx="0" cy="180" r="8"></circle>
+      <circle cx="450" cy="96" r="8"></circle>
+      <circle cx="900" cy="132" r="8"></circle>
+    </svg>
+  </div>
+
+  <main class="auth-card">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><i class="bi bi-journal-bookmark-fill"></i></div>
+      <p class="brand-name">Memorix</p>
+    </div>
+
+    <h1>Welcome back</h1>
+    <p class="subtitle">Sign in to continue learning</p>
+    <div class="divider"><span>credentials</span></div>
+
+    {% if form.non_field_errors %}
+      <div class="error-box">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <div>{{ form.non_field_errors }}</div>
+      </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <label for="id_username">Email address</label>
+      <div class="field">
+        <i class="bi bi-envelope"></i>
+        <input type="text" name="username" id="id_username" autocomplete="username" placeholder="you@example.com" required autofocus>
+      </div>
+
+      <label for="id_password">Password</label>
+      <div class="field">
+        <i class="bi bi-lock"></i>
+        <input type="password" name="password" id="id_password" autocomplete="current-password" placeholder="•••••••" required>
+        <button class="password-toggle" type="button" aria-label="Show password" onclick="togglePassword()">
+          <i class="bi bi-eye"></i>
+        </button>
+      </div>
+
+      <div class="form-row">
+        <label class="remember">
+          <input type="checkbox" name="remember">
+          <span>Remember me</span>
+        </label>
         <a href="{% url 'accounts:password_reset' %}">Forgot password?</a>
       </div>
-    </div>
-  </div>
-</div>
-{% endblock %}
+
+      <button class="submit" type="submit">Sign In</button>
+    </form>
+
+    <p class="switch">Don't have an account? <a href="{% url 'accounts:signup' %}">Register now</a></p>
+  </main>
+
+  <script>
+    function togglePassword() {
+      const input = document.getElementById("id_password");
+      const icon = document.querySelector(".password-toggle i");
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      icon.className = isHidden ? "bi bi-eye-slash" : "bi bi-eye";
+    }
+  </script>
+</body>
+</html>

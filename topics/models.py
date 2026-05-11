@@ -13,6 +13,7 @@ class Topic(models.Model):
     name = models.CharField(max_length=200)
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium')
     description = models.TextField(blank=True)
+    ai_explanation = models.TextField(blank=True)
     is_completed = models.BooleanField(default=False)
     accuracy_percent = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)

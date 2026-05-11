@@ -5,6 +5,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3b9eff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Memorix">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/img/memorix-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/img/memorix-icon.svg">
   <title>Memorix - AI Learning Platform</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -150,7 +157,38 @@
       transform: translateY(-2px);
     }
 
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .ai-tutor-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 45px;
+      padding: 0 22px;
+      border: 1px solid rgba(56, 189, 248, 0.38);
+      border-radius: 14px;
+      background: rgba(56, 189, 248, 0.11);
+      color: white;
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: 0.35s;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.18);
+    }
+
+    .ai-tutor-btn:hover {
+      transform: translateY(-3px);
+      border-color: rgba(56, 189, 248, 0.72);
+      background: rgba(56, 189, 248, 0.18);
+      box-shadow: 0 0 34px rgba(56, 189, 248, 0.34);
+    }
+
     .login-btn {
+      min-height: 45px;
       padding: 12px 28px;
       border: none;
       border-radius: 14px;
@@ -873,6 +911,17 @@
         display: none;
       }
 
+      .nav-actions {
+        gap: 10px;
+      }
+
+      .ai-tutor-btn,
+      .login-btn {
+        min-height: 42px;
+        padding: 0 16px;
+        font-size: 14px;
+      }
+
       .hero h1 {
         font-size: 44px;
       }
@@ -929,13 +978,16 @@
     <div class="logo">⚡ Memorix</div>
 
     <div class="nav-links">
-      <a href="#">Home</a>
-      <a href="#categories" class="auth-link">Categories</a>
-      <a href="#categories" class="auth-link">Education</a>
+      <a href="dashboard.html">Home</a>
+      <a href="classes.html" class="auth-link">Categories</a>
+      <a href="classes.html" class="auth-link">Education</a>
       <a href="#">About</a>
     </div>
 
-    <button class="login-btn" type="button" onclick="logout()">Logout</button>
+    <div class="nav-actions">
+      <a href="ai-tutor.html" class="ai-tutor-btn">AI Tutor</a>
+      <button class="login-btn" type="button" onclick="logout()">Logout</button>
+    </div>
 
   </nav>
 
@@ -980,11 +1032,11 @@
 
       <div class="hero-buttons">
 
-        <button class="primary-btn" onclick="revealCategories()">
+        <button class="primary-btn" onclick="startStandaloneFlow()">
           🚀 Start Learning
         </button>
 
-        <button class="secondary-btn" onclick="revealCategories()">
+        <button class="secondary-btn" onclick="startStandaloneFlow()">
           Explore Features
         </button>
 
@@ -1119,6 +1171,15 @@
     function logout() {
       localStorage.removeItem('eduUser');
       window.location.href = 'index.html';
+    }
+
+    function startStandaloneFlow() {
+      localStorage.removeItem('selectedPath');
+      localStorage.removeItem('selectedLearningMode');
+      localStorage.removeItem('selectedSubject');
+      localStorage.removeItem('selectedTopic');
+      localStorage.removeItem('selectedModuleIndex');
+      window.location.href = 'classes.html';
     }
 
     // Show nav auth links; categories revealed only on button click
@@ -1610,7 +1671,12 @@
     document.querySelectorAll('.category-chip').forEach(chip => {
       chip.addEventListener('click', event => {
         event.preventDefault();
-        openPlanner(chip.dataset.path, chip);
+        localStorage.setItem('selectedPath', chip.dataset.path);
+        localStorage.removeItem('selectedLearningMode');
+        localStorage.removeItem('selectedSubject');
+        localStorage.removeItem('selectedTopic');
+        localStorage.removeItem('selectedModuleIndex');
+        window.location.href = 'learning-mode.html';
       });
     });
 
@@ -1625,6 +1691,7 @@
     });
   </script>
 
+  <script src="/static/js/pwa.js"></script>
 </body>
 
 </html>

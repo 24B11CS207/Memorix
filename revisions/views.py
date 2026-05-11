@@ -4,9 +4,10 @@ from django.contrib import messages
 from django.utils import timezone
 from .models import RevisionPlan, ReviewSession, REVIEW_SCHEDULES
 from topics.models import Topic
-from ai_engine.services import generate_mcqs, generate_wrong_answer_explanation
+from ai_engine.services import generate_unique_mcqs, generate_wrong_answer_explanation
 from rewards.services import grant_points
 from notifications.services import notify_test_completion
+from analytics.services import record_analytics_snapshot, update_topic_difficulty
 
 
 @login_required
@@ -77,9 +78,18 @@ def take_review(request, session_id):
 
     # Generate MCQs only on first load if not present
     if not session.questions:
-        session.questions = generate_mcqs(
+        previous_questions = [
+            q.get('question')
+            for questions in ReviewSession.objects.filter(plan__user=request.user, plan__topic=plan.topic)
+            .exclude(id=session.id)
+            .values_list('questions', flat=True)
+            for q in (questions or [])
+            if q.get('question')
+        ]
+        session.questions = generate_unique_mcqs(
             plan.topic.name, count=15, difficulty=plan.topic.difficulty,
-            purpose=f'review_{session.review_number}'
+            purpose=f'review_{session.review_number}',
+            previous_questions=previous_questions,
         )
         session.status = 'available'
         session.save()
@@ -118,6 +128,7 @@ def take_review(request, session_id):
         session.completed_at = timezone.now()
         session.status = 'passed' if passed else 'failed'
         session.save()
+        update_topic_difficulty(plan.topic, score)
 
         if passed:
             grant_points(request.user, 5, reason="Review completed")
@@ -136,6 +147,7 @@ def take_review(request, session_id):
         except Exception:
             pass
 
+        record_analytics_snapshot(request.user)
         request.session[f'rev_review_{session.id}'] = review_items
         return redirect('revisions:result', session_id=session.id)
 

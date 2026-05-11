@@ -7,6 +7,7 @@ from datetime import timedelta
 from topics.models import Topic
 from exams.models import InstantTest
 from revisions.models import ReviewSession
+from .services import calculate_user_metrics
 
 
 @login_required
@@ -38,6 +39,7 @@ def analytics_home(request):
 
     # Difficulty breakdown
     diff_breakdown = list(topics.values('difficulty').annotate(c=Count('id')))
+    metrics = calculate_user_metrics(user)
 
     context = {
         'mastery_json': json.dumps(mastery),
@@ -49,5 +51,8 @@ def analytics_home(request):
         'avg_accuracy': round(instant.aggregate(a=Avg('score_percent'))['a'] or 0, 1),
         'reviews_passed': sessions.filter(status='passed').count(),
         'reviews_total': sessions.count(),
+        'retention_percent': metrics['retention'],
+        'review_completion_percent': metrics['review_completion'],
+        'weak_topics': metrics['weak_topics'],
     }
     return render(request, 'analytics/home.html', context)

@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3b9eff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Memorix">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/img/memorix-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/img/memorix-icon.svg">
   <title>Memorix - Deep Dive</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -346,7 +353,10 @@
 
   <nav>
     <div class="logo">🧠 Memorix</div>
-    <a class="back" href="subjects.html">Change Subject</a>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a class="back" href="ai-tutor.html">AI Tutor</a>
+      <a class="back" href="subjects.html">Change Subject</a>
+    </div>
   </nav>
 
   <main class="wrap">
@@ -419,7 +429,7 @@
           <div class="mock-stat"><div class="mv" id="mockBestScore">–</div><div class="ml">Best Score</div></div>
           <div class="mock-stat"><div class="mv" id="mockModulesAvail">0</div><div class="ml">Modules Available</div></div>
         </div>
-        <button class="btn-cyan" onclick="openMockTest()">Start Mock Test</button>
+        <button class="btn-cyan" id="mockStartBtn" onclick="openMockTest()">Start Mock Test</button>
         <div class="mock-hist" id="mockHist"></div>
       </div>
 
@@ -503,51 +513,45 @@
     /* ─────────── SMART SCHEDULE BUILDER ─────────── */
     /*
       Algorithm:
-        Core slots = 5 module days + 1 final assessment = 6 required days
-        Extra days (days - 6) are distributed in priority order:
-          1. Review 1 (after M1+M2)
-          2. Review 2 (after M4)
-          3. Mock Test day 1 (after M3, uses M1-M3)
-          4. Mock Test day 2 (before assessment, uses all modules)
-          5. Revision buffer day
-        Any remaining extra days: spread as additional revision days
+        Build a learning path where review checkpoints sit inside the module flow.
+        The number of requested days controls how many review/practice checkpoints
+        are added, then all slots are spread across the available calendar days.
     */
     function buildSchedule(topic, days) {
       const MODS  = ['Basics','Core Concepts','Examples','Application Practice','Final Revision'];
       const ICONS = ['📖','🔬','💡','⚙️','🎯'];
-      const required = 6; // 5 modules + 1 assessment
-      let extra = Math.max(0, days - required);
-
-      // Budget for optional slots (in priority)
-      const hasR1     = extra >= 1; if (hasR1)  extra--;
-      const hasR2     = extra >= 1; if (hasR2)  extra--;
-      const hasMock1  = extra >= 1; if (hasMock1) extra--;
-      const hasMock2  = extra >= 1; if (hasMock2) extra--;
-      const hasRevBuf = extra >= 1; if (hasRevBuf) extra--;
+      let extra = Math.max(2, days - 5);
 
       const slots = [];
       let rIdx = 0;
-
+      const useExtra = () => {
+        if (extra <= 0) return false;
+        extra--;
+        return true;
+      };
+      const addReview = (label, coveredModules) => {
+        slots.push({ type:'review', reviewIdx:rIdx++, icon:'📝', label, coveredModules });
+      };
+      const addMock = (coveredUpTo) => {
+        slots.push({ type:'mock', icon:'🎯', label:'Unlimited Mock Practice', coveredUpTo });
+      };
       // M1
       slots.push({ type:'module', moduleIdx:0, icon:ICONS[0], label:`${MODS[0]}` });
+      if (useExtra()) addReview('Review 1', [0]);
       // M2
       slots.push({ type:'module', moduleIdx:1, icon:ICONS[1], label:`${MODS[1]}` });
-      // Review 1 (covers M1+M2)
-      if (hasR1) slots.push({ type:'review', reviewIdx:rIdx++, icon:'📝', label:`Review 1`, coveredModules:[0,1] });
+      if (useExtra()) addReview(`Review ${rIdx + 1}`, [0,1]);
       // M3
       slots.push({ type:'module', moduleIdx:2, icon:ICONS[2], label:`${MODS[2]}` });
-      // Mock test 1 (uses completed M1-M3)
-      if (hasMock1) slots.push({ type:'mock', icon:'🎯', label:'Mock Test', coveredUpTo:2 });
+      if (useExtra()) addReview(`Review ${rIdx + 1}`, [0,1,2]);
+      if (useExtra()) addMock(2);
       // M4
       slots.push({ type:'module', moduleIdx:3, icon:ICONS[3], label:`${MODS[3]}` });
-      // Review 2 (covers M1-M4)
-      if (hasR2) slots.push({ type:'review', reviewIdx:rIdx++, icon:'📝', label:`Review 2`, coveredModules:[0,1,2,3] });
+      if (useExtra()) addReview(`Review ${rIdx + 1}`, [0,1,2,3]);
       // M5
       slots.push({ type:'module', moduleIdx:4, icon:ICONS[4], label:`${MODS[4]}` });
-      // Revision buffer
-      if (hasRevBuf) slots.push({ type:'revision', icon:'🔄', label:'Revision Day' });
-      // Mock test 2 (uses all completed modules)
-      if (hasMock2) slots.push({ type:'mock', icon:'🎯', label:'Mock Test', coveredUpTo:4 });
+      if (useExtra()) addMock(4);
+      if (useExtra()) slots.push({ type:'revision', icon:'🔄', label:'Revision Day' });
       // Final Assessment (always last)
       slots.push({ type:'assessment', reviewIdx:rIdx, icon:'🏆', label:'Final Assessment', coveredModules:[0,1,2,3,4] });
 
@@ -571,6 +575,7 @@
       const days = Math.max(5, Math.min(60, rawDays));
       if (!topic) { document.getElementById('topicSearch').focus(); return; }
       if (!rawDays) { document.getElementById('daysInput').focus(); return; }
+      localStorage.setItem(`deep-dive-active-topic-${selectedPath}-${selectedSubject}`, topic);
 
       const MODULE_NAMES = ['Basics','Core Concepts','Examples','Application Practice','Final Revision'];
 
@@ -587,14 +592,14 @@
       const reviewSlots = schedule.filter(s => s.type === 'review' || s.type === 'assessment');
       const reviews = reviewSlots.map((slot, i) => ({
         day: slot.day,
-        status: i === 0 ? 'available' : 'locked',
+        status: 'locked',
         score: null,
         wrong: [],
         coveredModules: slot.coveredModules || [],
         label: slot.label || `Review ${i+1}`
       }));
 
-      const plan = { topic, days, modules, reviews, schedule, mockHistory: [], createdAt: new Date().toISOString() };
+      const plan = { topic, days, modules, reviews, schedule, mockHistory: [], scheduleVersion: 'interleaved-v3', createdAt: new Date().toISOString() };
       savePlan(plan);
       renderPlan(plan);
     }
@@ -605,8 +610,22 @@
       if (!saved) return;
       try {
         const plan = JSON.parse(saved);
-        // Back-compat: if old plan has no schedule, rebuild it
-        if (!plan.schedule) plan.schedule = buildSchedule(plan.topic, plan.days);
+        // Back-compat: rebuild older linear schedules into the interleaved review path.
+        if (!plan.schedule || plan.scheduleVersion !== 'interleaved-v3') {
+          plan.schedule = buildSchedule(plan.topic, plan.days);
+          const reviewSlots = plan.schedule.filter(s => s.type === 'review' || s.type === 'assessment');
+          plan.reviews = reviewSlots.map(slot => ({
+            day: slot.day,
+            status: 'locked',
+            score: null,
+            wrong: [],
+            coveredModules: slot.coveredModules || [],
+            label: slot.label || 'Review'
+          }));
+          unlockEligibleReviews(plan);
+          plan.scheduleVersion = 'interleaved-v3';
+          savePlan(plan);
+        }
         if (!plan.mockHistory) plan.mockHistory = [];
         renderPlan(plan);
       } catch { localStorage.removeItem(planKey); }
@@ -779,20 +798,22 @@
     }
 
     /* ─────────── MODULE COMPLETION ─────────── */
+    function unlockEligibleReviews(plan) {
+      plan.reviews.forEach((review, rIdx) => {
+        if (review.status !== 'locked') return;
+        const covered = review.coveredModules || [];
+        const allDone = covered.length === 0 || covered.every(mi => plan.modules[mi]?.completed);
+        const prevPassed = rIdx === 0 || plan.reviews[rIdx-1].status === 'passed';
+        if (allDone && prevPassed) review.status = 'available';
+      });
+    }
+
     function completeModule(index) {
       const plan = currentPlan();
       plan.modules[index].completed = true;
       plan.modules[index].completedAt = new Date().toISOString();
 
-      // Unlock next review if all modules before it are done
-      plan.reviews.forEach((review, rIdx) => {
-        if (review.status === 'locked') {
-          const covered = review.coveredModules || [];
-          const allDone = covered.length === 0 || covered.every(mi => plan.modules[mi].completed);
-          const prevPassed = rIdx === 0 || plan.reviews[rIdx-1].status === 'passed';
-          if (allDone && prevPassed) { review.status = 'available'; }
-        }
-      });
+      unlockEligibleReviews(plan);
 
       savePlan(plan);
       renderPlan(plan);
@@ -1005,18 +1026,30 @@
     }
 
     /* ─────────── REVIEW SYSTEM ─────────── */
-    function startReview(index) {
+    async function startReview(index) {
       const plan = currentPlan();
       const prevFailed = plan.reviews.findIndex((r, i) => i < index && r.status === 'failed');
       if (prevFailed !== -1) return;
 
       activeReviewIndex = index;
-      activeReviewQuestions = buildReviewQuestions(plan.topic, index, plan.reviews[index].coveredModules || []);
+      const coveredModules = plan.reviews[index].coveredModules || [];
+      document.getElementById('quizPanel').classList.remove('hidden');
+      document.getElementById('quizPanel').innerHTML = `
+        <div class="panel">
+          <h2>${plan.reviews[index].label || 'Review ' + (index+1)}</h2>
+          <p class="muted" style="margin-bottom:16px;">Generating fresh AI review questions for ${escapeHtml(plan.topic)}...</p>
+        </div>`;
+      document.getElementById('quizPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+
+      activeReviewQuestions = await fetchReviewQuestions(plan.topic, index, coveredModules);
+      if (!activeReviewQuestions.length) {
+        activeReviewQuestions = buildReviewQuestions(plan.topic, index, coveredModules);
+      }
 
       const qHtml = activeReviewQuestions.map((item, qi) => `
         <section class="q">
-          <p>${qi+1}. ${item.q}</p>
-          ${item.options.map((opt, oi) => `<label><input type="radio" name="rev${qi}" value="${oi}"> ${opt}</label>`).join('')}
+          <p>${qi+1}. ${escapeHtml(item.q)}</p>
+          ${item.options.map((opt, oi) => `<label><input type="radio" name="rev${qi}" value="${oi}"> ${escapeHtml(opt)}</label>`).join('')}
         </section>`).join('');
 
       document.getElementById('quizPanel').classList.remove('hidden');
@@ -1032,6 +1065,24 @@
           <div class="result" id="reviewResult"></div>
         </div>`;
       document.getElementById('quizPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+
+    async function fetchReviewQuestions(topicName, reviewIndex, coveredModules) {
+      const historyKey = `deep-review-history-${selectedPath}-${selectedSubject}-${topicName}-${reviewIndex}`;
+      let history = [];
+      try { history = JSON.parse(localStorage.getItem(historyKey) || '[]'); } catch {}
+      const moduleIndex = coveredModules.length ? Math.max(...coveredModules) : reviewIndex;
+      const generated = await fetchAiQuestions('/ai/api/questions/', {
+        topic: topicName,
+        subject: selectedSubject,
+        class_name: selectedPath,
+        module_index: Math.max(0, Math.min(4, moduleIndex)),
+        count: 5,
+        history,
+        retry_hint: history.length > 0
+      });
+      rememberQuestionHistory(historyKey, generated.map(q => q.q), 40);
+      return generated.slice(0, 5);
     }
 
     function buildReviewQuestions(topic, reviewIndex, coveredModules) {
@@ -1108,10 +1159,7 @@
         .map(a => ({ question: a.question, chosen: a.userAnswer, correct: a.correctAnswer, concept: a.concept }));
 
       if (passed) {
-        const nextR = plan.reviews[activeReviewIndex + 1];
-        if (nextR && nextR.status === 'locked') nextR.status = 'available';
-        const lastR = plan.reviews[plan.reviews.length - 1];
-        if (lastR && plan.reviews.slice(0, -1).every(r => r.status === 'passed')) lastR.status = 'available';
+        unlockEligibleReviews(plan);
       }
       savePlan(plan);
 
@@ -1244,7 +1292,12 @@
     function renderMockPanel(plan) {
       const completedMods = plan.modules.reduce((acc, m, i) => { if (m.completed) acc.push(i); return acc; }, []);
       const panel = document.getElementById('mockPanel');
-      panel.style.display = completedMods.length > 0 ? 'block' : 'none';
+      panel.style.display = 'block';
+      const startBtn = document.getElementById('mockStartBtn');
+      if (startBtn) {
+        startBtn.disabled = completedMods.length === 0;
+        startBtn.textContent = completedMods.length ? 'Start Mock Test' : 'Complete one module to unlock mock tests';
+      }
 
       const history = plan.mockHistory || [];
       const best    = history.length ? Math.max(...history.map(h => h.score)) + '%' : '–';
@@ -1264,20 +1317,32 @@
           </div>`).join('');
     }
 
-    function openMockTest() {
+    async function openMockTest() {
       const plan = currentPlan();
       const completedMods = plan.modules.reduce((acc, m, i) => { if (m.completed) acc.push(i); return acc; }, []);
       if (completedMods.length === 0) return;
 
       // Difficulty scales with attempt count
       const attemptNum = (plan.mockHistory || []).length + 1;
-      activeMockQuestions = buildMockQuestions(plan.topic, completedMods, attemptNum);
 
       const modNames = completedMods.map(i => ['Basics','Core Concepts','Examples','Application Practice','Final Revision'][i]).join(', ');
+      document.getElementById('mockQuizPanel').classList.remove('hidden');
+      document.getElementById('mockQuizPanel').innerHTML = `
+        <div class="panel" style="border-color:rgba(34,211,238,.35);">
+          <h2>Mock Test #${attemptNum}</h2>
+          <p class="muted" style="margin-bottom:16px;">Generating fresh AI mock questions from: <strong style="color:#a5f3fc;">${escapeHtml(modNames)}</strong></p>
+        </div>`;
+      document.getElementById('mockQuizPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+
+      activeMockQuestions = await fetchMockQuestions(plan.topic, completedMods, attemptNum);
+      if (!activeMockQuestions.length) {
+        activeMockQuestions = buildMockQuestions(plan.topic, completedMods, attemptNum);
+      }
+
       const qHtml = activeMockQuestions.map((item, qi) => `
         <section class="q">
-          <p>${qi+1}. ${item.q}</p>
-          ${item.options.map((opt, oi) => `<label><input type="radio" name="mock${qi}" value="${oi}"> ${opt}</label>`).join('')}
+          <p>${qi+1}. ${escapeHtml(item.q)}</p>
+          ${item.options.map((opt, oi) => `<label><input type="radio" name="mock${qi}" value="${oi}"> ${escapeHtml(opt)}</label>`).join('')}
         </section>`).join('');
 
       document.getElementById('mockQuizPanel').classList.remove('hidden');
@@ -1294,6 +1359,29 @@
           <div class="result" id="mockResult"></div>
         </div>`;
       document.getElementById('mockQuizPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+
+    async function fetchMockQuestions(topicName, completedModules, attemptNum) {
+      const historyKey = `deep-mock-history-${selectedPath}-${selectedSubject}-${topicName}`;
+      let history = [];
+      try { history = JSON.parse(localStorage.getItem(historyKey) || '[]'); } catch {}
+      const generated = await fetchAiQuestions('/ai/api/mock/', {
+        topic: topicName,
+        subject: selectedSubject,
+        class_name: selectedPath,
+        completed_modules: completedModules.length,
+        attempt_num: attemptNum,
+        count: 10,
+        history,
+        retry_hint: history.length > 0
+      });
+      const moduleNames = ['Basics','Core Concepts','Examples','Application Practice','Final Revision'];
+      const tagged = generated.map(q => ({
+        ...q,
+        module: q.module || moduleNames[completedModules[Math.min(completedModules.length - 1, attemptNum % completedModules.length)]] || ''
+      }));
+      rememberQuestionHistory(historyKey, tagged.map(q => q.q), 80);
+      return tagged.slice(0, 10);
     }
 
     function buildMockQuestions(topic, completedModuleIndices, attemptNum) {
@@ -1550,6 +1638,64 @@
     }
 
     /* ─────────── UTILITIES ─────────── */
+    async function fetchAiQuestions(url, payload) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`AI API failed with ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data.questions)) return [];
+        return data.questions
+          .map(normalizeAiQuestion)
+          .filter(Boolean)
+          .map(shuffleOptions);
+      } catch (error) {
+        console.warn('AI question generation unavailable; using local fallback.', error);
+        return [];
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    function normalizeAiQuestion(item) {
+      const options = Array.isArray(item.options) ? item.options.map(String) : [];
+      const answer = Number(item.correct_index);
+      if (!item.question || options.length !== 4 || Number.isNaN(answer) || answer < 0 || answer > 3) {
+        return null;
+      }
+      return {
+        q: String(item.question),
+        options,
+        answer,
+        concept: String(item.concept || item.explanation || ''),
+        explanation: String(item.explanation || '')
+      };
+    }
+
+    function rememberQuestionHistory(key, questionTexts, limit) {
+      let recent = [];
+      try { recent = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+      const updated = [...questionTexts, ...recent]
+        .filter((value, index, arr) => value && arr.indexOf(value) === index)
+        .slice(0, limit);
+      localStorage.setItem(key, JSON.stringify(updated));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     function moduleText(index, topic) {
       return ['Build meaning, keywords, and the base idea of ','Study rules, structure, and relationships in ',
         'Work through solved examples and identify patterns for ','Apply to mixed and exam-style situations: ',
@@ -1584,5 +1730,6 @@
       renderTopics(allTopics);
     }
   </script>
+  <script src="/static/js/pwa.js"></script>
 </body>
 </html>

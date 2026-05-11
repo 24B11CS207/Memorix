@@ -5,9 +5,10 @@ from django.contrib import messages
 from django.utils import timezone
 from .models import InstantTest
 from topics.models import Topic
-from ai_engine.services import generate_mcqs, generate_wrong_answer_explanation
+from ai_engine.services import generate_unique_mcqs, generate_wrong_answer_explanation
 from rewards.services import grant_points
 from notifications.services import notify_test_completion
+from analytics.services import record_analytics_snapshot, update_topic_difficulty
 
 
 @login_required
@@ -30,7 +31,19 @@ def start_instant(request, topic_id):
             return redirect('exams:result', test_id=existing_today.id)
         return redirect('exams:take', test_id=existing_today.id)
 
-    mcqs = generate_mcqs(topic.name, count=15, difficulty=topic.difficulty, purpose='instant')
+    previous_questions = [
+        q.get('question')
+        for questions in InstantTest.objects.filter(user=request.user, topic=topic).values_list('questions', flat=True)
+        for q in (questions or [])
+        if q.get('question')
+    ]
+    mcqs = generate_unique_mcqs(
+        topic.name,
+        count=15,
+        difficulty=topic.difficulty,
+        purpose='instant',
+        previous_questions=previous_questions,
+    )
     random.shuffle(mcqs)
     test = InstantTest.objects.create(
         user=request.user, topic=topic,
@@ -80,6 +93,8 @@ def take_instant(request, test_id):
         test.completed = True
         test.completed_at = timezone.now()
         test.save()
+        update_topic_difficulty(test.topic, score)
+        record_analytics_snapshot(request.user)
 
         passed = score >= 80
         if passed:
