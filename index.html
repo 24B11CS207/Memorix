@@ -124,6 +124,190 @@
         }
 
         /* ── Card ── */
+        .edu-animation {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .edu-item {
+            position: absolute;
+            display: grid;
+            place-items: center;
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            background: linear-gradient(145deg, rgba(17, 34, 74, 0.74), rgba(45, 24, 102, 0.62));
+            border: 1px solid rgba(99, 179, 255, 0.30);
+            color: rgba(231, 246, 255, 0.92);
+            font-size: 1.45rem;
+            box-shadow:
+                0 0 28px rgba(59, 158, 255, 0.28),
+                0 0 48px rgba(159, 111, 255, 0.13),
+                inset 0 1px 0 rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(10px);
+            animation: eduFloat 12s ease-in-out infinite alternate;
+        }
+
+        .edu-book {
+            position: absolute;
+            width: 78px;
+            height: 56px;
+            opacity: 0.7;
+            animation: bookDrift 11s ease-in-out infinite alternate;
+        }
+
+        .edu-book::before,
+        .edu-book::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            width: 38px;
+            height: 48px;
+            border-radius: 9px 3px 8px 9px;
+            border: 2px solid rgba(255, 255, 255, 0.58);
+            box-shadow: 0 0 28px rgba(0, 229, 255, 0.22);
+        }
+
+        .edu-book::before {
+            left: 2px;
+            background: linear-gradient(145deg, #34d399, #22d3ee 50%, #3b82f6);
+            transform-origin: right center;
+            animation: bgLeftPage 3.2s ease-in-out infinite;
+        }
+
+        .edu-book::after {
+            right: 2px;
+            background: linear-gradient(145deg, #f9a8d4, #a78bfa 50%, #6366f1);
+            transform-origin: left center;
+            animation: bgRightPage 3.2s ease-in-out infinite;
+        }
+
+        .edu-book.one { top: 28%; left: 24%; animation-delay: -2s; }
+        .edu-book.two { bottom: 25%; right: 26%; animation-duration: 13s; animation-delay: -6s; transform: scale(.8); }
+        .edu-book.three { top: 63%; left: 68%; animation-duration: 15s; animation-delay: -9s; transform: scale(.72); }
+
+        .edu-item.text {
+            width: auto;
+            min-width: 66px;
+            padding: 0 16px;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .edu-item:nth-child(1) { top: 14%; left: 11%; animation-duration: 13s; }
+        .edu-item:nth-child(2) { top: 18%; right: 13%; animation-duration: 15s; animation-delay: -4s; }
+        .edu-item:nth-child(3) { bottom: 17%; left: 16%; animation-duration: 16s; animation-delay: -7s; }
+        .edu-item:nth-child(4) { bottom: 13%; right: 18%; animation-duration: 14s; animation-delay: -2s; }
+        .edu-item:nth-child(5) { top: 47%; left: 6%; animation-duration: 18s; animation-delay: -9s; }
+        .edu-item:nth-child(6) { top: 42%; right: 7%; animation-duration: 17s; animation-delay: -5s; }
+
+        .edu-path {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(760px, 78vw);
+            height: min(360px, 46vh);
+            transform: translate(-50%, -50%);
+            opacity: 0.24;
+        }
+
+        .edu-path svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .edu-path .dash {
+            fill: none;
+            stroke: rgba(0, 229, 255, 0.72);
+            stroke-width: 2.2;
+            stroke-dasharray: 8 12;
+            animation: dashMove 18s linear infinite;
+            filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.48));
+        }
+
+        .edu-path .node {
+            fill: rgba(56, 189, 248, 0.55);
+            stroke: rgba(255, 255, 255, 0.72);
+            stroke-width: 1;
+            animation: nodePulse 3.4s ease-in-out infinite;
+        }
+
+        @keyframes eduFloat {
+            from {
+                transform: translate3d(0, 0, 0) rotate(-4deg);
+                opacity: 0.42;
+            }
+
+            to {
+                transform: translate3d(18px, -28px, 0) rotate(5deg);
+                opacity: 0.86;
+            }
+        }
+
+        @keyframes bookDrift {
+            from {
+                filter: hue-rotate(0deg) saturate(1.05);
+                transform: translate3d(0, 0, 0) rotate(-8deg) scale(1);
+            }
+
+            to {
+                filter: hue-rotate(22deg) saturate(1.45);
+                transform: translate3d(32px, -38px, 0) rotate(9deg) scale(1.08);
+            }
+        }
+
+        @keyframes bgLeftPage {
+            0%, 100% { transform: rotateY(0deg); }
+            50% { transform: rotateY(22deg); }
+        }
+
+        @keyframes bgRightPage {
+            0%, 100% { transform: rotateY(0deg); }
+            50% { transform: rotateY(-22deg); }
+        }
+
+        @keyframes dashMove {
+            to {
+                stroke-dashoffset: -160;
+            }
+        }
+
+        @keyframes nodePulse {
+            50% {
+                fill: rgba(159, 111, 255, 0.42);
+                transform: scale(1.18);
+            }
+        }
+
+        @media (max-width: 760px) {
+            .edu-item {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                font-size: 1.1rem;
+                opacity: 0.5;
+            }
+
+            .edu-item.text {
+                min-width: 52px;
+                padding: 0 10px;
+                font-size: 0.74rem;
+            }
+
+            .edu-item:nth-child(5),
+            .edu-item:nth-child(6),
+            .edu-book.two,
+            .edu-book.three {
+                display: none;
+            }
+        }
+
         .auth-wrapper {
             position: relative;
             z-index: 10;
@@ -164,6 +348,126 @@
             font-size: 1.25rem;
             color: #fff;
             box-shadow: 0 0 20px rgba(59, 158, 255, 0.4);
+        }
+
+        .book-mark {
+            position: relative;
+            width: 52px;
+            height: 40px;
+            transform-style: preserve-3d;
+            animation: bookFloat 2.8s ease-in-out infinite;
+        }
+
+        .brand-icon .book-mark {
+            width: 30px;
+            height: 24px;
+        }
+
+        .book-mark::before,
+        .book-mark::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            width: 50%;
+            height: 36px;
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            box-shadow:
+                0 10px 24px rgba(0, 0, 0, 0.20),
+                0 0 24px rgba(0, 229, 255, 0.26);
+        }
+
+        .brand-icon .book-mark::before,
+        .brand-icon .book-mark::after {
+            height: 22px;
+            border-width: 1.5px;
+        }
+
+        .book-mark::before {
+            background:
+                linear-gradient(90deg, rgba(255,255,255,.35) 0 2px, transparent 2px 100%),
+                linear-gradient(145deg, #f0fdfa 0%, #5eead4 28%, #22d3ee 62%, #2563eb 100%);
+        }
+
+        .book-mark::after {
+            background:
+                linear-gradient(90deg, transparent 0 calc(100% - 2px), rgba(255,255,255,.35) calc(100% - 2px) 100%),
+                linear-gradient(145deg, #fff7ed 0%, #f9a8d4 26%, #a78bfa 58%, #7c3aed 100%);
+        }
+
+        .book-mark::before {
+            left: 0;
+            border-radius: 4px 1px 1px 5px;
+            transform-origin: right center;
+            animation: leftPage 2.8s ease-in-out infinite;
+        }
+
+        .book-mark::after {
+            right: 0;
+            border-radius: 1px 4px 5px 1px;
+            transform-origin: left center;
+            animation: rightPage 2.8s ease-in-out infinite;
+        }
+
+        .book-spine {
+            position: absolute;
+            left: 50%;
+            top: 3px;
+            width: 4px;
+            height: 36px;
+            border-radius: 999px;
+            background: linear-gradient(#00e5ff, #9f6fff);
+            transform: translateX(-50%);
+            z-index: 2;
+            box-shadow:
+                0 0 14px rgba(0, 229, 255, 0.72),
+                0 0 28px rgba(159, 111, 255, 0.46);
+        }
+
+        .brand-icon .book-spine {
+            top: 3px;
+            height: 22px;
+            width: 2px;
+        }
+
+        .book-line {
+            position: absolute;
+            z-index: 3;
+            height: 3px;
+            border-radius: 999px;
+            background: rgba(5, 18, 42, 0.50);
+            animation: lineGlow 2.8s ease-in-out infinite;
+        }
+
+        .book-line.one { left: 10px; top: 14px; width: 14px; }
+        .book-line.two { right: 10px; top: 22px; width: 14px; animation-delay: -.45s; }
+
+        .brand-icon .book-line {
+            height: 1.5px;
+        }
+
+        .brand-icon .book-line.one { left: 6px; top: 9px; width: 8px; }
+        .brand-icon .book-line.two { right: 6px; top: 14px; width: 8px; }
+
+        @keyframes bookFloat {
+            0%, 100% { transform: translateY(0) rotate(-2deg) scale(1); filter: saturate(1.1); }
+            50% { transform: translateY(-7px) rotate(2deg) scale(1.08); filter: saturate(1.45); }
+        }
+
+        @keyframes leftPage {
+            0%, 100% { transform: rotateY(0deg); }
+            50% { transform: rotateY(24deg); }
+        }
+
+        @keyframes rightPage {
+            0%, 100% { transform: rotateY(0deg); }
+            50% { transform: rotateY(-24deg); }
+        }
+
+        @keyframes lineGlow {
+            50% {
+                background: rgba(159, 111, 255, 0.72);
+                box-shadow: 0 0 8px rgba(159, 111, 255, 0.45);
+            }
         }
 
         .brand-name {
@@ -638,6 +942,27 @@
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
+    <div class="edu-animation" aria-hidden="true">
+        <div class="edu-item"><i class="bi bi-book"></i></div>
+        <div class="edu-item"><i class="bi bi-lightbulb"></i></div>
+        <div class="edu-item"><i class="bi bi-pencil-square"></i></div>
+        <div class="edu-item"><i class="bi bi-award"></i></div>
+        <div class="edu-item text">A+</div>
+        <div class="edu-item text">x+y</div>
+        <div class="edu-book one"></div>
+        <div class="edu-book two"></div>
+        <div class="edu-book three"></div>
+        <div class="edu-path">
+            <svg viewBox="0 0 760 360" preserveAspectRatio="none">
+                <path class="dash" d="M45 235 C170 100 285 285 390 165 S610 65 715 190" />
+                <circle class="node" cx="45" cy="235" r="5" />
+                <circle class="node" cx="235" cy="185" r="5" />
+                <circle class="node" cx="390" cy="165" r="5" />
+                <circle class="node" cx="565" cy="105" r="5" />
+                <circle class="node" cx="715" cy="190" r="5" />
+            </svg>
+        </div>
+    </div>
 
     <!-- Main card -->
     <div class="auth-wrapper">
@@ -645,13 +970,25 @@
 
             <!-- Brand -->
             <div class="brand" id="authBrand" style="display:none;">
-                <div class="brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                <div class="brand-icon">
+                    <div class="book-mark">
+                        <span class="book-spine"></span>
+                        <span class="book-line one"></span>
+                        <span class="book-line two"></span>
+                    </div>
+                </div>
                 <span class="brand-name">Memorix</span>
             </div>
 
             <!-- ════ LOGIN PANEL ════ -->
             <div id="welcomePanel" class="panel welcome-panel">
-                <div class="welcome-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                <div class="welcome-icon">
+                    <div class="book-mark">
+                        <span class="book-spine"></span>
+                        <span class="book-line one"></span>
+                        <span class="book-line two"></span>
+                    </div>
+                </div>
                 <h1 class="app-name">Memorix</h1>
                 <p class="welcome-copy">Learn by modules, take smart tests, and unlock your next topic step by step.</p>
                 <button class="btn-glow btn-primary-glow" onclick="showLogin()">Get Started</button>
@@ -791,13 +1128,12 @@
     <script>
         'use strict';
 
-        /* ── Session persistence ── */
+        /* ── Session persistence — redirect if already logged in ── */
         (function checkSession() {
             try {
-                const user = JSON.parse(localStorage.getItem('eduUser'));
-                if (user && user.email) {
-                    // Uncomment to auto-redirect on cached session:
-                    // window.location.href = 'education-selection.html';
+                const existing = JSON.parse(localStorage.getItem('eduUser'));
+                if (existing && existing.email) {
+                    window.location.href = 'dashboard.html';
                 }
             } catch { localStorage.removeItem('eduUser'); }
         })();
@@ -908,85 +1244,6 @@
         }
 
         /* ── LOGIN ── */
-        async function handleLogin() {
-            const email = val('loginEmail');
-            const password = val('loginPassword');
-            let valid = true;
-
-            setError('loginEmail', 'loginEmailErr', !isEmail(email));
-            setError('loginPassword', 'loginPasswordErr', !password);
-            if (!isEmail(email) || !password) return;
-
-            setBtn('loginBtn', true, 'Signing in…');
-            el('loginAlert').className = 'alert-glass error';
-
-            try {
-                const res = await fetch('http://localhost:5000/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password }),
-                });
-
-                const data = await res.json().catch(() => ({}));
-
-                if (res.ok) {
-                    if (el('rememberMe').checked) {
-                        localStorage.setItem('eduUser', JSON.stringify(data.user ?? data));
-                    }
-                    setBtn('loginBtn', false, '✓ Success!');
-                    setTimeout(() => { window.location.href = 'education-selection.html'; }, 700);
-                } else {
-                    showAlert('loginAlert', 'loginAlertMsg', data.message || 'Invalid credentials. Please try again.');
-                    setBtn('loginBtn', false, 'Sign In');
-                }
-            } catch (err) {
-                showAlert('loginAlert', 'loginAlertMsg', 'Unable to connect to server. Please try again later.');
-                setBtn('loginBtn', false, 'Sign In');
-            }
-        }
-
-        /* ── REGISTER ── */
-        async function handleRegister() {
-            const name = val('regName');
-            const email = val('regEmail');
-            const password = val('regPassword');
-            const confirm = val('regConfirm');
-
-            setError('regName', 'regNameErr', !name);
-            setError('regEmail', 'regEmailErr', !isEmail(email));
-            setError('regPassword', 'regPasswordErr', password.length < 8);
-            setError('regConfirm', 'regConfirmErr', password !== confirm || !confirm);
-
-            if (!name || !isEmail(email) || password.length < 8 || password !== confirm) return;
-
-            setBtn('registerBtn', true, 'Creating Account…');
-            el('regAlert').className = 'alert-glass error';
-            el('regSuccessAlert').className = 'alert-glass success';
-
-            try {
-                const res = await fetch('http://localhost:5000/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password }),
-                });
-
-                const data = await res.json().catch(() => ({}));
-
-                if (res.ok) {
-                    el('regSuccessAlert').className = 'alert-glass success show';
-                    setBtn('registerBtn', false, '✓ Account Created!');
-                    setTimeout(() => switchTo('login'), 2000);
-                } else {
-                    showAlert('regAlert', 'regAlertMsg', data.message || 'Registration failed. Please try again.');
-                    setBtn('registerBtn', false, 'Create Account');
-                }
-            } catch (err) {
-                showAlert('regAlert', 'regAlertMsg', 'Unable to connect to server. Please try again later.');
-                setBtn('registerBtn', false, 'Create Account');
-            }
-        }
-
-        /* ── Enter key support ── */
         function handleLogin() {
             const email = val('loginEmail');
             const password = val('loginPassword');
@@ -1007,7 +1264,7 @@
 
             localStorage.setItem('eduUser', JSON.stringify({ name: user.name, email: user.email }));
             setBtn('loginBtn', false, 'Success!');
-            setTimeout(() => { window.location.href = 'classes.html'; }, 700);
+            setTimeout(() => { window.location.href = 'dashboard.html'; }, 700);
         }
 
         function handleRegister() {
@@ -1040,7 +1297,7 @@
             localStorage.setItem('eduUser', JSON.stringify({ name, email }));
             el('regSuccessAlert').className = 'alert-glass success show';
             setBtn('registerBtn', false, 'Account Created!');
-            setTimeout(() => { window.location.href = 'classes.html'; }, 900);
+            setTimeout(() => { window.location.href = 'dashboard.html'; }, 900);
         }
 
         document.addEventListener('keydown', e => {

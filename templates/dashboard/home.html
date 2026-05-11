@@ -37,7 +37,7 @@
             {% for item in category.items %}
               <a
                 class="education-pill"
-                href="{% url 'topics:create' %}?name={{ item.name|urlencode }}&description={{ item.description|urlencode }}&difficulty={{ item.difficulty|urlencode }}"
+                href="{% url 'topics:learn_mode' %}?name={{ item.name|urlencode }}&difficulty={{ item.difficulty|urlencode }}"
               >
                 {{ item.name }}
               </a>

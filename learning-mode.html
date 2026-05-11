@@ -6,50 +6,77 @@
   <title>Memorix - Learning Mode</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --purple:#7c5cfc; --blue:#38bdf8; --green:#22c55e; --text:#fff; --text2:#9ca3af; --glass:rgba(18,20,40,.72); --border:rgba(124,92,252,.24); }
+    :root { --purple:#7c5cfc; --blue:#38bdf8; --green:#22c55e; --text:#fff; --text2:#9ca3af; --glass:rgba(14,16,36,.78); --border:rgba(124,92,252,.28); }
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
-    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; }
-    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; z-index:-1;
+      background:radial-gradient(circle at 25% 25%, rgba(124,92,252,.14), transparent 45%),
+                 radial-gradient(circle at 75% 75%, rgba(56,189,248,.1), transparent 45%);
+      animation:bp 12s ease-in-out infinite alternate; }
+    @keyframes bp { to { transform:scale(1.07); } }
+    .particle { position:fixed; width:5px; height:5px; border-radius:50%;
+      background:rgba(167,139,250,.65); box-shadow:0 0 9px rgba(167,139,250,.8);
+      animation:fu linear infinite; pointer-events:none; z-index:0; }
+    @keyframes fu { from{transform:translateY(100vh) scale(.5);opacity:0;} 10%{opacity:1;} to{transform:translateY(-120px) scale(1.2);opacity:0;} }
+
+    nav { position:fixed; inset:0 0 auto; height:74px; z-index:100; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.78); backdrop-filter:blur(18px); border-bottom:1px solid rgba(255,255,255,.08); }
     .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     a { color:#fff; text-decoration:none; }
-    .back { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; }
-    .wrap { max-width:920px; margin:auto; }
-    h1 { font-size:44px; text-align:center; margin-bottom:10px; }
+    .back { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; transition:.25s; }
+    .back:hover { border-color:#a78bfa; background:rgba(124,92,252,.14); }
+
+    .wrap { max-width:920px; margin:auto; position:relative; z-index:1; }
+    h1 { font-size:44px; text-align:center; margin-bottom:10px;
+      background:linear-gradient(135deg,#fff,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .sub { text-align:center; color:var(--text2); margin-bottom:34px; line-height:1.7; }
-    .modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
-    .mode { min-height:250px; border:1px solid var(--border); border-radius:22px; background:var(--glass); color:#fff; padding:26px; cursor:pointer; text-align:left; transition:.25s; box-shadow:0 0 28px rgba(124,92,252,.14); }
-    .mode:hover { transform:translateY(-5px); border-color:#a78bfa; background:rgba(124,92,252,.18); }
-    .icon { width:54px; height:54px; border-radius:16px; display:grid; place-items:center; margin-bottom:18px; font-size:26px; background:linear-gradient(135deg,var(--purple),#4f46e5); }
-    .deep .icon { background:linear-gradient(135deg,var(--green),var(--blue)); }
-    .mode h2 { font-size:25px; margin-bottom:10px; }
-    .mode p { color:var(--text2); line-height:1.7; }
-    .tag { display:inline-block; margin-top:20px; border-radius:999px; padding:7px 11px; background:rgba(255,255,255,.08); color:#dbeafe; font-size:13px; }
-    @media(max-width:760px){ nav{padding:0 20px;} h1{font-size:34px;} .modes{grid-template-columns:1fr;} }
+
+    .modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
+    .mode { min-height:270px; border-radius:24px; background:var(--glass); color:#fff; padding:28px;
+      cursor:pointer; text-align:left; transition:.3s; backdrop-filter:blur(14px); border:1px solid transparent; }
+    .mode.instant { border-color:rgba(124,92,252,.4); box-shadow:0 0 30px rgba(124,92,252,.18); }
+    .mode.deep    { border-color:rgba(34,197,94,.35);  box-shadow:0 0 30px rgba(34,197,94,.14); }
+    .mode.instant:hover { transform:translateY(-6px); box-shadow:0 0 50px rgba(124,92,252,.55); border-color:#a78bfa; }
+    .mode.deep:hover    { transform:translateY(-6px); box-shadow:0 0 50px rgba(34,197,94,.45);  border-color:#4ade80; }
+
+    .icon { width:56px; height:56px; border-radius:16px; display:grid; place-items:center; margin-bottom:18px; font-size:28px; }
+    .instant .icon { background:linear-gradient(135deg,var(--purple),#4f46e5); box-shadow:0 0 20px rgba(124,92,252,.55); }
+    .deep .icon    { background:linear-gradient(135deg,var(--green),var(--blue)); box-shadow:0 0 20px rgba(34,197,94,.5); }
+    .mode h2 { font-size:24px; margin-bottom:10px; }
+    .mode p { color:var(--text2); line-height:1.7; font-size:14px; }
+    .tag { display:inline-block; margin-top:18px; border-radius:999px; padding:6px 12px; font-size:12px; }
+    .instant .tag { background:rgba(124,92,252,.18); color:#c4b5fd; }
+    .deep .tag    { background:rgba(34,197,94,.14);  color:#86efac; }
+    @media(max-width:760px){ nav{padding:0 20px;} h1{font-size:30px;} .modes{grid-template-columns:1fr;} }
   </style>
 </head>
 <body>
+  <div class="particle" style="left:8%;  animation-duration:13s;"></div>
+  <div class="particle" style="left:25%; animation-duration:17s; animation-delay:-4s;"></div>
+  <div class="particle" style="left:55%; animation-duration:11s; animation-delay:-7s;"></div>
+  <div class="particle" style="left:78%; animation-duration:15s; animation-delay:-2s;"></div>
+
   <nav>
-    <div class="logo">Memorix</div>
+    <div class="logo">⚡ Memorix</div>
     <a class="back" href="classes.html">Change Class</a>
   </nav>
 
   <main class="wrap">
     <h1 id="title">Choose Learning Mode</h1>
-    <p class="sub">Pick how you want to continue. Instant Learning opens topics and modules immediately.</p>
+    <p class="sub">Pick one learning method to continue after selecting your class.</p>
 
     <div class="modes">
-      <button class="mode" onclick="chooseMode('Instant Learning')">
+      <button class="mode instant" onclick="chooseMode('Instant Learning')">
         <div class="icon">⚡</div>
         <h2>Instant Learning</h2>
-        <p>Quickly select a topic, generate modules, learn one module, and take the module test.</p>
-        <span class="tag">Topics and modules</span>
+        <p>Pick a subject and topic. Get 5 progressive modules — learn each one, pass the test, and unlock the next. Fast, focused, effective.</p>
+        <span class="tag">Topics → Modules → Tests</span>
       </button>
 
       <button class="mode deep" onclick="chooseMode('Deep Dive')">
-        <div class="icon">◎</div>
-        <h2>Deep Dive</h2>
-        <p>Use the same topic flow with a slower, stronger study path for detailed practice.</p>
-        <span class="tag">Detailed learning path</span>
+        <div class="icon">🧠</div>
+        <h2>Deep Dive Learning</h2>
+        <p>Set how many days you need. Memorix schedules modules and spaced reviews with a structured progress timeline.</p>
+        <span class="tag">Schedule → Reviews → Progress</span>
       </button>
     </div>
   </main>
@@ -65,7 +92,7 @@
 
     function chooseMode(mode) {
       localStorage.setItem('selectedLearningMode', mode);
-      window.location.href = 'topics-page.html';
+      window.location.href = 'subjects.html';
     }
   </script>
 </body>

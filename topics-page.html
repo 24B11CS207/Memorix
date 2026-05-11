@@ -6,36 +6,69 @@
   <title>Memorix - Select Topic</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --purple:#7c5cfc; --blue:#38bdf8; --text:#fff; --text2:#9ca3af; --glass:rgba(18,20,40,.72); --border:rgba(124,92,252,.24); }
+    :root { --purple:#7c5cfc; --blue:#38bdf8; --green:#22c55e; --text:#fff; --text2:#9ca3af; --glass:rgba(14,16,36,.78); --border:rgba(124,92,252,.28); }
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
-    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; }
-    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; z-index:-1;
+      background:radial-gradient(circle at 20% 30%, rgba(124,92,252,.12), transparent 40%),
+                 radial-gradient(circle at 80% 70%, rgba(56,189,248,.09), transparent 40%);
+      animation:bgPulse 12s ease-in-out infinite alternate; }
+    @keyframes bgPulse { to { transform:scale(1.06); } }
+
+    nav { position:fixed; inset:0 0 auto; height:74px; z-index:100; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.78); backdrop-filter:blur(18px); border-bottom:1px solid rgba(255,255,255,.08); }
     .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     a { color:#fff; text-decoration:none; }
-    .back { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; }
+    .back { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; transition:.25s; }
+    .back:hover { border-color:#a78bfa; background:rgba(124,92,252,.14); }
     .wrap { max-width:1180px; margin:auto; }
-    h1 { font-size:42px; text-align:center; margin-bottom:10px; }
+    h1 { font-size:42px; text-align:center; margin-bottom:10px;
+      background:linear-gradient(135deg,#fff,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .sub { text-align:center; color:var(--text2); margin-bottom:30px; }
+
     .search-row { display:grid; grid-template-columns:1fr auto; gap:12px; margin-bottom:18px; }
-    input { min-height:52px; border:1px solid rgba(255,255,255,.14); border-radius:14px; background:rgba(255,255,255,.07); color:#fff; padding:0 16px; font-size:16px; outline:none; }
-    button { border:1px solid rgba(255,255,255,.12); border-radius:13px; background:rgba(255,255,255,.06); color:white; padding:12px 15px; cursor:pointer; transition:.25s; }
-    button:hover { background:rgba(124,92,252,.2); border-color:#a78bfa; transform:translateY(-2px); }
-    .primary { background:linear-gradient(135deg,var(--purple),#4f46e5); border:0; }
-    .suggestions, .modules { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
-    .module { border:1px solid var(--border); border-radius:18px; background:var(--glass); padding:20px; }
-    .module.locked { opacity:.45; }
-    .status { display:inline-block; margin-bottom:10px; padding:5px 10px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--text2); font-size:12px; }
-    .status.unlocked { background:rgba(34,197,94,.14); color:#86efac; }
-    .module h2 { font-size:19px; margin-bottom:10px; }
-    .module p, .learn-box, .test-box { color:var(--text2); line-height:1.7; }
+    input { min-height:52px; border:1px solid rgba(255,255,255,.14); border-radius:14px; background:rgba(255,255,255,.06); color:#fff; padding:0 18px; font-size:16px; outline:none; transition:.25s; }
+    input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(56,189,248,.18), 0 0 22px rgba(56,189,248,.12); }
+    input::placeholder { color:#4b5563; }
+
+    button { border:1px solid rgba(255,255,255,.12); border-radius:13px; background:rgba(255,255,255,.06); color:white; padding:12px 15px; cursor:pointer; transition:.25s; font-family:Poppins,sans-serif; }
+    button:hover:not(:disabled) { background:rgba(124,92,252,.22); border-color:#a78bfa; transform:translateY(-2px); }
+    .primary { background:linear-gradient(135deg,var(--purple),#4f46e5); border:0; box-shadow:0 0 24px rgba(124,92,252,.4); }
+    .primary:hover:not(:disabled) { box-shadow:0 0 38px rgba(124,92,252,.7); }
+
+    .suggestions { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-bottom:16px; }
+    .modules { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
+
+    /* module cards */
+    .module { border-radius:20px; background:var(--glass); padding:22px; backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,.1); transition:.3s; }
+    .module.active-module { border-color:rgba(124,92,252,.7) !important;
+      box-shadow:0 0 28px rgba(124,92,252,.45), inset 0 0 20px rgba(124,92,252,.08) !important;
+      animation:moduleGlow 2.5s ease-in-out infinite alternate; }
+    @keyframes moduleGlow {
+      from { box-shadow:0 0 20px rgba(124,92,252,.4), inset 0 0 14px rgba(124,92,252,.06); }
+      to   { box-shadow:0 0 42px rgba(124,92,252,.7), inset 0 0 28px rgba(124,92,252,.14); }
+    }
+    .module.locked { opacity:.4; filter:grayscale(.4); border-color:rgba(255,255,255,.06) !important; }
+    .module.just-unlocked { animation:unlockPop .55s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes unlockPop { from { transform:scale(.92); opacity:.4; } to { transform:scale(1); opacity:1; } }
+
+    .status { display:inline-flex; align-items:center; gap:6px; margin-bottom:12px; padding:5px 12px; border-radius:999px; font-size:12px; }
+    .status.locked-st { background:rgba(255,255,255,.07); color:var(--text2); }
+    .status.unlocked { background:rgba(34,197,94,.16); color:#86efac;
+      box-shadow:0 0 12px rgba(34,197,94,.25); }
+    .status.completed { background:rgba(56,189,248,.14); color:#7dd3fc; }
+
+    .module h2 { font-size:18px; margin-bottom:8px; }
+    .module p { color:var(--text2); line-height:1.7; font-size:14px; }
     .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
-    button:disabled { opacity:.45; cursor:not-allowed; transform:none; }
-    .learn-box, .test-box { display:none; margin-top:14px; padding:14px; border-radius:13px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.1); }
+    button:disabled { opacity:.38; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+    .learn-box, .test-box { display:none; margin-top:14px; padding:14px; border-radius:13px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); }
     .learn-box.show, .test-box.show { display:block; }
     .q { margin-top:12px; padding:12px; border-radius:11px; background:rgba(255,255,255,.05); }
-    label { display:block; margin-top:8px; cursor:pointer; }
+    label { display:block; margin-top:8px; cursor:pointer; color:var(--text2); }
     .result { margin-top:12px; font-weight:600; }
-    @media(max-width:700px){ nav{padding:0 20px;} h1{font-size:32px;} .search-row{grid-template-columns:1fr;} }
+
+    @media(max-width:700px){ nav{padding:0 20px;} h1{font-size:28px;} .search-row{grid-template-columns:1fr;} }
   </style>
 </head>
 <body>
@@ -60,7 +93,7 @@
     if (!user || !user.email) window.location.href = 'index.html';
     const selectedPath = localStorage.getItem('selectedPath');
     let selectedSubject = localStorage.getItem('selectedSubject');
-    const selectedLearningMode = localStorage.getItem('selectedLearningMode') || 'Instance Learning';
+    const selectedLearningMode = localStorage.getItem('selectedLearningMode') || 'Instant Learning';
     if (!selectedPath) window.location.href = 'classes.html';
     if (!selectedSubject) {
       selectedSubject = selectedPath;
@@ -103,10 +136,16 @@
 
     const topicContext = localStorage.getItem('selectedSubject') || selectedPath;
     if (selectedLearningMode === 'Deep Dive') window.location.href = 'deep-dive.html';
-    document.getElementById('title').textContent = `${selectedSubject} Instance Learning`;
+    document.getElementById('title').textContent = `${selectedSubject} Instant Learning`;
     document.getElementById('subtitle').textContent = 'Search or select a topic. Memorix will create 5 locked learning modules.';
     const topics = topicBank[topicContext] || pathTopics(selectedPath);
     renderSuggestions(topics);
+
+    const rememberedTopic = localStorage.getItem('selectedTopic');
+    if (rememberedTopic) {
+      document.getElementById('topicSearch').value = rememberedTopic;
+      buildModules();
+    }
 
     document.getElementById('topicSearch').addEventListener('input', event => {
       const term = event.target.value.toLowerCase();
@@ -128,14 +167,17 @@
       const topic = document.getElementById('topicSearch').value.trim();
       if (!topic) return document.getElementById('topicSearch').focus();
       const moduleData = ['Basics', 'Core Concepts', 'Examples', 'Application Practice', 'Final Revision'];
+      const moduleIcons = ['📖', '🔬', '💡', '⚙️', '🎯'];
       document.getElementById('modules').innerHTML = moduleData.map((name, index) => `
-        <section class="module ${index ? 'locked' : ''}" id="module-${index}">
-          <span class="status ${index ? '' : 'unlocked'}" id="status-${index}">${index ? 'Locked' : 'Unlocked'}</span>
-          <h2>Module ${index + 1}: ${topic} ${name}</h2>
+        <section class="module ${index ? 'locked' : 'active-module'}" id="module-${index}">
+          <span class="status ${index ? 'locked-st' : 'unlocked'}" id="status-${index}">
+            ${index ? '🔒 Locked' : '✅ Unlocked'}
+          </span>
+          <h2>${moduleIcons[index]} Module ${index + 1}: ${topic} ${name}</h2>
           <p>${moduleText(index, topic)}</p>
           <div class="actions">
             <button class="primary" id="learn-${index}" onclick="openLearnPage(${index}, '${topic.replace(/'/g, "\\'")}')" ${index ? 'disabled' : ''}>Learn Module</button>
-            <button id="test-${index}-btn" onclick="openTestPage(${index}, '${topic.replace(/'/g, "\\'")}')" ${index ? 'disabled' : ''}>${hasLearned(index, topic) ? 'Take Test' : 'Learn First'}</button>
+            <button id="test-${index}-btn" onclick="openTestPage(${index}, '${topic.replace(/'/g, "\\'")}')" ${hasLearned(index, topic) ? '' : 'disabled'}>${hasLearned(index, topic) ? 'Take Test' : 'Learn First'}</button>
           </div>
           <div class="learn-box" id="learn-box-${index}"></div>
           <div class="test-box" id="test-box-${index}"></div>
@@ -179,13 +221,23 @@
       const unlocked = Number(localStorage.getItem(`unlocked-${selectedPath}-${selectedSubject}-${topic}`) || '0');
       for (let index = 0; index <= unlocked; index++) {
         const module = document.getElementById(`module-${index}`);
+        const statusEl = document.getElementById(`status-${index}`);
+        const learnBtn = document.getElementById(`learn-${index}`);
+        const testBtn = document.getElementById(`test-${index}-btn`);
         if (!module) continue;
         module.classList.remove('locked');
-        document.getElementById(`status-${index}`).textContent = 'Unlocked';
-        document.getElementById(`status-${index}`).classList.add('unlocked');
-        document.getElementById(`learn-${index}`).disabled = false;
-        document.getElementById(`test-${index}-btn`).disabled = false;
-        document.getElementById(`test-${index}-btn`).textContent = hasLearned(index, topic) ? 'Take Test' : 'Learn First';
+        module.classList.add('active-module');
+        statusEl.className = 'status unlocked';
+        statusEl.textContent = hasLearned(index, topic) ? '✅ Completed' : '✅ Unlocked';
+        if (hasLearned(index, topic)) { statusEl.className = 'status completed'; }
+        learnBtn.disabled = false;
+        testBtn.disabled = !hasLearned(index, topic);
+        testBtn.textContent = hasLearned(index, topic) ? 'Take Test' : 'Learn First';
+      }
+      // Only the first locked module after the unlocked range gets a pulsing indicator
+      const nextLocked = document.getElementById(`module-${unlocked + 1}`);
+      if (nextLocked) {
+        nextLocked.style.borderColor = 'rgba(124,92,252,.18)';
       }
     }
   </script>

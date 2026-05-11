@@ -6,36 +6,123 @@
   <title>Memorix - Select Class</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#070816; --purple:#7c5cfc; --blue:#38bdf8; --text:#fff; --text2:#9ca3af; --glass:rgba(18,20,40,.72); --border:rgba(124,92,252,.24); }
+    :root {
+      --bg:#070816; --purple:#7c5cfc; --blue:#38bdf8; --cyan:#22d3ee;
+      --green:#22c55e; --text:#fff; --text2:#9ca3af;
+      --glass:rgba(14,16,36,.78); --border:rgba(124,92,252,.28);
+    }
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
-    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; }
-    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); }
-    .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .logout { color:#fff; text-decoration:none; border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; }
-    .wrap { max-width:1180px; margin:auto; }
-    h1 { font-size:44px; text-align:center; margin-bottom:12px; }
-    .sub { text-align:center; color:var(--text2); margin-bottom:38px; }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; overflow-x:hidden; }
+
+    /* animated bg glow */
+    body::before { content:''; position:fixed; inset:0; z-index:-1;
+      background: radial-gradient(circle at 20% 20%, rgba(124,92,252,.15), transparent 40%),
+                  radial-gradient(circle at 80% 70%, rgba(56,189,248,.1), transparent 40%);
+      animation: bgPulse 10s ease-in-out infinite alternate; }
+    @keyframes bgPulse { to { transform:scale(1.08); } }
+
+    /* floating particles */
+    .particle { position:fixed; width:5px; height:5px; border-radius:50%;
+      background:rgba(167,139,250,.7); box-shadow:0 0 10px rgba(167,139,250,.9);
+      animation:floatUp linear infinite; pointer-events:none; z-index:0; }
+    @keyframes floatUp {
+      from { transform:translateY(100vh) scale(.5); opacity:0; }
+      10% { opacity:1; }
+      to   { transform:translateY(-120px) scale(1.2); opacity:0; }
+    }
+
+    nav { position:fixed; inset:0 0 auto; height:74px; z-index:100;
+      display:flex; justify-content:space-between; align-items:center; padding:0 52px;
+      background:rgba(7,8,22,.78); backdrop-filter:blur(18px);
+      border-bottom:1px solid rgba(255,255,255,.08); }
+    .logo { font-size:30px; font-weight:700;
+      background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      animation:logoGlow 3s infinite alternate; }
+    @keyframes logoGlow {
+      from { filter:drop-shadow(0 0 6px rgba(124,92,252,.35)); }
+      to   { filter:drop-shadow(0 0 18px rgba(56,189,248,.65)); }
+    }
+    .logout { color:#fff; text-decoration:none; border:1px solid rgba(255,255,255,.14);
+      border-radius:12px; padding:10px 16px; transition:.25s; }
+    .logout:hover { border-color:#a78bfa; background:rgba(124,92,252,.14); }
+
+    .wrap { max-width:1180px; margin:auto; position:relative; z-index:1; }
+    h1 { font-size:44px; text-align:center; margin-bottom:12px;
+      background:linear-gradient(135deg,#fff,#a78bfa,var(--blue));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .sub { text-align:center; color:var(--text2); margin-bottom:38px; line-height:1.7; }
+
+    /* class selection grid */
     .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:22px; }
-    .card { background:var(--glass); border:1px solid var(--border); border-radius:22px; padding:24px; box-shadow:0 0 28px rgba(124,92,252,.14); }
-    .card h2 { font-size:22px; margin-bottom:12px; }
+    .card { background:var(--glass); border:1px solid var(--border); border-radius:22px; padding:24px;
+      box-shadow:0 0 28px rgba(124,92,252,.12); backdrop-filter:blur(12px); transition:.3s; }
+    .card:hover { box-shadow:0 0 42px rgba(56,189,248,.22); border-color:rgba(56,189,248,.35); transform:translateY(-3px); }
+    .card h2 { font-size:20px; margin-bottom:14px;
+      background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .chips { display:flex; flex-wrap:wrap; gap:10px; }
-    .mode-overlay { position:fixed; inset:0; z-index:5; display:none; align-items:center; justify-content:center; padding:100px 22px 40px; background:rgba(6,8,22,.82); backdrop-filter:blur(10px); }
-    .mode-overlay.show { display:flex; }
-    .mode-panel { width:min(920px,100%); }
-    .mode-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; max-width:820px; margin:0 auto; }
-    .mode-card { min-height:230px; text-align:left; border:1px solid var(--border); border-radius:22px; background:var(--glass); color:#fff; padding:26px; cursor:pointer; transition:.25s; box-shadow:0 0 28px rgba(124,92,252,.14); }
-    .mode-card:hover { background:rgba(124,92,252,.2); border-color:#a78bfa; transform:translateY(-4px); }
-    .mode-card h2 { font-size:25px; margin-bottom:10px; }
-    .mode-card p { color:var(--text2); line-height:1.7; }
-    .back-btn { display:block; width:max-content; margin:24px auto 0; }
-    button { border:1px solid rgba(255,255,255,.12); border-radius:12px; background:rgba(255,255,255,.06); color:#fff; padding:10px 14px; cursor:pointer; transition:.25s; }
-    button:hover { background:rgba(124,92,252,.22); border-color:#a78bfa; transform:translateY(-2px); }
-    @media(max-width:700px){ nav{padding:0 20px;} h1{font-size:34px;} .mode-grid{grid-template-columns:1fr;} }
+
+    /* class chip buttons */
+    .chip-btn { border:1px solid rgba(124,92,252,.3); border-radius:10px;
+      background:rgba(124,92,252,.08); color:#dbeafe; padding:9px 13px; font-size:13px;
+      cursor:pointer; transition:.22s; font-family:Poppins,sans-serif; }
+    .chip-btn:hover { background:rgba(124,92,252,.28); border-color:#a78bfa;
+      box-shadow:0 0 16px rgba(124,92,252,.45); transform:translateY(-2px) scale(1.04); }
+
+    /* mode overlay */
+    .mode-overlay { position:fixed; inset:0; z-index:200; display:none;
+      align-items:center; justify-content:center; padding:80px 22px 40px;
+      background:rgba(4,6,18,.92); backdrop-filter:blur(20px); }
+    .mode-overlay.show { display:flex; animation:overlayIn .35s ease; }
+    @keyframes overlayIn { from { opacity:0; } to { opacity:1; } }
+
+    .mode-panel { width:min(960px,100%); }
+    .mode-title { font-size:36px; text-align:center; margin-bottom:8px;
+      background:linear-gradient(135deg,#fff,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .mode-sub { text-align:center; color:var(--text2); margin-bottom:32px; line-height:1.7; }
+
+    .mode-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; max-width:860px; margin:0 auto; }
+    .mode-card { min-height:260px; text-align:left; border-radius:24px;
+      background:var(--glass); color:#fff; padding:28px; cursor:pointer;
+      transition:.3s; backdrop-filter:blur(14px); border:1px solid transparent; }
+    .mode-card.instant { border-color:rgba(124,92,252,.4); box-shadow:0 0 30px rgba(124,92,252,.18); }
+    .mode-card.deepdive { border-color:rgba(34,197,94,.35); box-shadow:0 0 30px rgba(34,197,94,.14); }
+    .mode-card:hover { transform:translateY(-6px); }
+    .mode-card.instant:hover { box-shadow:0 0 50px rgba(124,92,252,.5); border-color:#a78bfa; }
+    .mode-card.deepdive:hover { box-shadow:0 0 50px rgba(34,197,94,.4); border-color:#4ade80; }
+
+    .mode-icon { width:56px; height:56px; border-radius:16px; display:grid; place-items:center;
+      font-size:28px; margin-bottom:18px; }
+    .instant .mode-icon { background:linear-gradient(135deg,#7c5cfc,#4f46e5);
+      box-shadow:0 0 22px rgba(124,92,252,.55); }
+    .deepdive .mode-icon { background:linear-gradient(135deg,#22c55e,var(--blue));
+      box-shadow:0 0 22px rgba(34,197,94,.5); }
+    .mode-card h2 { font-size:24px; margin-bottom:10px; }
+    .mode-card p { color:var(--text2); line-height:1.7; font-size:14px; }
+    .mode-tag { display:inline-block; margin-top:18px; border-radius:999px; padding:6px 12px;
+      font-size:12px; }
+    .instant .mode-tag { background:rgba(124,92,252,.18); color:#c4b5fd; }
+    .deepdive .mode-tag { background:rgba(34,197,94,.14); color:#86efac; }
+
+    .back-btn { display:block; width:max-content; margin:26px auto 0;
+      border:1px solid rgba(255,255,255,.14); border-radius:12px;
+      background:rgba(255,255,255,.06); color:#fff; padding:10px 20px; cursor:pointer; transition:.25s; font-family:Poppins,sans-serif; }
+    .back-btn:hover { background:rgba(255,255,255,.12); }
+
+    @media(max-width:700px){ nav{padding:0 20px;} h1{font-size:30px;} .mode-grid{grid-template-columns:1fr;} .mode-title{font-size:26px;} }
   </style>
 </head>
 <body>
+  <!-- floating particles -->
+  <div class="particle" style="left:6%;  animation-duration:12s; animation-delay:0s;"></div>
+  <div class="particle" style="left:18%; animation-duration:17s; animation-delay:-3s;"></div>
+  <div class="particle" style="left:32%; animation-duration:10s; animation-delay:-6s;"></div>
+  <div class="particle" style="left:47%; animation-duration:15s; animation-delay:-1s;"></div>
+  <div class="particle" style="left:61%; animation-duration:13s; animation-delay:-8s;"></div>
+  <div class="particle" style="left:75%; animation-duration:18s; animation-delay:-4s;"></div>
+  <div class="particle" style="left:88%; animation-duration:11s; animation-delay:-2s;"></div>
+
   <nav>
-    <div class="logo">Memorix</div>
+    <div class="logo">⚡ Memorix</div>
     <a class="logout" href="dashboard.html">Home</a>
   </nav>
 
@@ -45,93 +132,109 @@
 
     <div class="grid">
       <section class="card">
-        <h2>1st to 10th Class</h2>
+        <h2>1st – 10th Class</h2>
         <div class="chips">
-          <button onclick="choosePath('Class 1')">Class 1</button>
-          <button onclick="choosePath('Class 2')">Class 2</button>
-          <button onclick="choosePath('Class 3')">Class 3</button>
-          <button onclick="choosePath('Class 4')">Class 4</button>
-          <button onclick="choosePath('Class 5')">Class 5</button>
-          <button onclick="choosePath('Class 6')">Class 6</button>
-          <button onclick="choosePath('Class 7')">Class 7</button>
-          <button onclick="choosePath('Class 8')">Class 8</button>
-          <button onclick="choosePath('Class 9')">Class 9</button>
-          <button onclick="choosePath('Class 10')">Class 10</button>
+          <button class="chip-btn" onclick="choosePath('Class 1')">Class 1</button>
+          <button class="chip-btn" onclick="choosePath('Class 2')">Class 2</button>
+          <button class="chip-btn" onclick="choosePath('Class 3')">Class 3</button>
+          <button class="chip-btn" onclick="choosePath('Class 4')">Class 4</button>
+          <button class="chip-btn" onclick="choosePath('Class 5')">Class 5</button>
+          <button class="chip-btn" onclick="choosePath('Class 6')">Class 6</button>
+          <button class="chip-btn" onclick="choosePath('Class 7')">Class 7</button>
+          <button class="chip-btn" onclick="choosePath('Class 8')">Class 8</button>
+          <button class="chip-btn" onclick="choosePath('Class 9')">Class 9</button>
+          <button class="chip-btn" onclick="choosePath('Class 10')">Class 10</button>
         </div>
       </section>
 
       <section class="card">
         <h2>Intermediate</h2>
         <div class="chips">
-          <button onclick="choosePath('Intermediate MPC')">MPC</button>
-          <button onclick="choosePath('Intermediate BiPC')">BiPC</button>
-          <button onclick="choosePath('Intermediate HEC')">HEC</button>
-          <button onclick="choosePath('Intermediate CEC')">CEC</button>
-          <button onclick="choosePath('Intermediate MEC')">MEC</button>
+          <button class="chip-btn" onclick="choosePath('Intermediate MPC')">MPC</button>
+          <button class="chip-btn" onclick="choosePath('Intermediate BiPC')">BiPC</button>
+          <button class="chip-btn" onclick="choosePath('Intermediate HEC')">HEC</button>
+          <button class="chip-btn" onclick="choosePath('Intermediate CEC')">CEC</button>
+          <button class="chip-btn" onclick="choosePath('Intermediate MEC')">MEC</button>
         </div>
       </section>
 
       <section class="card">
         <h2>B.Tech</h2>
         <div class="chips">
-          <button onclick="choosePath('B.Tech CSE')">CSE</button>
-          <button onclick="choosePath('B.Tech AI & ML')">AI & ML</button>
-          <button onclick="choosePath('B.Tech Data Science')">Data Science</button>
-          <button onclick="choosePath('B.Tech ECE')">ECE</button>
-          <button onclick="choosePath('B.Tech EEE')">EEE</button>
-          <button onclick="choosePath('B.Tech Mechanical')">Mechanical</button>
-          <button onclick="choosePath('B.Tech Civil')">Civil</button>
-          <button onclick="choosePath('B.Tech IT')">IT</button>
+          <button class="chip-btn" onclick="choosePath('B.Tech CSE')">CSE</button>
+          <button class="chip-btn" onclick="choosePath('B.Tech AI & ML')">AI & ML</button>
+          <button class="chip-btn" onclick="choosePath('B.Tech Data Science')">Data Science</button>
+          <button class="chip-btn" onclick="choosePath('B.Tech ECE')">ECE</button>
+          <button class="chip-btn" onclick="choosePath('B.Tech EEE')">EEE</button>
+          <button class="chip-btn" onclick="choosePath('B.Tech Mechanical')">Mechanical</button>
+          <button class="chip-btn" onclick="choosePath('B.Tech Civil')">Civil</button>
+          <button class="chip-btn" onclick="choosePath('B.Tech IT')">IT</button>
         </div>
       </section>
 
       <section class="card">
-        <h2>Medical & Other</h2>
+        <h2>Medical &amp; Other</h2>
         <div class="chips">
-          <button onclick="choosePath('MBBS')">MBBS</button>
-          <button onclick="choosePath('BDS')">BDS</button>
-          <button onclick="choosePath('B.Pharmacy')">B.Pharmacy</button>
-          <button onclick="choosePath('B.Sc')">B.Sc</button>
-          <button onclick="choosePath('B.Com')">B.Com</button>
-          <button onclick="choosePath('B.A')">B.A</button>
+          <button class="chip-btn" onclick="choosePath('MBBS')">MBBS</button>
+          <button class="chip-btn" onclick="choosePath('BDS')">BDS</button>
+          <button class="chip-btn" onclick="choosePath('B.Pharmacy')">B.Pharmacy</button>
+          <button class="chip-btn" onclick="choosePath('B.Sc')">B.Sc</button>
+          <button class="chip-btn" onclick="choosePath('B.Com')">B.Com</button>
+          <button class="chip-btn" onclick="choosePath('B.A')">B.A</button>
         </div>
       </section>
     </div>
   </main>
 
+  <!-- Learning mode overlay — shown inline after class selection -->
   <section class="mode-overlay" id="modeStep">
     <div class="mode-panel">
-      <h1 id="modeTitle">Choose Learning Mode</h1>
-      <p class="sub">Select how you want to study this class.</p>
+      <h2 class="mode-title" id="modeTitle">Choose Learning Mode</h2>
+      <p class="mode-sub" id="modeSubtitle">Select how you want to master this subject.</p>
+
       <div class="mode-grid">
-        <button class="mode-card" onclick="chooseMode('Instance Learning')">
-          <h2>Instance Learning</h2>
-          <p>Start quickly with topic selection, learning modules, and module tests.</p>
+        <!-- Instant Learning -->
+        <button class="mode-card instant" onclick="chooseMode('Instant Learning')">
+          <div class="mode-icon">⚡</div>
+          <h2>Instant Learning</h2>
+          <p>Pick a subject and topic. Get 5 progressive modules — learn each one, pass the test, and unlock the next. Fast, focused, effective.</p>
+          <span class="mode-tag">Topics → Modules → Tests</span>
         </button>
-        <button class="mode-card" onclick="chooseMode('Deep Dive')">
-          <h2>Deep Dive</h2>
-          <p>Use a slower, stronger study path for detailed practice and deeper understanding.</p>
+
+        <!-- Deep Dive -->
+        <button class="mode-card deepdive" onclick="chooseMode('Deep Dive')">
+          <div class="mode-icon">🧠</div>
+          <h2>Deep Dive Learning</h2>
+          <p>Set how many days you need. Memorix schedules modules and spaced reviews across your timeline with a structured progress tracker.</p>
+          <span class="mode-tag">Schedule → Reviews → Progress</span>
         </button>
       </div>
-      <button class="back-btn" onclick="showClasses()">Change Class</button>
+
+      <button class="back-btn" onclick="closeOverlay()">← Change Class</button>
     </div>
   </section>
 
   <script>
     const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
     if (!user || !user.email) window.location.href = 'index.html';
+
     function choosePath(path) {
       localStorage.setItem('selectedPath', path);
-      localStorage.setItem('selectedSubject', path);
       localStorage.removeItem('selectedLearningMode');
+      localStorage.removeItem('selectedSubject');
+      localStorage.removeItem('selectedTopic');
+      localStorage.removeItem('selectedModuleIndex');
+      document.getElementById('modeTitle').textContent = path + ' — Choose Learning Mode';
+      document.getElementById('modeSubtitle').textContent = 'Select how you want to master ' + path + '.';
       document.getElementById('modeStep').classList.add('show');
-      document.getElementById('modeTitle').textContent = `${path}: Choose Learning Mode`;
     }
+
     function chooseMode(mode) {
       localStorage.setItem('selectedLearningMode', mode);
       window.location.href = 'subjects.html';
     }
-    function showClasses() {
+
+    function closeOverlay() {
       document.getElementById('modeStep').classList.remove('show');
     }
   </script>

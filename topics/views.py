@@ -231,6 +231,77 @@ def module_quiz(request, topic_id, module_id):
 
 
 @login_required
+def learn_mode(request):
+    """Intermediate page after selecting a class — choose Instance Learning or Deep Dive."""
+    class_name = request.GET.get('name', '')
+    difficulty = request.GET.get('difficulty', 'medium')
+    if not class_name:
+        return redirect('dashboard:home')
+    existing_topics = Topic.objects.filter(
+        user=request.user,
+        name__startswith=f"{class_name} - "
+    ).order_by('-created_at')[:8]
+    return render(request, 'topics/learn_mode.html', {
+        'class_name': class_name,
+        'difficulty': difficulty,
+        'existing_topics': existing_topics,
+    })
+
+
+@login_required
+def instance_learning_create(request):
+    """Create a topic from an Instance Learning search and redirect to its detail page."""
+    if request.method != 'POST':
+        return redirect('dashboard:home')
+    class_name = request.POST.get('class_name', '').strip()
+    difficulty = request.POST.get('difficulty', 'medium')
+    search_term = request.POST.get('search_term', '').strip()
+    if not search_term or not class_name:
+        messages.error(request, "Please enter a topic to search.")
+        return redirect(
+            reverse('topics:learn_mode') + f'?name={class_name}&difficulty={difficulty}'
+        )
+    topic_name = f"{class_name} - {search_term}"
+    existing = Topic.objects.filter(user=request.user, name=topic_name).first()
+    if existing:
+        messages.info(request, f"Resuming '{search_term}'.")
+        return redirect('topics:detail', pk=existing.pk)
+    topic = Topic.objects.create(
+        user=request.user,
+        name=topic_name,
+        difficulty=difficulty,
+        description=f"Instance learning: {search_term} in {class_name}",
+    )
+    modules_data = generate_learning_modules(topic_name, topic.difficulty, num_modules=5)
+    for i, m in enumerate(modules_data):
+        lm = LearningModule.objects.create(
+            topic=topic,
+            order=i,
+            title=m.get('title', f"Module {i+1}"),
+            content=m.get('content', ''),
+            key_points=m.get('key_points', []),
+            examples=m.get('examples', []),
+            summary=m.get('summary', ''),
+            reading_minutes=m.get('reading_minutes', 5),
+            is_unlocked=(i == 0),
+        )
+        mcqs = generate_mcqs(
+            f"{topic_name} - {lm.title}", count=5,
+            difficulty=topic.difficulty, purpose='module_quiz'
+        )
+        for q in mcqs:
+            ModuleQuestion.objects.create(
+                module=lm,
+                question=q['question'],
+                options=q['options'],
+                correct_index=q['correct_index'],
+                explanation=q.get('explanation', ''),
+            )
+    messages.success(request, f"Started instance learning for '{search_term}'!")
+    return redirect('topics:detail', pk=topic.pk)
+
+
+@login_required
 def topic_delete(request, pk):
     topic = get_object_or_404(Topic, pk=pk, user=request.user)
     if request.method == 'POST':

@@ -21,7 +21,102 @@
     label { display:block; margin-top:8px; cursor:pointer; }
     .actions { margin-top:22px; display:flex; gap:12px; flex-wrap:wrap; }
     .result { margin-top:18px; font-weight:700; font-size:18px; }
-    @media(max-width:700px){ nav{padding:0 20px;} h1{font-size:32px;} }
+    @media(max-width:700px){ nav{padding:0 20px;} h1{font-size:32px;} .score-card{flex-direction:column;} .score-circ-wrap{margin:auto;} }
+
+    /* ── Result Analysis ── */
+    :root { --purple:#7c5cfc; --blue:#38bdf8; --cyan:#22d3ee; --green:#22c55e; --red:#f87171; --text2:#9ca3af; }
+    .result-panel { animation:fadeUp .45s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(22px);} to{opacity:1;transform:none;} }
+
+    .score-card { display:flex; align-items:center; gap:28px; flex-wrap:wrap;
+      border-radius:24px; background:rgba(14,16,36,.88); backdrop-filter:blur(16px);
+      padding:28px 32px; margin-bottom:18px; }
+    .score-card.pass { border:1px solid rgba(34,197,94,.40); box-shadow:0 0 44px rgba(34,197,94,.18); }
+    .score-card.fail { border:1px solid rgba(248,113,113,.38); box-shadow:0 0 44px rgba(248,113,113,.14); }
+
+    .score-circ-wrap { position:relative; width:140px; height:140px; flex-shrink:0; }
+    .score-svg { width:140px; height:140px; }
+    .score-center { position:absolute; inset:0; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:2px; }
+    .score-num { font-size:46px; font-weight:700; line-height:1; }
+    .score-num.pass { color:#86efac; }
+    .score-num.fail { color:#fca5a5; }
+    .score-den { font-size:13px; color:var(--text2); }
+
+    .score-right { flex:1; min-width:180px; }
+    .status-badge { display:inline-block; padding:7px 20px; border-radius:999px; font-size:14px;
+      font-weight:700; margin-bottom:10px; letter-spacing:.05em; }
+    .status-badge.pass { background:rgba(34,197,94,.16); border:1px solid rgba(34,197,94,.50);
+      color:#86efac; box-shadow:0 0 18px rgba(34,197,94,.30); }
+    .status-badge.fail { background:rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.42);
+      color:#fca5a5; box-shadow:0 0 18px rgba(248,113,113,.24); }
+    .score-pct-big { font-size:30px; font-weight:700; color:#a78bfa; margin-bottom:6px; }
+    .perf-msg { color:var(--text2); font-size:13px; line-height:1.65; margin-bottom:14px; }
+    .stat-pills { display:flex; gap:10px; flex-wrap:wrap; }
+    .stat-pill { text-align:center; padding:8px 14px; border-radius:12px;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+      font-size:12px; color:var(--text2); }
+    .stat-pill .sv { display:block; font-size:22px; font-weight:700; margin-bottom:2px; }
+    .stat-pill.g .sv { color:#86efac; }
+    .stat-pill.r .sv { color:#fca5a5; }
+    .stat-pill.b .sv { color:#7dd3fc; }
+
+    .info-banner { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      gap:12px; padding:15px 20px; border-radius:14px; margin-bottom:16px; font-size:13px; }
+    .info-banner.ok  { background:rgba(34,197,94,.09); border:1px solid rgba(34,197,94,.28); color:#86efac; }
+    .info-banner.warn{ background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.26); color:#fde68a; }
+
+    .res-btn { display:inline-block; padding:10px 20px; border-radius:12px; font-size:14px;
+      font-weight:600; cursor:pointer; text-decoration:none; transition:.22s;
+      font-family:Poppins,sans-serif; }
+    .res-btn-green  { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff !important;
+      border:0 !important; box-shadow:0 0 18px rgba(34,197,94,.35); }
+    .res-btn-green:hover  { box-shadow:0 0 32px rgba(34,197,94,.65); transform:translateY(-2px); }
+    .res-btn-cyan   { background:linear-gradient(135deg,#22d3ee,#38bdf8); color:#0a0f26 !important;
+      border:0 !important; box-shadow:0 0 16px rgba(34,211,238,.35); }
+    .res-btn-cyan:hover   { box-shadow:0 0 30px rgba(34,211,238,.65); transform:translateY(-2px); }
+    .res-btn-purple { background:linear-gradient(135deg,#7c5cfc,#4f46e5); color:#fff !important;
+      border:0 !important; box-shadow:0 0 16px rgba(124,92,252,.35); }
+    .res-btn-purple:hover { box-shadow:0 0 30px rgba(124,92,252,.65); transform:translateY(-2px); }
+    .res-btn-ghost  { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14) !important;
+      color:#fff !important; }
+    .res-btn-ghost:hover  { background:rgba(124,92,252,.14); border-color:#a78bfa !important; transform:translateY(-2px); }
+
+    .weak-panel { padding:16px 20px; border-radius:14px; margin-bottom:16px;
+      background:rgba(251,191,36,.07); border:1px solid rgba(251,191,36,.22); }
+    .weak-panel h4 { font-size:13px; color:#fde68a; margin-bottom:8px; font-weight:600; }
+    .weak-tags { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:8px; }
+    .weak-tag { padding:4px 12px; border-radius:999px; font-size:12px;
+      background:rgba(251,191,36,.11); border:1px solid rgba(251,191,36,.28); color:#fde68a; }
+    .rev-note { font-size:12px; color:#c4b5fd; line-height:1.75; padding:9px 13px; border-radius:10px;
+      background:rgba(124,92,252,.09); border-left:3px solid #7c5cfc; margin-top:8px; }
+
+    .qa-section { margin-bottom:16px; }
+    .qa-section-title { font-size:17px; font-weight:600; margin-bottom:12px; color:#a5f3fc; }
+    .qa-card { border-radius:17px; padding:18px 20px; margin-bottom:12px; }
+    .qa-card.ok  { background:rgba(34,197,94,.05);  border:1px solid rgba(34,197,94,.20); }
+    .qa-card.bad { background:rgba(248,113,113,.05); border:1px solid rgba(248,113,113,.20); }
+    .qa-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .qa-label { font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px;
+      background:rgba(255,255,255,.07); color:var(--text2); letter-spacing:.04em; }
+    .qa-mark { font-size:13px; font-weight:600; }
+    .qa-mark.ok  { color:#86efac; }
+    .qa-mark.bad { color:#fca5a5; }
+    .qa-q { font-size:14px; color:#fff; line-height:1.7; margin-bottom:10px; font-weight:500; }
+    .qa-answers { display:flex; flex-direction:column; gap:7px; margin-bottom:10px; }
+    .qa-ans { font-size:13px; padding:7px 13px; border-radius:9px; line-height:1.6; }
+    .qa-ans.wrong { background:rgba(248,113,113,.11); border:1px solid rgba(248,113,113,.24); color:#fca5a5; }
+    .qa-ans.right { background:rgba(34,197,94,.09);  border:1px solid rgba(34,197,94,.26); color:#86efac; }
+    .ans-lbl { font-weight:600; opacity:.8; margin-right:5px; }
+    .qa-exp { padding:11px 14px; border-radius:11px; margin-bottom:7px;
+      background:rgba(56,189,248,.07); border:1px solid rgba(56,189,248,.18); }
+    .exp-hd { font-size:11px; font-weight:700; color:#7dd3fc; margin-bottom:5px; letter-spacing:.05em; }
+    .exp-bd { font-size:13px; color:var(--text2); line-height:1.75; }
+    .qa-tip { font-size:12px; color:#c4b5fd; line-height:1.7; padding:9px 13px; border-radius:9px;
+      background:rgba(124,92,252,.09); border-left:3px solid #7c5cfc; }
+    .tip-lbl { font-weight:700; color:#a78bfa; margin-right:5px; }
+    .qa-ok-note { font-size:12px; color:#86efac; font-style:italic; line-height:1.6; }
+    .res-actions { display:flex; gap:11px; flex-wrap:wrap; margin-top:8px; margin-bottom:28px; }
   </style>
 </head>
 <body>
@@ -100,7 +195,7 @@
         options: shuffledOptions,
         answer: shuffledOptions.indexOf(correctOption)
       };
-    }
+    }  
 
     function selectQuestionSet(questionBank, historyKey, count) {
       const historyLimit = Math.min(questionBank.length - count, count * 2);
@@ -450,31 +545,214 @@
     }
 
     function submitTest() {
-      let score = 0;
-      let answered = 0;
+      let score = 0, answered = 0;
+      const analysis = [];
+
       questions.forEach((item, qIndex) => {
-        const selected = document.querySelector(`input[name="q${qIndex}"]:checked`);
-        if (selected) {
-          answered++;
-          if (Number(selected.value) === item.answer) score++;
-        }
+        const sel = document.querySelector(`input[name="q${qIndex}"]:checked`);
+        if (!sel) return;
+        answered++;
+        const chosenIdx = Number(sel.value);
+        const isCorrect = chosenIdx === item.answer;
+        if (isCorrect) score++;
+        analysis.push({
+          num: qIndex + 1,
+          question: item.q.replace(/^\d+\.\s*/, ''),
+          userAnswer: item.options[chosenIdx],
+          correctAnswer: item.options[item.answer],
+          isCorrect
+        });
       });
 
-      const result = document.getElementById('result');
+      const resultEl = document.getElementById('result');
       if (answered < 10) {
-        result.style.color = '#fbbf24';
-        result.textContent = `Please answer all questions. Completed ${answered}/10.`;
+        resultEl.style.color = '#fbbf24';
+        resultEl.textContent = `Please answer all questions. Completed ${answered}/10.`;
         return;
       }
 
-      if (score >= 7) {
-        unlockNext();
-        result.style.color = '#86efac';
-        result.innerHTML = `Passed ${score}/10. Next module unlocked. <br><br><a class="back" href="topics-page.html">Go to Modules</a>`;
-      } else {
-        result.style.color = '#fca5a5';
-        result.innerHTML = `Score ${score}/10. Please revise and try again with a fresh question set. <br><br><button class="primary" type="button" onclick="window.location.reload()">Re-attempt Test</button>`;
-      }
+      const passed = score >= 7;
+      const pct = score * 10;
+
+      if (passed) unlockNext();
+      saveAttempt(score, pct, passed);
+
+      document.getElementById('testForm').style.display = 'none';
+      document.querySelector('.actions').style.display = 'none';
+      document.querySelector('.sub').style.display = 'none';
+
+      resultEl.style.color = '';
+      resultEl.innerHTML = buildResultHTML(score, pct, passed, analysis);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => animateScore(pct, score), 160);
+    }
+
+    function saveAttempt(score, pct, passed) {
+      const key = `test-attempts-${selectedPath}-${selectedSubject}-${topic}-${moduleIndex}`;
+      const hist = JSON.parse(localStorage.getItem(key) || '[]');
+      hist.push({ date: new Date().toISOString(), score, pct, passed });
+      localStorage.setItem(key, JSON.stringify(hist.slice(-10)));
+    }
+
+    function animateScore(pct, score) {
+      const arc   = document.getElementById('scoreArc');
+      const numEl = document.getElementById('scoreNum');
+      if (!arc || !numEl) return;
+      const circumference = 263.9;
+      arc.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+      let count = 0;
+      const interval = setInterval(() => {
+        count++;
+        numEl.textContent = count;
+        if (count >= score) clearInterval(interval);
+      }, 1100 / Math.max(score, 1));
+    }
+
+    function buildResultHTML(score, pct, passed, analysis) {
+      const wrong   = analysis.filter(a => !a.isCorrect);
+      const circumference = 263.9;
+
+      const perfMsg =
+        pct === 100 ? 'Perfect score! Outstanding mastery of this module.' :
+        pct >= 90   ? 'Excellent! You have very strong command of this material.' :
+        pct >= 80   ? 'Great work! A solid pass — keep this momentum going.' :
+        pct >= 70   ? 'Good job! You cleared the threshold. Push for higher accuracy.' :
+        pct >= 60   ? 'Very close! A couple more right and you would have passed.' :
+        pct >= 40   ? 'Needs improvement. Study the explanations below before retrying.' :
+                      'Go back to the Learn Module, revise carefully, then retry.';
+
+      const weakAreas = getWeakAreas(wrong);
+
+      const unlockHtml = passed ? `
+        <div class="info-banner ok">
+          <span>🎉 Next module unlocked! Continue your learning journey.</span>
+          <a class="res-btn res-btn-green" href="topics-page.html">Continue to Modules →</a>
+        </div>` : `
+        <div class="info-banner warn">
+          <span>📚 You need 7/10 to pass. Review the explanations below — each retry gives fresh questions.</span>
+          <button class="res-btn res-btn-cyan" onclick="window.location.reload()">🔄 Retry Test</button>
+        </div>`;
+
+      const weakHtml = weakAreas.length ? `
+        <div class="weak-panel">
+          <h4>⚠️ Areas to Strengthen</h4>
+          <div class="weak-tags">${weakAreas.map(w => `<span class="weak-tag">${w}</span>`).join('')}</div>
+          <div class="rev-note">
+            💡 For each weak area re-open the Learn Module and re-read the Key Points and Formulas sections.
+            Explain the concept out loud without notes before retrying this test.
+          </div>
+        </div>` : '';
+
+      const qaHtml = analysis.map(item => {
+        if (item.isCorrect) {
+          return `<div class="qa-card ok">
+            <div class="qa-top">
+              <span class="qa-label">Q${item.num}</span>
+              <span class="qa-mark ok">✅ Correct</span>
+            </div>
+            <div class="qa-q">${item.question}</div>
+            <div class="qa-answers">
+              <div class="qa-ans right"><span class="ans-lbl">Your Answer:</span>${item.correctAnswer}</div>
+            </div>
+            <div class="qa-ok-note">✓ Well done — this reflects exactly the right understanding. Keep applying this principle.</div>
+          </div>`;
+        }
+        const exp = buildExplanation(item.correctAnswer, item.userAnswer);
+        return `<div class="qa-card bad">
+          <div class="qa-top">
+            <span class="qa-label">Q${item.num}</span>
+            <span class="qa-mark bad">❌ Wrong</span>
+          </div>
+          <div class="qa-q">${item.question}</div>
+          <div class="qa-answers">
+            <div class="qa-ans wrong"><span class="ans-lbl">Your Answer:</span>${item.userAnswer}</div>
+            <div class="qa-ans right"><span class="ans-lbl">Correct Answer:</span>${item.correctAnswer}</div>
+          </div>
+          <div class="qa-exp">
+            <div class="exp-hd">📖 EXPLANATION</div>
+            <div class="exp-bd">${exp.reason}</div>
+          </div>
+          <div class="qa-tip"><span class="tip-lbl">💡 Revision Tip:</span>${exp.tip}</div>
+        </div>`;
+      }).join('');
+
+      return `<div class="result-panel">
+        <div class="score-card ${passed ? 'pass' : 'fail'}">
+          <div class="score-circ-wrap">
+            <svg viewBox="0 0 100 100" class="score-svg">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
+              <circle cx="50" cy="50" r="42" fill="none"
+                stroke="${passed ? '#22c55e' : '#f87171'}" stroke-width="8"
+                stroke-linecap="round"
+                stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
+                id="scoreArc"
+                style="transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset 1.2s ease;"/>
+            </svg>
+            <div class="score-center">
+              <div class="score-num ${passed ? 'pass' : 'fail'}" id="scoreNum">0</div>
+              <div class="score-den">/10</div>
+            </div>
+          </div>
+          <div class="score-right">
+            <div class="status-badge ${passed ? 'pass' : 'fail'}">${passed ? '✅ PASS' : '❌ FAIL'}</div>
+            <div class="score-pct-big">${pct}%</div>
+            <div class="perf-msg">${perfMsg}</div>
+            <div class="stat-pills">
+              <div class="stat-pill g"><span class="sv">${score}</span>Correct</div>
+              <div class="stat-pill r"><span class="sv">${10 - score}</span>Wrong</div>
+              <div class="stat-pill b"><span class="sv">${pct}%</span>Accuracy</div>
+              <div class="stat-pill"><span class="sv">${moduleNames[moduleIndex] || 'M' + (moduleIndex + 1)}</span>Module</div>
+            </div>
+          </div>
+        </div>
+
+        ${unlockHtml}
+        ${weakHtml}
+
+        <div class="qa-section">
+          <div class="qa-section-title">📋 Question-by-Question Analysis</div>
+          ${qaHtml}
+        </div>
+
+        <div class="res-actions">
+          ${passed
+            ? `<a class="res-btn res-btn-purple" href="topics-page.html">📚 Go to Modules</a>`
+            : `<button class="res-btn res-btn-cyan" onclick="window.location.reload()">🔄 Retry with Fresh Questions</button>`
+          }
+          <a class="res-btn res-btn-ghost" href="learn-module.html">📖 Back to Learn Module</a>
+        </div>
+      </div>`;
+    }
+
+    function buildExplanation(correctOption, wrongOption) {
+      const tips = [
+        'Before answering, identify the keyword in the question stem — it tells you which concept applies.',
+        'The correct option explains WHY something works, not just WHAT it is. Train yourself to spot this.',
+        'When options seem similar, focus on which one directly answers the exact condition in the question.',
+        'Write the correct answer in your own words after reviewing — this turns correction into active learning.',
+        'Ask yourself: "Does this option show real understanding, or just memorisation?" — then choose accordingly.',
+        'Re-read the Key Points section in the Learn Module for this concept to reinforce the correct understanding.'
+      ];
+      const tip = tips[Math.floor(Math.random() * tips.length)];
+      const reason = `The correct answer is <em>"${correctOption}"</em>. This option correctly identifies the most effective principle being tested here. Your answer <em>"${wrongOption}"</em> does not apply the right concept — the correct option always reflects genuine understanding of the learning method, not surface recall.`;
+      return { reason, tip };
+    }
+
+    function getWeakAreas(wrongItems) {
+      const areas = new Set();
+      wrongItems.forEach(w => {
+        const q = w.question.toLowerCase();
+        if (q.includes('keyword') || q.includes('meaning') || q.includes('definition') || q.includes('understand first')) areas.add('Definition & Keywords');
+        if (q.includes('rule') || q.includes('formula') || q.includes('concept') || q.includes('core')) areas.add('Core Concepts & Rules');
+        if (q.includes('example') || q.includes('solve') || q.includes('step') || q.includes('method') || q.includes('solved')) areas.add('Worked Examples');
+        if (q.includes('apply') || q.includes('mixed') || q.includes('application') || q.includes('case')) areas.add('Application Practice');
+        if (q.includes('revision') || q.includes('recall') || q.includes('flashcard') || q.includes('final')) areas.add('Revision Technique');
+        if (q.includes('mistake') || q.includes('wrong') || q.includes('trap') || q.includes('error')) areas.add('Error Awareness');
+        if (q.includes('explain') || q.includes('why') || q.includes('reason') || q.includes('habit')) areas.add('Conceptual Understanding');
+        if (q.includes('compare') || q.includes('two') || q.includes('difference') || q.includes('close')) areas.add('Comparative Analysis');
+      });
+      if (areas.size === 0 && wrongItems.length > 0) areas.add('General Understanding');
+      return [...areas].slice(0, 4);
     }
   </script>
 </body>

@@ -6,128 +6,493 @@
   <title>Memorix - Deep Dive</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --purple:#7c5cfc; --blue:#38bdf8; --green:#22c55e; --red:#f87171; --yellow:#fbbf24; --text:#fff; --text2:#9ca3af; --glass:rgba(18,20,40,.72); --border:rgba(124,92,252,.24); }
+    :root {
+      --purple:#7c5cfc; --blue:#38bdf8; --cyan:#22d3ee;
+      --green:#22c55e; --red:#f87171; --yellow:#fbbf24;
+      --text:#fff; --text2:#9ca3af;
+      --glass:rgba(14,16,36,.80); --border:rgba(124,92,252,.28);
+    }
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif; }
-    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 60px; }
-    nav { position:fixed; inset:0 0 auto; height:74px; display:flex; justify-content:space-between; align-items:center; padding:0 52px; background:rgba(7,8,22,.72); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.08); z-index:4; }
-    .logo { font-size:30px; font-weight:700; background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    body { min-height:100vh; background:linear-gradient(135deg,#060816,#11132b,#1a1040); color:var(--text); padding:110px 22px 80px; overflow-x:hidden; }
+
+    /* animated bg */
+    body::before { content:''; position:fixed; inset:0; z-index:-1;
+      background:radial-gradient(circle at 20% 20%, rgba(124,92,252,.13), transparent 40%),
+                 radial-gradient(circle at 80% 75%, rgba(56,189,248,.10), transparent 40%);
+      animation:bgP 12s ease-in-out infinite alternate; }
+    @keyframes bgP { to { transform:scale(1.07); } }
+
+    /* floating particles */
+    .particle { position:fixed; width:5px; height:5px; border-radius:50%;
+      background:rgba(167,139,250,.65); box-shadow:0 0 9px rgba(167,139,250,.8);
+      animation:fu linear infinite; pointer-events:none; z-index:0; }
+    @keyframes fu { from{transform:translateY(100vh) scale(.5);opacity:0;} 10%{opacity:1;} to{transform:translateY(-120px) scale(1.2);opacity:0;} }
+
+    /* ── Nav ── */
+    nav { position:fixed; inset:0 0 auto; height:74px; z-index:100;
+      display:flex; justify-content:space-between; align-items:center; padding:0 52px;
+      background:rgba(7,8,22,.80); backdrop-filter:blur(18px);
+      border-bottom:1px solid rgba(255,255,255,.08); }
+    .logo { font-size:30px; font-weight:700;
+      background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      animation:logoG 3s infinite alternate; }
+    @keyframes logoG { from{filter:drop-shadow(0 0 6px rgba(124,92,252,.3));} to{filter:drop-shadow(0 0 18px rgba(56,189,248,.6));} }
     a { color:#fff; text-decoration:none; }
-    .back { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; }
-    .wrap { max-width:1180px; margin:auto; }
-    h1 { font-size:42px; text-align:center; margin-bottom:10px; }
+    .back { border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:10px 16px; transition:.25s; }
+    .back:hover { border-color:#a78bfa; background:rgba(124,92,252,.14); }
+
+    /* ── Layout ── */
+    .wrap { max-width:1200px; margin:auto; position:relative; z-index:1; }
+    h1 { font-size:42px; text-align:center; margin-bottom:10px;
+      background:linear-gradient(135deg,#fff,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .sub { text-align:center; color:var(--text2); margin-bottom:30px; line-height:1.7; }
-    .panel, .card { border:1px solid var(--border); border-radius:18px; background:var(--glass); padding:20px; }
-    .setup { display:grid; grid-template-columns:1fr 180px auto; gap:12px; margin-bottom:18px; }
-    input { min-height:52px; border:1px solid rgba(255,255,255,.14); border-radius:14px; background:rgba(255,255,255,.07); color:#fff; padding:0 16px; font-size:16px; outline:none; }
-    button { border:1px solid rgba(255,255,255,.12); border-radius:13px; background:rgba(255,255,255,.06); color:white; padding:12px 15px; cursor:pointer; transition:.25s; }
-    button:hover:not(:disabled) { background:rgba(124,92,252,.2); border-color:#a78bfa; transform:translateY(-2px); }
-    button:disabled { opacity:.45; cursor:not-allowed; }
-    .primary { background:linear-gradient(135deg,var(--purple),#4f46e5); border:0; }
-    .topics, .timeline, .review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:16px; }
-    .topic { text-align:left; }
-    .muted { color:var(--text2); line-height:1.7; }
-    .tag { display:inline-block; margin-bottom:10px; padding:5px 10px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--text2); font-size:12px; }
-    .tag.done { background:rgba(34,197,94,.14); color:#86efac; }
-    .tag.failed { background:rgba(248,113,113,.14); color:#fca5a5; }
-    .tag.available { background:rgba(251,191,36,.14); color:#fde68a; }
-    .card h2 { font-size:20px; margin-bottom:8px; }
-    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+
+    /* ── Panel / Card base ── */
+    .panel, .card { border:1px solid var(--border); border-radius:20px; background:var(--glass); padding:22px; backdrop-filter:blur(14px); }
     .hidden { display:none; }
+    .muted { color:var(--text2); line-height:1.7; }
+
+    /* ── Setup ── */
+    .setup { display:grid; grid-template-columns:1fr 160px auto; gap:12px; margin-bottom:18px; }
+    .topics { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:16px; }
+    input { min-height:52px; border:1px solid rgba(255,255,255,.14); border-radius:14px;
+      background:rgba(255,255,255,.06); color:#fff; padding:0 16px; font-size:16px; outline:none; transition:.25s; }
+    input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(56,189,248,.18); }
+    input::placeholder { color:#4b5563; }
+
+    /* ── Buttons ── */
+    button { border:1px solid rgba(255,255,255,.12); border-radius:13px;
+      background:rgba(255,255,255,.06); color:white; padding:12px 15px;
+      cursor:pointer; transition:.25s; font-family:Poppins,sans-serif; font-size:14px; }
+    button:hover:not(:disabled) { background:rgba(124,92,252,.22); border-color:#a78bfa; transform:translateY(-2px); }
+    button:disabled { opacity:.4; cursor:not-allowed; transform:none !important; }
+    .btn-primary { background:linear-gradient(135deg,var(--purple),#4f46e5); border:0;
+      box-shadow:0 0 22px rgba(124,92,252,.4); }
+    .btn-primary:hover:not(:disabled) { box-shadow:0 0 36px rgba(124,92,252,.7); }
+    .btn-cyan { background:linear-gradient(135deg,var(--cyan),var(--blue)); border:0;
+      box-shadow:0 0 20px rgba(34,211,238,.35); }
+    .btn-cyan:hover:not(:disabled) { box-shadow:0 0 34px rgba(34,211,238,.6); }
+    .btn-green { background:linear-gradient(135deg,var(--green),var(--cyan)); border:0;
+      box-shadow:0 0 18px rgba(34,197,94,.35); }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+
+    /* ── Tags ── */
+    .tag { display:inline-block; margin-bottom:10px; padding:5px 12px; border-radius:999px; font-size:12px; }
+    .tag-default { background:rgba(255,255,255,.08); color:var(--text2); }
+    .tag-done    { background:rgba(34,197,94,.16);  color:#86efac; box-shadow:0 0 10px rgba(34,197,94,.25); }
+    .tag-failed  { background:rgba(248,113,113,.14); color:#fca5a5; }
+    .tag-avail   { background:rgba(251,191,36,.14);  color:#fde68a; }
+    .tag-mock    { background:rgba(34,211,238,.14);  color:#a5f3fc; }
+    .tag-locked  { background:rgba(255,255,255,.06); color:#6b7280; }
+
+    /* ── Countdown Banner ── */
+    .countdown-banner { margin-bottom:20px; padding:14px 22px; border-radius:16px;
+      background:linear-gradient(135deg,rgba(124,92,252,.18),rgba(56,189,248,.12));
+      border:1px solid rgba(124,92,252,.35); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+    .cdb-title { font-size:13px; color:var(--text2); }
+    .cdb-vals { display:flex; gap:22px; align-items:center; }
+    .cdb-val { text-align:center; }
+    .cdb-val .num { font-size:26px; font-weight:700;
+      background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .cdb-val .lbl { font-size:10px; color:var(--text2); }
+    .cdb-pct { font-size:14px; color:#86efac; font-weight:600; }
+
+    /* ── Progress Panel ── */
+    .progress-panel { padding:22px; border:1px solid rgba(56,189,248,.22); border-radius:20px;
+      background:rgba(6,12,32,.72); backdrop-filter:blur(14px); margin-top:18px; }
+    .progress-panel h3 { font-size:17px; margin-bottom:14px; color:#7dd3fc; }
+    .prog-row { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
+    .prog-stat { text-align:center; min-width:56px; }
+    .prog-stat .val { font-size:26px; font-weight:700;
+      background:linear-gradient(135deg,#a78bfa,var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .prog-stat .lbl { font-size:10px; color:var(--text2); margin-top:2px; }
+    .prog-bar-wrap { flex:1; min-width:160px; }
+    .prog-bar-label { font-size:11px; color:var(--text2); margin-bottom:5px; display:flex; justify-content:space-between; }
+    .prog-bar { height:8px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; }
+    .prog-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#7c5cfc,#38bdf8); transition:width .7s ease; }
+
+    /* mini timeline dots */
+    .tl-row { display:flex; overflow-x:auto; padding-bottom:4px; margin-top:12px; gap:0; }
+    .tl-seg { display:flex; flex:1; min-width:36px; flex-direction:column; align-items:center; position:relative; }
+    .tl-seg:not(:last-child)::after { content:''; position:absolute; top:10px; left:50%; width:100%; height:2px; background:rgba(255,255,255,.1); z-index:0; }
+    .tl-seg:not(:last-child).tl-done-seg::after { background:linear-gradient(90deg,#22c55e,rgba(255,255,255,.1)); }
+    .tl-dot { width:20px; height:20px; border-radius:50%; border:2px solid rgba(255,255,255,.18); background:#0d1020;
+      display:grid; place-items:center; font-size:9px; z-index:1; position:relative; transition:.3s; }
+    .tl-dot.done  { background:#22c55e; border-color:#22c55e; box-shadow:0 0 9px rgba(34,197,94,.55); }
+    .tl-dot.active{ background:#7c5cfc; border-color:#a78bfa; box-shadow:0 0 12px rgba(124,92,252,.65); animation:tlP 1.8s ease-in-out infinite; }
+    .tl-dot.fail  { background:#f87171; border-color:#f87171; }
+    @keyframes tlP { 0%,100%{box-shadow:0 0 9px rgba(124,92,252,.5);} 50%{box-shadow:0 0 20px rgba(124,92,252,.9);} }
+    .tl-lbl { font-size:9px; color:var(--text2); margin-top:4px; white-space:nowrap; }
+
+    /* ── Schedule Timeline ── */
+    .schedule-section { margin-top:28px; }
+    .schedule-section h2 { font-size:22px; margin-bottom:16px; }
+    .schedule-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px; }
+
+    .day-card { border-radius:18px; padding:18px; backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,.1); background:var(--glass);
+      transition:.3s; position:relative; overflow:hidden; }
+    .day-card::before { content:''; position:absolute; inset:0; opacity:.06;
+      background:linear-gradient(135deg,#7c5cfc,#38bdf8); pointer-events:none; }
+    .day-card:hover { transform:translateY(-4px); }
+
+    /* type-specific borders and glows */
+    .day-module    { border-color:rgba(124,92,252,.45); }
+    .day-module:hover { box-shadow:0 0 28px rgba(124,92,252,.45); }
+    .day-review    { border-color:rgba(251,191,36,.4); }
+    .day-review:hover { box-shadow:0 0 28px rgba(251,191,36,.4); }
+    .day-mock      { border-color:rgba(34,211,238,.38); }
+    .day-mock:hover { box-shadow:0 0 28px rgba(34,211,238,.4); }
+    .day-assessment{ border-color:rgba(167,139,250,.55); background:rgba(20,12,48,.85); }
+    .day-assessment:hover { box-shadow:0 0 36px rgba(167,139,250,.6); }
+    .day-revision  { border-color:rgba(34,197,94,.35); }
+    .day-revision:hover { box-shadow:0 0 22px rgba(34,197,94,.35); }
+
+    /* active day glow */
+    .day-active { animation:dayGlow 2.2s ease-in-out infinite alternate; }
+    .day-module.day-active    { box-shadow:0 0 30px rgba(124,92,252,.6); border-color:#a78bfa; }
+    .day-review.day-active    { box-shadow:0 0 30px rgba(251,191,36,.55); border-color:#fbbf24; }
+    .day-mock.day-active      { box-shadow:0 0 30px rgba(34,211,238,.55); border-color:var(--cyan); }
+    .day-assessment.day-active{ box-shadow:0 0 38px rgba(167,139,250,.7); border-color:#c4b5fd; }
+    @keyframes dayGlow { from { filter:brightness(1); } to { filter:brightness(1.12); } }
+
+    /* completed day */
+    .day-done { opacity:.75; }
+    .day-done .day-num-badge { background:#22c55e !important; }
+
+    .day-num-badge { position:absolute; top:14px; right:14px;
+      width:30px; height:30px; border-radius:50%;
+      background:linear-gradient(135deg,var(--purple),#4f46e5);
+      display:grid; place-items:center; font-size:11px; font-weight:700; }
+    .day-icon-lg { font-size:28px; margin-bottom:10px; }
+    .day-type-label { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+      margin-bottom:6px; }
+    .day-module .day-type-label    { color:#c4b5fd; }
+    .day-review .day-type-label    { color:#fde68a; }
+    .day-mock .day-type-label      { color:#a5f3fc; }
+    .day-assessment .day-type-label{ color:#e9d5ff; }
+    .day-revision .day-type-label  { color:#86efac; }
+    .day-card h3 { font-size:15px; margin-bottom:6px; }
+    .day-card p  { font-size:12px; color:var(--text2); line-height:1.6; }
+
+    /* ── Mock Test Panel ── */
+    .mock-access-panel { margin-top:24px; padding:22px; border:1px solid rgba(34,211,238,.3); border-radius:20px;
+      background:rgba(6,20,36,.78); backdrop-filter:blur(14px); }
+    .mock-access-panel h2 { font-size:20px; margin-bottom:6px; color:#a5f3fc; }
+    .mock-access-panel p  { color:var(--text2); margin-bottom:16px; font-size:13px; line-height:1.6; }
+    .mock-stat-row { display:flex; gap:22px; flex-wrap:wrap; margin-bottom:16px; }
+    .mock-stat { text-align:center; }
+    .mock-stat .mv { font-size:22px; font-weight:700; color:var(--cyan); }
+    .mock-stat .ml { font-size:10px; color:var(--text2); }
+    .mock-hist { margin-top:16px; }
+    .mock-hist-item { display:flex; justify-content:space-between; align-items:center;
+      padding:10px 14px; border-radius:12px; background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08); margin-bottom:8px; font-size:13px; }
+    .mock-hist-score { font-weight:700; }
+    .mock-hist-score.pass { color:#86efac; }
+    .mock-hist-score.fail { color:#fca5a5; }
+
+    /* ── Quiz ── */
     .quiz { margin-top:20px; }
-    .q { margin-top:12px; padding:14px; border-radius:13px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.1); }
-    label { display:block; margin-top:8px; color:var(--text2); cursor:pointer; }
-    .result { margin-top:16px; font-weight:600; }
-    .explain { margin-top:10px; padding:12px; border-radius:12px; background:rgba(56,189,248,.08); border:1px solid rgba(56,189,248,.18); color:#dbeafe; line-height:1.7; }
-    @media(max-width:760px){ nav{padding:0 20px;} h1{font-size:32px;} .setup{grid-template-columns:1fr;} }
+    .q { margin-top:12px; padding:14px; border-radius:14px;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); }
+    .q p { margin-bottom:6px; font-size:14px; }
+    label { display:block; margin-top:8px; color:var(--text2); cursor:pointer; font-size:13px; }
+    label:hover { color:#fff; }
+    .result { margin-top:16px; font-weight:600; line-height:1.7; }
+
+    /* wrong answer card */
+    .explain-card { margin-top:12px; padding:14px; border-radius:14px;
+      background:rgba(56,189,248,.07); border:1px solid rgba(56,189,248,.22); }
+    .explain-card .eq { font-weight:600; margin-bottom:8px; font-size:13px; }
+    .explain-card .ea { font-size:12px; color:var(--text2); line-height:1.7; }
+    .explain-card .concept-note { margin-top:8px; padding:8px 12px; border-radius:10px;
+      background:rgba(124,92,252,.12); border-left:3px solid var(--purple); font-size:12px; color:#c4b5fd; }
+    .explain-correct { color:#86efac; font-weight:600; }
+    .explain-wrong   { color:#fca5a5; }
+
+    /* ── Modules & Reviews (existing grids) ── */
+    .timeline, .review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:14px; }
+
+    /* ── Learning Content Viewer ── */
+    .learning-overlay { position:fixed; inset:0; z-index:200; background:rgba(4,5,18,.93);
+      backdrop-filter:blur(10px); display:flex; align-items:flex-start; justify-content:center;
+      overflow-y:auto; padding:90px 20px 40px; animation:fadeIn .3s ease; }
+    .learning-overlay.hidden { display:none; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    .learning-panel { max-width:860px; width:100%; border:1px solid rgba(124,92,252,.48);
+      border-radius:24px; background:rgba(10,12,30,.97); backdrop-filter:blur(20px);
+      box-shadow:0 0 60px rgba(124,92,252,.32); padding:36px; animation:slideUp .35s ease; }
+    @keyframes slideUp { from{transform:translateY(28px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+    .lv-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:22px; }
+    .lv-meta { font-size:12px; color:var(--text2); margin-bottom:6px; }
+    .lv-title { font-size:26px; font-weight:700;
+      background:linear-gradient(135deg,#a78bfa,#38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .lv-close { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+      border-radius:10px; padding:8px 14px; cursor:pointer; color:var(--text2); transition:.2s; font-size:18px; flex-shrink:0; margin-left:16px; }
+    .lv-close:hover { background:rgba(248,113,113,.15); border-color:#f87171; color:#f87171; transform:none; }
+    .lv-badge-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+    .lv-badge { padding:5px 14px; border-radius:999px; font-size:11px; font-weight:600;
+      background:rgba(124,92,252,.15); border:1px solid rgba(124,92,252,.30); color:#c4b5fd; }
+    .lv-badge.day-b { background:rgba(56,189,248,.12); border-color:rgba(56,189,248,.28); color:#7dd3fc; }
+    .lv-section { margin-bottom:20px; padding:18px 20px; border-radius:16px;
+      background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); }
+    .lv-section h3 { font-size:14px; font-weight:600; margin-bottom:12px; color:#a5f3fc; letter-spacing:.02em; }
+    .lv-section > p { color:var(--text2); line-height:1.85; font-size:14px; }
+    .lv-list { list-style:none; padding:0; margin:0; }
+    .lv-list li { padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05);
+      color:var(--text2); font-size:13px; line-height:1.7; display:flex; gap:10px; align-items:flex-start; }
+    .lv-list li:last-child { border-bottom:none; }
+    .lv-list li::before { content:'▸'; color:#a78bfa; flex-shrink:0; margin-top:1px; }
+    .lv-formula-box { background:rgba(56,189,248,.06); border:1px solid rgba(56,189,248,.22);
+      border-radius:12px; padding:14px 18px; font-size:13px; color:#7dd3fc; margin-top:10px; line-height:2.1; white-space:pre-line; }
+    .lv-eg-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-top:10px; }
+    .lv-eg-card { background:rgba(34,211,238,.05); border:1px solid rgba(34,211,238,.18);
+      border-radius:12px; padding:13px 15px; }
+    .lv-eg-card .ex-t { font-size:11px; font-weight:700; color:#a5f3fc; margin-bottom:7px; letter-spacing:.04em; text-transform:uppercase; }
+    .lv-eg-card .ex-b { font-size:12px; color:var(--text2); line-height:1.75; }
+    .lv-summary-box { background:linear-gradient(135deg,rgba(124,92,252,.10),rgba(56,189,248,.06));
+      border:1px solid rgba(124,92,252,.26); border-radius:14px; padding:16px 20px; margin-bottom:22px; }
+    .lv-summary-box p { font-size:13px; color:#e9d5ff; line-height:1.85; }
+    .lv-mark-btn { width:100%; padding:17px; font-size:16px; font-weight:700; border-radius:14px;
+      background:linear-gradient(135deg,#22c55e,#16a34a); border:0;
+      box-shadow:0 0 30px rgba(34,197,94,.40); cursor:pointer; transition:.25s; color:#fff; letter-spacing:.02em; }
+    .lv-mark-btn:hover { box-shadow:0 0 48px rgba(34,197,94,.72); transform:translateY(-3px); }
+    .lv-mark-note { text-align:center; color:var(--text2); font-size:12px; margin-top:10px; }
+
+    /* ── Mock Test Enhanced Results ── */
+    .score-box { padding:16px 20px; border-radius:14px; margin-bottom:14px; }
+    .score-box.pass { background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.25); }
+    .score-box.fail { background:rgba(251,191,36,.07); border:1px solid rgba(251,191,36,.22); }
+    .score-box .sv { font-size:26px; font-weight:700; margin-bottom:4px; }
+    .score-box.pass .sv { color:#86efac; }
+    .score-box.fail .sv { color:#fde68a; }
+    .score-box .sm { font-size:13px; color:var(--text2); }
+    .weak-section { margin-top:14px; padding:14px 16px; border-radius:14px;
+      background:rgba(251,191,36,.07); border:1px solid rgba(251,191,36,.22); }
+    .weak-section h4 { font-size:13px; color:#fde68a; margin-bottom:8px; }
+    .weak-tag { display:inline-block; padding:4px 12px; margin:3px; border-radius:999px;
+      background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.28); font-size:12px; color:#fde68a; }
+    .rev-tip { background:rgba(124,92,252,.09); border:1px solid rgba(124,92,252,.22);
+      border-left:3px solid var(--purple); border-radius:10px; padding:10px 14px;
+      margin-top:10px; font-size:12px; color:#c4b5fd; line-height:1.75; }
+
+    /* ── Shared result analysis (reviews + mock tests) ── */
+    .dd-result { animation:ddFade .4s ease; }
+    @keyframes ddFade { from{opacity:0;transform:translateY(18px);} to{opacity:1;transform:none;} }
+    .dd-score-card { display:flex; align-items:center; gap:24px; flex-wrap:wrap;
+      border-radius:20px; padding:24px 28px; margin-bottom:14px; }
+    .dd-score-card.pass { background:rgba(34,197,94,.07); border:1px solid rgba(34,197,94,.38); box-shadow:0 0 36px rgba(34,197,94,.16); }
+    .dd-score-card.fail { background:rgba(248,113,113,.07); border:1px solid rgba(248,113,113,.35); box-shadow:0 0 36px rgba(248,113,113,.13); }
+    .dd-circ { position:relative; width:120px; height:120px; flex-shrink:0; }
+    .dd-circ svg { width:120px; height:120px; }
+    .dd-circ-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
+    .dd-circ-num { font-size:30px; font-weight:700; line-height:1; }
+    .dd-circ-num.pass { color:#86efac; }
+    .dd-circ-num.fail { color:#fca5a5; }
+    .dd-circ-den { font-size:12px; color:var(--text2); }
+    .dd-score-right { flex:1; min-width:160px; }
+    .dd-badge { display:inline-block; padding:6px 18px; border-radius:999px; font-size:13px; font-weight:700; margin-bottom:8px; letter-spacing:.04em; }
+    .dd-badge.pass { background:rgba(34,197,94,.16); border:1px solid rgba(34,197,94,.50); color:#86efac; box-shadow:0 0 14px rgba(34,197,94,.28); }
+    .dd-badge.fail { background:rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.42); color:#fca5a5; box-shadow:0 0 14px rgba(248,113,113,.22); }
+    .dd-pct { font-size:24px; font-weight:700; color:#a78bfa; margin-bottom:5px; }
+    .dd-perf { font-size:13px; color:var(--text2); line-height:1.65; margin-bottom:12px; }
+    .dd-stat-row { display:flex; gap:9px; flex-wrap:wrap; }
+    .dd-stat { text-align:center; padding:7px 12px; border-radius:11px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); font-size:11px; color:var(--text2); }
+    .dd-stat .dv { display:block; font-size:19px; font-weight:700; margin-bottom:1px; }
+    .dd-stat.g .dv { color:#86efac; }
+    .dd-stat.r .dv { color:#fca5a5; }
+    .dd-stat.b .dv { color:#7dd3fc; }
+    .dd-banner { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      gap:10px; padding:13px 18px; border-radius:13px; margin-bottom:12px; font-size:13px; }
+    .dd-banner.ok   { background:rgba(34,197,94,.09); border:1px solid rgba(34,197,94,.26); color:#86efac; }
+    .dd-banner.warn { background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.24); color:#fde68a; }
+    .dd-qa-section { margin-bottom:14px; }
+    .dd-qa-title { font-size:15px; font-weight:600; color:#a5f3fc; margin:14px 0 10px; }
+    .dd-qa { border-radius:15px; padding:16px 18px; margin-bottom:10px; }
+    .dd-qa.ok  { background:rgba(34,197,94,.05);  border:1px solid rgba(34,197,94,.18); }
+    .dd-qa.bad { background:rgba(248,113,113,.05); border:1px solid rgba(248,113,113,.18); }
+    .dd-qa-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .dd-qa-num { font-size:11px; font-weight:700; padding:2px 9px; border-radius:999px; background:rgba(255,255,255,.07); color:var(--text2); }
+    .dd-qa-st { font-size:12px; font-weight:600; }
+    .dd-qa-st.ok  { color:#86efac; }
+    .dd-qa-st.bad { color:#fca5a5; }
+    .dd-qa-q { font-size:13px; color:#fff; line-height:1.7; margin-bottom:8px; }
+    .dd-qa-ans { font-size:12px; padding:6px 12px; border-radius:8px; margin-bottom:5px; line-height:1.6; }
+    .dd-qa-ans.w { background:rgba(248,113,113,.10); border:1px solid rgba(248,113,113,.22); color:#fca5a5; }
+    .dd-qa-ans.c { background:rgba(34,197,94,.08);  border:1px solid rgba(34,197,94,.24); color:#86efac; }
+    .dd-ans-lbl { font-weight:600; opacity:.8; margin-right:4px; }
+    .dd-exp { padding:10px 13px; border-radius:10px; margin-bottom:6px; margin-top:4px;
+      background:rgba(56,189,248,.07); border:1px solid rgba(56,189,248,.16); }
+    .dd-exp-h { font-size:11px; font-weight:700; color:#7dd3fc; margin-bottom:4px; letter-spacing:.05em; }
+    .dd-exp-b { font-size:12px; color:var(--text2); line-height:1.75; }
+    .dd-ok-note { font-size:12px; color:#86efac; font-style:italic; line-height:1.6; }
+
+    /* ── Responsive ── */
+    @media(max-width:760px){
+      nav{padding:0 20px;} h1{font-size:28px;} .setup{grid-template-columns:1fr;}
+      .cdb-vals{gap:12px;} .day-card{padding:14px;} .learning-panel{padding:22px;}
+      .lv-title{font-size:20px;} .dd-score-card{flex-direction:column;} .dd-circ{margin:auto;}
+    }
   </style>
 </head>
 <body>
+  <!-- particles -->
+  <div class="particle" style="left:5%;  animation-duration:13s;"></div>
+  <div class="particle" style="left:22%; animation-duration:18s; animation-delay:-5s;"></div>
+  <div class="particle" style="left:48%; animation-duration:11s; animation-delay:-8s;"></div>
+  <div class="particle" style="left:71%; animation-duration:16s; animation-delay:-3s;"></div>
+  <div class="particle" style="left:90%; animation-duration:14s; animation-delay:-1s;"></div>
+
   <nav>
-    <div class="logo">Memorix</div>
+    <div class="logo">🧠 Memorix</div>
     <a class="back" href="subjects.html">Change Subject</a>
   </nav>
 
   <main class="wrap">
     <h1 id="title">Deep Dive</h1>
-    <p class="sub">Select a topic, enter your course duration, and Memorix will spread modules and reviews across your schedule.</p>
+    <p class="sub">Select a topic and enter how many days you need. Memorix will build your full schedule with modules, reviews, and mock tests.</p>
 
+    <!-- ── SETUP PANEL ── -->
     <section class="panel" id="setupPanel">
       <div class="setup">
-        <input id="topicSearch" type="search" placeholder="Search or type topic">
-        <input id="daysInput" type="number" min="1" max="60" placeholder="Days">
-        <button class="primary" onclick="createPlan()">Create Schedule</button>
+        <input id="topicSearch" type="search" placeholder="Search or type a topic…">
+        <input id="daysInput" type="number" min="5" max="60" placeholder="Days (5–60)">
+        <button class="btn-primary" onclick="createPlan()">Create Schedule</button>
       </div>
       <div class="topics" id="topics"></div>
     </section>
 
+    <!-- ── PLAN PANEL ── -->
     <section id="planPanel" class="hidden">
+
+      <!-- header card -->
       <div class="panel">
         <h2 id="planTitle">Schedule</h2>
         <p class="muted" id="planSummary"></p>
         <div class="actions">
-          <button onclick="resetPlan()">Choose Another Topic</button>
+          <button onclick="resetPlan()">↩ Choose Another Topic</button>
         </div>
       </div>
-      <h2 style="margin-top:24px;">Modules</h2>
-      <div class="timeline" id="modules"></div>
-      <h2 style="margin-top:24px;">Scheduled Reviews</h2>
-      <div class="review-grid" id="reviews"></div>
+
+      <!-- countdown banner -->
+      <div class="countdown-banner" id="countdownBanner">
+        <div>
+          <div class="cdb-title">Course Progress</div>
+          <div class="cdb-pct" id="cdbPct">0% complete</div>
+        </div>
+        <div class="cdb-vals">
+          <div class="cdb-val"><div class="num" id="cdbDays">–</div><div class="lbl">Total Days</div></div>
+          <div class="cdb-val"><div class="num" id="cdbMods">0/5</div><div class="lbl">Modules</div></div>
+          <div class="cdb-val"><div class="num" id="cdbRevs">0</div><div class="lbl">Reviews Passed</div></div>
+          <div class="cdb-val"><div class="num" id="cdbMocks">0</div><div class="lbl">Mock Tests</div></div>
+        </div>
+      </div>
+
+      <!-- progress bar + mini dots -->
+      <div class="progress-panel">
+        <h3>📊 Overall Progress</h3>
+        <div class="prog-row">
+          <div class="prog-stat"><div class="val" id="pctVal">0%</div><div class="lbl">Done</div></div>
+          <div class="prog-bar-wrap">
+            <div class="prog-bar-label"><span>Course Completion</span><span id="pctLabel">0 / 0</span></div>
+            <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+          </div>
+          <div class="prog-stat"><div class="val" id="daysLeft">–</div><div class="lbl">Days</div></div>
+          <div class="prog-stat"><div class="val" id="reviewsDone">0</div><div class="lbl">Rev. Passed</div></div>
+        </div>
+        <div class="tl-row" id="timelineDots"></div>
+      </div>
+
+      <!-- day-by-day schedule -->
+      <div class="schedule-section">
+        <h2>📅 Your Learning Schedule</h2>
+        <div class="schedule-grid" id="scheduleGrid"></div>
+      </div>
+
+      <!-- mock test quick access -->
+      <div class="mock-access-panel" id="mockPanel" style="display:none;">
+        <h2>🎯 Mock Tests</h2>
+        <p>Practice unlimited times using questions from your completed modules. Mock tests do not affect module unlocks.</p>
+        <div class="mock-stat-row">
+          <div class="mock-stat"><div class="mv" id="mockAttempts">0</div><div class="ml">Attempts</div></div>
+          <div class="mock-stat"><div class="mv" id="mockBestScore">–</div><div class="ml">Best Score</div></div>
+          <div class="mock-stat"><div class="mv" id="mockModulesAvail">0</div><div class="ml">Modules Available</div></div>
+        </div>
+        <button class="btn-cyan" onclick="openMockTest()">Start Mock Test</button>
+        <div class="mock-hist" id="mockHist"></div>
+      </div>
+
+      <!-- review quiz -->
       <div class="quiz hidden" id="quizPanel"></div>
+
+      <!-- mock test quiz -->
+      <div class="quiz hidden" id="mockQuizPanel"></div>
     </section>
   </main>
 
+  <!-- ── LEARNING CONTENT VIEWER OVERLAY ── -->
+  <div id="learningOverlay" class="learning-overlay hidden">
+    <div class="learning-panel" id="learningPanelContent">
+      <!-- injected by openLearningView() -->
+    </div>
+  </div>
+
   <script>
+    'use strict';
+
+    /* ─────────── AUTH + INIT ─────────── */
     const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
     if (!user || !user.email) window.location.href = 'index.html';
 
-    const selectedPath = localStorage.getItem('selectedPath');
+    const selectedPath    = localStorage.getItem('selectedPath');
     const selectedSubject = localStorage.getItem('selectedSubject');
-    if (!selectedPath) window.location.href = 'classes.html';
+    if (!selectedPath)    window.location.href = 'classes.html';
     if (!selectedSubject) window.location.href = 'subjects.html';
 
+    /* ─────────── TOPIC BANK ─────────── */
     const topicBank = {
-      Mathematics: ['Fractions', 'Algebra', 'Trigonometry', 'Calculus', 'Probability'],
-      Science: ['Photosynthesis', 'Atoms', 'Force', 'Electricity', 'Human Body'],
-      English: ['Grammar', 'Tenses', 'Essay Writing', 'Comprehension', 'Vocabulary'],
-      'Social Studies': ['Indian History', 'Geography', 'Civics', 'Economics', 'Constitution'],
-      'Computer Basics': ['MS Office', 'Internet Basics', 'Keyboard Skills', 'Scratch Programming'],
-      Physics: ['Mechanics', 'Waves', 'Optics', 'Thermodynamics', 'Current Electricity'],
-      Chemistry: ['Organic Chemistry', 'Chemical Bonding', 'Acids and Bases', 'Periodic Table'],
-      Botany: ['Plant Kingdom', 'Photosynthesis', 'Plant Anatomy', 'Genetics'],
-      Zoology: ['Human Heart', 'Nervous System', 'Digestion', 'Respiration'],
-      Programming: ['C Basics', 'Python Basics', 'Loops', 'Functions', 'OOP'],
-      'Data Structures': ['Arrays', 'Linked List', 'Stack', 'Queue', 'Trees'],
-      DBMS: ['ER Model', 'SQL', 'Normalization', 'Transactions'],
-      Anatomy: ['Human Heart', 'Bones', 'Muscles', 'Nervous System'],
-      Accounting: ['Journal Entries', 'Ledger', 'Trial Balance', 'Final Accounts'],
-      Reasoning: ['Number Series', 'Coding Decoding', 'Blood Relations', 'Directions']
+      Mathematics: ['Fractions','Algebra','Trigonometry','Calculus','Probability','Statistics'],
+      Science: ['Photosynthesis','Atoms','Force','Electricity','Human Body','Magnetism'],
+      English: ['Grammar','Tenses','Essay Writing','Comprehension','Vocabulary','Punctuation'],
+      'Social Studies': ['Indian History','Geography','Civics','Economics','Constitution'],
+      'Computer Basics': ['MS Office','Internet Basics','Keyboard Skills','Scratch Programming'],
+      Physics: ['Mechanics','Waves','Optics','Thermodynamics','Current Electricity'],
+      Chemistry: ['Organic Chemistry','Chemical Bonding','Acids and Bases','Periodic Table'],
+      Botany: ['Plant Kingdom','Photosynthesis','Plant Anatomy','Genetics'],
+      Zoology: ['Human Heart','Nervous System','Digestion','Respiration'],
+      Programming: ['C Basics','Python Basics','Loops','Functions','OOP'],
+      'Data Structures': ['Arrays','Linked List','Stack','Queue','Trees'],
+      DBMS: ['ER Model','SQL','Normalization','Transactions'],
+      Anatomy: ['Human Heart','Bones','Muscles','Nervous System'],
+      Accounting: ['Journal Entries','Ledger','Trial Balance','Final Accounts'],
+      Reasoning: ['Number Series','Coding Decoding','Blood Relations','Directions']
     };
-    const fallbackTopics = ['Introduction', 'Basics', 'Important Concepts', 'Practice Questions'];
-    const topics = topicBank[selectedSubject] || fallbackTopics;
-    const planKey = `deep-dive-plan-${selectedPath}-${selectedSubject}`;
+    const fallbackTopics = ['Introduction','Core Concepts','Practice Questions','Revision'];
+    const allTopics  = topicBank[selectedSubject] || fallbackTopics;
+    const planKey    = `deep-dive-plan-${selectedPath}-${selectedSubject}`;
+
+    /* active review/mock state */
     let activeReviewIndex = null;
-    let activeQuestions = [];
+    let activeReviewQuestions = [];
+    let activeMockQuestions   = [];
 
     document.getElementById('title').textContent = `${selectedSubject} Deep Dive`;
-    renderTopics(topics);
+    renderTopics(allTopics);
     loadPlan();
 
-    document.getElementById('topicSearch').addEventListener('input', event => {
-      const term = event.target.value.toLowerCase();
-      renderTopics(topics.filter(topic => topic.toLowerCase().includes(term)));
+    document.getElementById('topicSearch').addEventListener('input', e => {
+      const t = e.target.value.toLowerCase();
+      renderTopics(allTopics.filter(x => x.toLowerCase().includes(t)));
     });
 
+    /* ─────────── TOPIC SUGGESTIONS ─────────── */
     function renderTopics(list) {
       document.getElementById('topics').innerHTML = list.map(topic => `
-        <button class="topic card" onclick="selectTopic('${escapeText(topic)}')">
-          <h2>${topic}</h2>
-          <p class="muted">Schedule ${topic} for slow learning and reviews.</p>
-        </button>
-      `).join('');
-    }
-
-    function escapeText(text) {
-      return text.replace(/'/g, "\\'");
+        <button class="card" style="text-align:left;" onclick="selectTopic('${esc(topic)}')">
+          <strong>${topic}</strong>
+          <p class="muted" style="font-size:12px;margin-top:4px;">Schedule ${topic} across your study days.</p>
+        </button>`).join('');
     }
 
     function selectTopic(topic) {
@@ -135,216 +500,1088 @@
       document.getElementById('daysInput').focus();
     }
 
+    /* ─────────── SMART SCHEDULE BUILDER ─────────── */
+    /*
+      Algorithm:
+        Core slots = 5 module days + 1 final assessment = 6 required days
+        Extra days (days - 6) are distributed in priority order:
+          1. Review 1 (after M1+M2)
+          2. Review 2 (after M4)
+          3. Mock Test day 1 (after M3, uses M1-M3)
+          4. Mock Test day 2 (before assessment, uses all modules)
+          5. Revision buffer day
+        Any remaining extra days: spread as additional revision days
+    */
+    function buildSchedule(topic, days) {
+      const MODS  = ['Basics','Core Concepts','Examples','Application Practice','Final Revision'];
+      const ICONS = ['📖','🔬','💡','⚙️','🎯'];
+      const required = 6; // 5 modules + 1 assessment
+      let extra = Math.max(0, days - required);
+
+      // Budget for optional slots (in priority)
+      const hasR1     = extra >= 1; if (hasR1)  extra--;
+      const hasR2     = extra >= 1; if (hasR2)  extra--;
+      const hasMock1  = extra >= 1; if (hasMock1) extra--;
+      const hasMock2  = extra >= 1; if (hasMock2) extra--;
+      const hasRevBuf = extra >= 1; if (hasRevBuf) extra--;
+
+      const slots = [];
+      let rIdx = 0;
+
+      // M1
+      slots.push({ type:'module', moduleIdx:0, icon:ICONS[0], label:`${MODS[0]}` });
+      // M2
+      slots.push({ type:'module', moduleIdx:1, icon:ICONS[1], label:`${MODS[1]}` });
+      // Review 1 (covers M1+M2)
+      if (hasR1) slots.push({ type:'review', reviewIdx:rIdx++, icon:'📝', label:`Review 1`, coveredModules:[0,1] });
+      // M3
+      slots.push({ type:'module', moduleIdx:2, icon:ICONS[2], label:`${MODS[2]}` });
+      // Mock test 1 (uses completed M1-M3)
+      if (hasMock1) slots.push({ type:'mock', icon:'🎯', label:'Mock Test', coveredUpTo:2 });
+      // M4
+      slots.push({ type:'module', moduleIdx:3, icon:ICONS[3], label:`${MODS[3]}` });
+      // Review 2 (covers M1-M4)
+      if (hasR2) slots.push({ type:'review', reviewIdx:rIdx++, icon:'📝', label:`Review 2`, coveredModules:[0,1,2,3] });
+      // M5
+      slots.push({ type:'module', moduleIdx:4, icon:ICONS[4], label:`${MODS[4]}` });
+      // Revision buffer
+      if (hasRevBuf) slots.push({ type:'revision', icon:'🔄', label:'Revision Day' });
+      // Mock test 2 (uses all completed modules)
+      if (hasMock2) slots.push({ type:'mock', icon:'🎯', label:'Mock Test', coveredUpTo:4 });
+      // Final Assessment (always last)
+      slots.push({ type:'assessment', reviewIdx:rIdx, icon:'🏆', label:'Final Assessment', coveredModules:[0,1,2,3,4] });
+
+      // Spread extra revision buffer days if any remain
+      for (let i = 0; i < extra; i++) {
+        slots.splice(slots.length - 1, 0, { type:'revision', icon:'🔄', label:'Revision Day' });
+      }
+
+      // Assign day numbers spread evenly across totalDays
+      const n = slots.length;
+      return slots.map((slot, i) => ({
+        ...slot,
+        day: n === 1 ? days : Math.min(days, Math.round(1 + i * (days - 1) / (n - 1)))
+      }));
+    }
+
+    /* ─────────── CREATE PLAN ─────────── */
     function createPlan() {
       const topic = document.getElementById('topicSearch').value.trim();
-      const days = Math.max(1, Math.min(60, Number(document.getElementById('daysInput').value || 0)));
-      if (!topic) return document.getElementById('topicSearch').focus();
-      if (!days) return document.getElementById('daysInput').focus();
+      const rawDays = Number(document.getElementById('daysInput').value || 0);
+      const days = Math.max(5, Math.min(60, rawDays));
+      if (!topic) { document.getElementById('topicSearch').focus(); return; }
+      if (!rawDays) { document.getElementById('daysInput').focus(); return; }
 
-      const moduleNames = ['Basics', 'Core Concepts', 'Examples', 'Application Practice', 'Final Revision'];
-      const modules = moduleNames.map((name, index) => {
-        const startDay = Math.floor((index * days) / moduleNames.length) + 1;
-        const endDay = Math.max(startDay, Math.floor(((index + 1) * days) / moduleNames.length));
-        return { name, startDay, endDay, completed: false };
+      const MODULE_NAMES = ['Basics','Core Concepts','Examples','Application Practice','Final Revision'];
+
+      // Generate day-by-day schedule
+      const schedule = buildSchedule(topic, days);
+
+      // Build modules array (compatible with existing completeModule logic)
+      const modules = MODULE_NAMES.map((name, i) => {
+        const slot = schedule.find(s => s.type === 'module' && s.moduleIdx === i);
+        return { name, icon: ['📖','🔬','💡','⚙️','🎯'][i], startDay: slot ? slot.day : i+1, endDay: slot ? slot.day : i+1, completed: false };
       });
 
-      const reviewCount = Math.min(6, Math.max(1, Math.ceil(days / 2)));
-      const reviews = Array.from({ length: reviewCount }, (_, index) => ({
-        day: Math.max(1, Math.ceil(((index + 1) * days) / reviewCount)),
-        status: index === 0 ? 'available' : 'locked',
+      // Build reviews array (compatible with existing startReview / submitReview logic)
+      const reviewSlots = schedule.filter(s => s.type === 'review' || s.type === 'assessment');
+      const reviews = reviewSlots.map((slot, i) => ({
+        day: slot.day,
+        status: i === 0 ? 'available' : 'locked',
         score: null,
-        wrong: []
+        wrong: [],
+        coveredModules: slot.coveredModules || [],
+        label: slot.label || `Review ${i+1}`
       }));
 
-      const plan = { topic, days, modules, reviews, createdAt: new Date().toISOString() };
+      const plan = { topic, days, modules, reviews, schedule, mockHistory: [], createdAt: new Date().toISOString() };
       savePlan(plan);
       renderPlan(plan);
     }
 
+    /* ─────────── PERSISTENCE ─────────── */
     function loadPlan() {
       const saved = localStorage.getItem(planKey);
       if (!saved) return;
       try {
-        renderPlan(JSON.parse(saved));
-      } catch {
-        localStorage.removeItem(planKey);
-      }
+        const plan = JSON.parse(saved);
+        // Back-compat: if old plan has no schedule, rebuild it
+        if (!plan.schedule) plan.schedule = buildSchedule(plan.topic, plan.days);
+        if (!plan.mockHistory) plan.mockHistory = [];
+        renderPlan(plan);
+      } catch { localStorage.removeItem(planKey); }
     }
+    function savePlan(plan)    { localStorage.setItem(planKey, JSON.stringify(plan)); }
+    function currentPlan()     { return JSON.parse(localStorage.getItem(planKey)); }
 
-    function savePlan(plan) {
-      localStorage.setItem(planKey, JSON.stringify(plan));
-    }
-
-    function currentPlan() {
-      return JSON.parse(localStorage.getItem(planKey));
-    }
-
+    /* ─────────── RENDER PLAN ─────────── */
     function renderPlan(plan) {
       document.getElementById('setupPanel').classList.add('hidden');
       document.getElementById('planPanel').classList.remove('hidden');
-      document.getElementById('planTitle').textContent = `${plan.topic} Deep Dive Schedule`;
-      document.getElementById('planSummary').textContent = `${plan.days} day course with ${plan.modules.length} modules and ${plan.reviews.length} scheduled reviews. Reviews unlock in order. If a review fails, later reviews stay locked until you pass it.`;
+      document.getElementById('planTitle').textContent = `${plan.topic} — ${plan.days}-Day Deep Dive`;
+      document.getElementById('planSummary').textContent =
+        `${plan.days}-day course · ${plan.modules.length} modules · ${plan.reviews.length} reviews · unlimited mock tests`;
 
-      document.getElementById('modules').innerHTML = plan.modules.map((module, index) => `
-        <section class="card">
-          <span class="tag ${module.completed ? 'done' : ''}">${module.completed ? 'Completed' : `Day ${module.startDay}-${module.endDay}`}</span>
-          <h2>Module ${index + 1}: ${plan.topic} ${module.name}</h2>
-          <p class="muted">${moduleText(index, plan.topic)}</p>
-          <div class="actions">
-            <button class="primary" onclick="completeModule(${index})" ${module.completed ? 'disabled' : ''}>${module.completed ? 'Completed' : 'Mark Learned'}</button>
-          </div>
-        </section>
-      `).join('');
+      renderCountdown(plan);
+      renderProgress(plan);
+      renderSchedule(plan);
+      renderMockPanel(plan);
+    }
 
-      document.getElementById('reviews').innerHTML = plan.reviews.map((review, index) => {
-        const labelClass = review.status === 'passed' ? 'done' : review.status === 'failed' ? 'failed' : review.status === 'available' ? 'available' : '';
-        const canOpen = review.status === 'available' || review.status === 'failed';
-        return `
-          <section class="card">
-            <span class="tag ${labelClass}">${review.status === 'locked' ? 'Locked' : review.status}</span>
-            <h2>Review ${index + 1}</h2>
-            <p class="muted">Scheduled around day ${review.day}. Score 80% or more to unlock the next review.</p>
-            ${review.score !== null ? `<p class="muted">Last score: ${review.score}%</p>` : ''}
-            <div class="actions">
-              <button class="primary" onclick="startReview(${index})" ${canOpen ? '' : 'disabled'}>${review.status === 'failed' ? 'Retry Review' : 'Start Review'}</button>
-            </div>
-          </section>
-        `;
+    /* ─────────── COUNTDOWN BANNER ─────────── */
+    function renderCountdown(plan) {
+      const doneModules = plan.modules.filter(m => m.completed).length;
+      const doneReviews = plan.reviews.filter(r => r.status === 'passed').length;
+      const total = plan.modules.length + plan.reviews.length;
+      const done  = doneModules + doneReviews;
+      const pct   = total ? Math.round((done / total) * 100) : 0;
+      const mocksDone = plan.mockHistory ? plan.mockHistory.length : 0;
+
+      document.getElementById('cdbPct').textContent  = `${pct}% complete`;
+      document.getElementById('cdbDays').textContent  = plan.days;
+      document.getElementById('cdbMods').textContent  = `${doneModules}/5`;
+      document.getElementById('cdbRevs').textContent  = doneReviews;
+      document.getElementById('cdbMocks').textContent = mocksDone;
+    }
+
+    /* ─────────── PROGRESS BAR + MINI DOTS ─────────── */
+    function renderProgress(plan) {
+      const doneModules = plan.modules.filter(m => m.completed).length;
+      const doneReviews = plan.reviews.filter(r => r.status === 'passed').length;
+      const total = plan.modules.length + plan.reviews.length;
+      const done  = doneModules + doneReviews;
+      const pct   = total ? Math.round((done / total) * 100) : 0;
+
+      document.getElementById('pctVal').textContent   = pct + '%';
+      document.getElementById('pctLabel').textContent = `${done} / ${total} done`;
+      document.getElementById('progFill').style.width = pct + '%';
+      document.getElementById('daysLeft').textContent  = plan.days;
+      document.getElementById('reviewsDone').textContent = `${doneReviews}/${plan.reviews.length}`;
+
+      // Mini timeline dots (ordered by schedule day)
+      const dotItems = plan.schedule
+        .filter(s => s.type !== 'revision')
+        .map((s, i) => {
+          if (s.type === 'module') {
+            const m = plan.modules[s.moduleIdx];
+            return { label:`M${s.moduleIdx+1}`, done:m.completed, fail:false };
+          }
+          if (s.type === 'review' || s.type === 'assessment') {
+            const r = plan.reviews[s.reviewIdx];
+            return { label: s.type==='assessment'?'FA':`R${s.reviewIdx+1}`,
+              done: r && r.status==='passed', fail: r && r.status==='failed' };
+          }
+          return { label:'MT', done: false, fail: false };
+        });
+
+      document.getElementById('timelineDots').innerHTML = dotItems.map((d, i) => {
+        const cls = d.done ? 'done' : d.fail ? 'fail' : (i===0||dotItems[i-1]?.done) ? 'active' : '';
+        const segDone = d.done ? 'tl-done-seg' : '';
+        return `<div class="tl-seg ${segDone}">
+          <div class="tl-dot ${cls}">${d.done?'✓':d.fail?'✗':i+1}</div>
+          <div class="tl-lbl">${d.label}</div>
+        </div>`;
       }).join('');
     }
 
-    function moduleText(index, topic) {
-      return [
-        `Build meaning, keywords, and the base idea of ${topic}.`,
-        `Study rules, structure, and relationships in ${topic}.`,
-        `Work through solved examples and identify patterns.`,
-        `Apply ${topic} to mixed and exam-style situations.`,
-        `Revise weak points and prepare for review questions.`
-      ][index];
+    /* ─────────── DAY-BY-DAY SCHEDULE ─────────── */
+    function renderSchedule(plan) {
+      const grid = document.getElementById('scheduleGrid');
+      grid.innerHTML = plan.schedule.map((slot, i) => {
+        const typeClass = `day-${slot.type}`;
+        const isDone    = isSlotDone(plan, slot);
+        const isActive  = !isDone && (i === 0 || isSlotDone(plan, plan.schedule[i-1]));
+        const doneClass  = isDone   ? 'day-done'   : '';
+        const activeClass= isActive ? 'day-active' : '';
+
+        const actionHtml = buildSlotAction(plan, slot, isDone, isActive);
+        const descHtml   = slotDescription(plan, slot);
+
+        return `<div class="day-card ${typeClass} ${doneClass} ${activeClass}">
+          <div class="day-num-badge">D${slot.day}</div>
+          <div class="day-icon-lg">${slot.icon}</div>
+          <div class="day-type-label">${slotTypeLabel(slot.type)}</div>
+          <h3>${slot.label}${slot.type==='module'?' — '+plan.topic:''}</h3>
+          <p>${descHtml}</p>
+          ${isDone ? '<p style="color:#86efac;font-size:12px;margin-top:8px;">✅ Completed</p>' : ''}
+          ${actionHtml}
+        </div>`;
+      }).join('');
     }
 
+    function slotTypeLabel(type) {
+      return { module:'Module', review:'Review', mock:'Mock Test', assessment:'Assessment', revision:'Revision' }[type] || type;
+    }
+
+    function isSlotDone(plan, slot) {
+      if (!slot) return false;
+      if (slot.type === 'module') return plan.modules[slot.moduleIdx]?.completed || false;
+      if (slot.type === 'review' || slot.type === 'assessment') {
+        const r = plan.reviews[slot.reviewIdx];
+        return r?.status === 'passed';
+      }
+      if (slot.type === 'revision') return false; // revision days are always "available"
+      if (slot.type === 'mock') return false; // mocks are always accessible once unlocked
+      return false;
+    }
+
+    function slotDescription(plan, slot) {
+      const topic = plan.topic;
+      const descs = {
+        module: ['Build meaning, keywords, and the base idea','Study rules, structure, and relationships',
+          'Work through solved examples and identify patterns','Apply to mixed and exam-style situations',
+          'Revise weak points and prepare for assessments'],
+        review: `Score 80%+ to unlock the next review. Covers all modules up to this checkpoint.`,
+        assessment: `Final assessment covering all 5 modules. Passing marks complete your Deep Dive course.`,
+        mock: `Unlimited practice from completed modules only. Does not affect any unlock system.`,
+        revision: `Free revision day — go back to any module, retry questions, or attempt a mock test.`
+      };
+      if (slot.type === 'module') return descs.module[slot.moduleIdx] || '';
+      return descs[slot.type] || '';
+    }
+
+    function buildSlotAction(plan, slot, isDone, isActive) {
+      const topic = plan.topic;
+      if (slot.type === 'module') {
+        const mod = plan.modules[slot.moduleIdx];
+        if (mod.completed) return '';
+        const canStart = isActive || slot.moduleIdx === 0;
+        return `<div class="actions"><button class="${canStart ? 'btn-primary' : ''}"
+          onclick="openLearningView(${slot.moduleIdx})" ${canStart ? '' : 'disabled'}>
+          ${canStart ? '📖 Study Module' : '🔒 Complete previous day first'}</button></div>`;
+      }
+      if (slot.type === 'review' || slot.type === 'assessment') {
+        const r = plan.reviews[slot.reviewIdx];
+        if (!r) return '';
+        const canOpen = r.status === 'available' || r.status === 'failed';
+        const prevFailed = plan.reviews.some((rv, ri) => ri < slot.reviewIdx && rv.status === 'failed');
+        const actuallyCanOpen = canOpen && !prevFailed;
+        let btnLabel = r.status === 'failed' ? '↩ Retry' : r.status === 'passed' ? '✓ Review Again' : 'Start Review';
+        return `<div class="actions">
+          <button class="${actuallyCanOpen ? 'btn-primary' : ''}" onclick="startReview(${slot.reviewIdx})"
+            ${actuallyCanOpen ? '' : 'disabled'}>${btnLabel}</button>
+          ${r.score !== null ? `<span style="font-size:12px;color:var(--text2);align-self:center;">Last: ${r.score}%</span>` : ''}
+        </div>`;
+      }
+      if (slot.type === 'mock') {
+        const completedCount = plan.modules.filter(m => m.completed).length;
+        return `<div class="actions"><button class="btn-cyan" onclick="openMockTest()"
+          ${completedCount === 0 ? 'disabled' : ''}>
+          ${completedCount ? '🎯 Start Mock Test' : 'Complete a module first'}</button></div>`;
+      }
+      if (slot.type === 'revision') {
+        const completedCount = plan.modules.filter(m => m.completed).length;
+        return `<div class="actions">
+          <button class="btn-green" onclick="openMockTest()" ${completedCount?'':'disabled'}>Practice Questions</button>
+        </div>`;
+      }
+      return '';
+    }
+
+    /* ─────────── MODULE COMPLETION ─────────── */
     function completeModule(index) {
       const plan = currentPlan();
       plan.modules[index].completed = true;
+      plan.modules[index].completedAt = new Date().toISOString();
+
+      // Unlock next review if all modules before it are done
+      plan.reviews.forEach((review, rIdx) => {
+        if (review.status === 'locked') {
+          const covered = review.coveredModules || [];
+          const allDone = covered.length === 0 || covered.every(mi => plan.modules[mi].completed);
+          const prevPassed = rIdx === 0 || plan.reviews[rIdx-1].status === 'passed';
+          if (allDone && prevPassed) { review.status = 'available'; }
+        }
+      });
+
       savePlan(plan);
       renderPlan(plan);
     }
 
+    /* ─────────── LEARNING CONTENT VIEWER ─────────── */
+    function moduleLearningContent(topic, moduleIdx) {
+      const themes = [
+        {
+          depth:'Foundation', goal:`Build a clear mental model of what ${topic} means and why it matters`,
+          explanation:`${topic} is a fundamental concept that every learner must understand from the ground up. In this opening module you will build your first complete picture of what ${topic} is, where it appears, and why it is important in this subject area. Every strong answer you write in an exam starts here.`,
+          concepts:[
+            `Definition — what exactly ${topic} is and how it is described in an academic context`,
+            `Scope — what does this concept cover and which areas does it connect to`,
+            `Importance — why understanding ${topic} is critical before moving to higher-level topics`,
+            `Key vocabulary — the specific words and terms used when discussing ${topic}`,
+            `First principles — the most basic truths that ${topic} is built upon`
+          ],
+          examples:[
+            { t:'Simple Example', b:`A basic case of ${topic} in an everyday context — used to build initial recognition and familiarity with the idea.` },
+            { t:'Textbook Case', b:`A standard example from study material that shows exactly how ${topic} is defined and used in academic settings.` },
+            { t:'Real-World Link', b:`How ${topic} appears in real life — connecting the abstract idea to tangible situations you already understand.` }
+          ],
+          keyPoints:[
+            `Always start with the definition before applying ${topic} to any question`,
+            `Identify the keywords in questions that signal this topic is being tested`,
+            `Never confuse ${topic} with related but different concepts in this subject`,
+            `Build a simple one-sentence summary of ${topic} in your own words`
+          ],
+          formulas:`${topic} — Basics Quick Reference\n• Core definition: [Concept] = [Component A] explains [Component B]\n• Key relationship: When [condition exists], then [result applies]\n• Foundation rule: ${topic} always depends on understanding [primary idea] first\n• Exam signal words: "define", "state", "what is", "describe" → use your definition`,
+          summary:`This module gave you the building blocks for ${topic}. You now understand its definition, scope, and first principles. The next module goes deeper into the rules and internal structure.`
+        },
+        {
+          depth:'Intermediate', goal:`Understand the rules, structure, and internal relationships of ${topic}`,
+          explanation:`With the basics of ${topic} in place, this module explores how it works internally. You will study the rules that govern ${topic}, how its parts relate to each other, and what conditions change its behavior. Understanding structure is what separates a surface-level learner from a deep thinker.`,
+          concepts:[
+            `Rules — what conditions must be true for ${topic} to apply correctly`,
+            `Structure — how the parts of ${topic} fit together and depend on each other`,
+            `Relationships — how ${topic} connects to other concepts in this subject`,
+            `Exceptions — when the standard rules of ${topic} do not apply and why`,
+            `Classification — the different types or categories within ${topic}`
+          ],
+          examples:[
+            { t:'Rule Application', b:`Applying the core rule of ${topic} step by step — showing which condition triggers which result and in what order.` },
+            { t:'Structural Breakdown', b:`Breaking a ${topic} problem into its components to show how the structure works from the inside out.` },
+            { t:'Exception Case', b:`A case where the standard rule does not apply — and what to use instead when ${topic} behaves differently.` }
+          ],
+          keyPoints:[
+            `Know every rule before attempting any ${topic} question in a real exam`,
+            `Always check which category or type of ${topic} the question is referring to`,
+            `Exceptions are frequently tested — learn them separately and clearly`,
+            `Draw a diagram or table to visualise the structure and relationships`
+          ],
+          formulas:`${topic} — Rules & Structure\n• Rule 1: If [condition A is present], then ${topic} follows [pattern X]\n• Rule 2: If [condition B applies], then result = [formula Y]\n• Exception: When [special case occurs], standard rules are replaced by [alternative]\n• Structure: [Input] → [Process using rule] → [Expected Output]\n• Type check: Always identify which category before selecting which rule`,
+          summary:`You now understand the internal rules and structure of ${topic}. The relationships between parts are clear and you know when exceptions apply. Next module: worked examples and question patterns.`
+        },
+        {
+          depth:'Applied', goal:`Practice with worked examples and identify question patterns for ${topic}`,
+          explanation:`This module shifts from theory to practice. You will work through solved examples of ${topic}, identify the pattern of how questions are asked, and learn which approach to use for each question type. Recognising patterns is the fastest way to become accurate and confident in exams.`,
+          concepts:[
+            `Question patterns — how ${topic} questions are typically structured and worded in exams`,
+            `Solution steps — the order in which to solve any ${topic} problem correctly`,
+            `Identification — how to recognise which rule or formula applies to a given question`,
+            `Common traps — mistakes that high-scorers avoid when answering ${topic} questions`,
+            `Speed techniques — approaches that give the correct answer faster under exam pressure`
+          ],
+          examples:[
+            { t:'Step-by-Step Solution', b:`A fully worked example of ${topic} — each step explained with the reason why that step comes next in the solution.` },
+            { t:'Exam-Style Question', b:`A question formatted exactly as it appears in exams — with the correct approach identified from the question wording itself.` },
+            { t:'Common Mistake', b:`A worked example showing the wrong approach many students take — and exactly how to identify and avoid that mistake.` }
+          ],
+          keyPoints:[
+            `Read the question twice — identify the type before writing anything down`,
+            `Write steps in the correct order — every step carries marks in written exams`,
+            `Show which formula you used and state why it applies to this specific case`,
+            `Always check that your final answer directly addresses what the question asked`
+          ],
+          formulas:`${topic} — Solution Approach\n• Step 1: Identify the question type (scan for keywords: define / calculate / explain / compare)\n• Step 2: Select the correct formula or rule for that question type\n• Step 3: Substitute values or concepts in the correct order\n• Step 4: Simplify and state the final answer with correct units or labels\n• Check: Does the answer make logical sense given the question condition?`,
+          summary:`You can now recognise ${topic} question patterns, apply the correct approach, and avoid common mistakes. Next module: applying this knowledge to complex and mixed exam scenarios.`
+        },
+        {
+          depth:'Exam-Ready', goal:`Apply ${topic} knowledge to mixed and exam-style scenarios`,
+          explanation:`This module is about transfer — taking what you know about ${topic} and applying it to new situations. Exam questions often combine multiple ideas, change the context, or present the topic in an unfamiliar way. This module is your preparation for exactly that kind of challenge.`,
+          concepts:[
+            `Transfer — using ${topic} knowledge in new contexts and unfamiliar scenarios`,
+            `Multi-step problems — questions that require more than one concept or formula`,
+            `Context shift — when a familiar topic appears in an unexpected setting`,
+            `Analysis — breaking down complex questions into manageable sub-steps`,
+            `Scoring marks — what examiners look for in a complete high-scoring answer`
+          ],
+          examples:[
+            { t:'Mixed Scenario', b:`A problem that combines ${topic} with a related concept — requiring you to select and apply the right rules for each separate part.` },
+            { t:'Unfamiliar Context', b:`The same core idea of ${topic} presented in a setting you have not seen before — testing real understanding, not memorisation.` },
+            { t:'High-Level Application', b:`An exam-level scenario where ${topic} must be applied at full difficulty — showing what a complete full-marks answer looks like.` }
+          ],
+          keyPoints:[
+            `Slow down on complex questions — identify all parts before starting to write`,
+            `Label every step clearly so examiners can follow your reasoning`,
+            `If stuck: go back to first principles and rebuild the answer from the definition`,
+            `State your conclusion clearly — never leave the final answer ambiguous`
+          ],
+          formulas:`${topic} — Application Checklist\n✓ Have I identified all the parts of the question?\n✓ Have I selected the correct rule or formula for each part?\n✓ Are my working steps clear and in the correct logical order?\n✓ Is my final answer complete, labelled, and directly answering the question?\n✓ Does my answer show understanding of WHY, not just WHAT?`,
+          summary:`You can now apply ${topic} to complex and unfamiliar exam scenarios. You have the skills needed for real exam performance. The final module prepares you for your full assessment.`
+        },
+        {
+          depth:'Mastery', goal:`Consolidate everything and prepare for the final ${topic} assessment`,
+          explanation:`This final revision module brings together everything you have learned about ${topic}. It is a complete review of all key definitions, rules, formulas, and examples — designed to give you full confidence before your assessment. Treat every point here as something you must be able to produce without notes.`,
+          concepts:[
+            `Complete coverage — every key idea from all previous modules in one place`,
+            `Weak area focus — targeting the concepts most likely to cost marks in your exam`,
+            `Exam strategy — how to approach the ${topic} section of your actual assessment`,
+            `Self-testing — how to check your own readiness before sitting the assessment`,
+            `Final checklist — what you must know before you can call yourself ready`
+          ],
+          examples:[
+            { t:'Full Topic Review', b:`A complete summary showing all key aspects of ${topic} — from definition to application in one integrated, exam-ready response.` },
+            { t:'High-Risk Question', b:`The type of ${topic} question most commonly missed in exams — with the full correct approach and explanation.` },
+            { t:'Assessment Preview', b:`A final practice question formatted exactly like your upcoming assessment — use it to check your actual readiness right now.` }
+          ],
+          keyPoints:[
+            `Can you define ${topic} without looking at notes? If yes — you know it`,
+            `Can you do a complete worked example from scratch? If yes — you are exam-ready`,
+            `Are there any sub-topics you are still unsure about? Revisit those now`,
+            `Review your wrong answers from previous mock tests before the assessment`
+          ],
+          formulas:`COMPLETE ${topic.toUpperCase()} — QUICK REFERENCE\n• Core definition: [Topic] = [Complete one-sentence academic definition]\n• Main formula / rule: [Primary rule every question depends on]\n• Key types: [Type A] vs [Type B] — difference is [one clear distinction]\n• Common mistake: Students confuse [X] with [Y] — the rule is [clear correction]\n• Exam tip: Always [specific action] when you see [specific keyword in question]`,
+          summary:`Congratulations — you have completed all five modules of ${topic}. You are now prepared for your final assessment. Trust your preparation, read every question twice, and apply what you have learned.`
+        }
+      ];
+      return themes[Math.min(moduleIdx, 4)];
+    }
+
+    function openLearningView(moduleIdx) {
+      const plan = currentPlan();
+      if (!plan) return;
+      const slot = plan.schedule.find(s => s.type === 'module' && s.moduleIdx === moduleIdx);
+      const content = moduleLearningContent(plan.topic, moduleIdx);
+      const modNames = ['Basics','Core Concepts','Examples','Application Practice','Final Revision'];
+      const modIcons = ['📖','🔬','💡','⚙️','🎯'];
+
+      const conceptsHtml  = content.concepts.map(c => `<li>${c}</li>`).join('');
+      const keyPointsHtml = content.keyPoints.map(p => `<li>${p}</li>`).join('');
+      const examplesHtml  = content.examples.map(ex =>
+        `<div class="lv-eg-card"><div class="ex-t">${ex.t}</div><div class="ex-b">${ex.b}</div></div>`
+      ).join('');
+
+      document.getElementById('learningPanelContent').innerHTML = `
+        <div class="lv-header">
+          <div>
+            <div class="lv-meta">${plan.topic} &nbsp;·&nbsp; Module ${moduleIdx + 1} of 5</div>
+            <div class="lv-title">${modIcons[moduleIdx]} ${modNames[moduleIdx]}</div>
+          </div>
+          <button class="lv-close" onclick="closeLearningView()">✕</button>
+        </div>
+
+        <div class="lv-badge-row">
+          <span class="lv-badge">📚 ${content.depth}</span>
+          <span class="lv-badge">🎯 ${content.goal}</span>
+          <span class="lv-badge day-b">📅 Day ${slot ? slot.day : moduleIdx + 1}</span>
+        </div>
+
+        <div class="lv-section">
+          <h3>📖 What You Will Learn</h3>
+          <p>${content.explanation}</p>
+        </div>
+
+        <div class="lv-section">
+          <h3>🔑 Core Concepts</h3>
+          <ul class="lv-list">${conceptsHtml}</ul>
+        </div>
+
+        <div class="lv-section">
+          <h3>💡 Worked Examples</h3>
+          <div class="lv-eg-grid">${examplesHtml}</div>
+        </div>
+
+        <div class="lv-section">
+          <h3>📌 Key Points to Remember</h3>
+          <ul class="lv-list">${keyPointsHtml}</ul>
+        </div>
+
+        <div class="lv-section">
+          <h3>📐 Formulas &amp; Rules</h3>
+          <div class="lv-formula-box">${content.formulas}</div>
+        </div>
+
+        <div class="lv-summary-box">
+          <p>📋 <strong>Module Summary:</strong> ${content.summary}</p>
+        </div>
+
+        <button class="lv-mark-btn" onclick="markAsLearned(${moduleIdx})">
+          ✅ Mark as Learned — I have studied this module fully
+        </button>
+        <p class="lv-mark-note">Only click "Mark as Learned" after you have read and understood all sections above.</p>
+      `;
+
+      document.getElementById('learningOverlay').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('learningOverlay').scrollTop = 0;
+    }
+
+    function closeLearningView() {
+      document.getElementById('learningOverlay').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function markAsLearned(moduleIdx) {
+      closeLearningView();
+      completeModule(moduleIdx);
+    }
+
+    /* ─────────── REVIEW SYSTEM ─────────── */
     function startReview(index) {
       const plan = currentPlan();
-      const previousFailed = plan.reviews.findIndex((review, reviewIndex) => reviewIndex < index && review.status === 'failed');
-      if (previousFailed !== -1) return;
+      const prevFailed = plan.reviews.findIndex((r, i) => i < index && r.status === 'failed');
+      if (prevFailed !== -1) return;
+
       activeReviewIndex = index;
-      activeQuestions = buildReviewQuestions(plan.topic, index);
+      activeReviewQuestions = buildReviewQuestions(plan.topic, index, plan.reviews[index].coveredModules || []);
+
+      const qHtml = activeReviewQuestions.map((item, qi) => `
+        <section class="q">
+          <p>${qi+1}. ${item.q}</p>
+          ${item.options.map((opt, oi) => `<label><input type="radio" name="rev${qi}" value="${oi}"> ${opt}</label>`).join('')}
+        </section>`).join('');
+
       document.getElementById('quizPanel').classList.remove('hidden');
       document.getElementById('quizPanel').innerHTML = `
         <div class="panel">
-          <h2>${plan.topic} Review ${index + 1}</h2>
-          <p class="muted">Answer all 5 questions. Passing this review unlocks the next scheduled review.</p>
-          ${activeQuestions.map((item, qIndex) => `
-            <section class="q">
-              <p>${qIndex + 1}. ${item.q}</p>
-              ${item.options.map((option, optionIndex) => `
-                <label><input type="radio" name="r${qIndex}" value="${optionIndex}"> ${option}</label>
-              `).join('')}
-            </section>
-          `).join('')}
-          <div class="actions">
-            <button class="primary" onclick="submitReview()">Submit Review</button>
+          <h2>📝 ${plan.reviews[index].label || 'Review ' + (index+1)}</h2>
+          <p class="muted" style="margin-bottom:16px;">Answer all questions. Score 80%+ to pass and unlock the next review.</p>
+          ${qHtml}
+          <div class="actions" style="margin-top:18px;">
+            <button class="btn-primary" onclick="submitReview()">Submit Review</button>
+            <button onclick="closeQuiz()">Cancel</button>
           </div>
           <div class="result" id="reviewResult"></div>
-        </div>
-      `;
-      document.getElementById('quizPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        </div>`;
+      document.getElementById('quizPanel').scrollIntoView({ behavior:'smooth', block:'start' });
     }
 
-    function buildReviewQuestions(topic, reviewIndex) {
+    function buildReviewQuestions(topic, reviewIndex, coveredModules) {
+      const moduleNames = ['Basics','Core Concepts','Examples','Application Practice','Final Revision'];
+      const covered = coveredModules.length
+        ? coveredModules.map(i => moduleNames[i]).join(', ')
+        : 'all studied modules';
+
       const base = [
-        { q: `What should you understand first in ${topic}?`, options: ['Meaning and key idea', 'Only option order', 'Only decoration', 'Nothing'], answer: 0 },
-        { q: `Why are reviews important in ${topic}?`, options: ['They reveal weak points', 'They remove learning', 'They skip practice', 'They hide mistakes'], answer: 0 },
-        { q: `What should you do after a wrong answer in ${topic}?`, options: ['Read the explanation and correct the idea', 'Ignore it', 'Repeat the same mistake', 'Change topic immediately'], answer: 0 },
-        { q: `A deep understanding of ${topic} means you can:`, options: ['Explain why an answer is correct', 'Memorize only letters', 'Skip examples', 'Avoid questions'], answer: 0 },
-        { q: `Before moving to the next review, you should:`, options: ['Fix mistakes from this review', 'Forget feedback', 'Guess faster', 'Avoid revision'], answer: 0 },
-        { q: `Which practice style helps with ${topic}?`, options: ['Slow review with correction', 'Random clicking', 'Only rereading titles', 'Ignoring conditions'], answer: 0 },
-        { q: `What makes an answer reliable in ${topic}?`, options: ['It matches the concept and condition', 'It is longest', 'It appears first', 'It is guessed'], answer: 0 }
+        { q:`What is the most important first step when learning ${topic}?`,
+          options:['Understand meaning, keywords, and purpose','Memorize answers without understanding','Skip to the hardest questions','Study an unrelated topic'],
+          answer:0, concept:`Start with clear understanding of ${topic} before anything else.` },
+        { q:`Why are reviews important after studying ${topic}?`,
+          options:['They reveal weak points and fix gaps','They remove the need to study again','They skip practice entirely','They hide mistakes'],
+          answer:0, concept:`Reviews expose what needs more revision in ${topic}.` },
+        { q:`What should you do after choosing a wrong answer on ${topic}?`,
+          options:['Read the explanation and correct the idea','Ignore it and move on','Repeat the same mistake','Switch to a different topic'],
+          answer:0, concept:`Wrong answers are learning opportunities — always review them.` },
+        { q:`A deep understanding of ${topic} means you can:`,
+          options:['Explain why the correct answer is right','Memorize only the correct letter','Skip all examples','Avoid all difficult questions'],
+          answer:0, concept:`True mastery means explaining the reasoning, not just the answer.` },
+        { q:`Which habit builds the strongest revision of ${topic}?`,
+          options:['Review mistakes, fix gaps, then practice again','Repeat correct answers only','Ignore feedback','Study at random without structure'],
+          answer:0, concept:`Focused correction of errors is the fastest path to mastery.` },
+        { q:`What does a strong answer to a ${topic} question include?`,
+          options:['Definition, concept, example, and conclusion','Only the final result','Only a memorized phrase','An unrelated fact'],
+          answer:0, concept:`Complete answers show definition, reasoning, example, and conclusion.` },
+        { q:`When two options seem close in ${topic}, what should guide your choice?`,
+          options:['The condition stated in the question','The longer option','The first option always','A random selection'],
+          answer:0, concept:`The question condition always tells you which concept to apply.` },
+        { q:`Which of these topics was covered in this review session?`,
+          options:[covered, 'Unrelated topics only', 'Nothing from this course', 'Only the final module'],
+          answer:0, concept:`This review covers: ${covered}.` },
       ];
       return shuffle(base).slice(0, 5).map(shuffleOptions);
     }
 
-    function shuffle(items) {
-      const copy = [...items];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    }
-
-    function shuffleOptions(question) {
-      const correct = question.options[question.answer];
-      const options = shuffle(question.options);
-      return { ...question, options, answer: options.indexOf(correct) };
-    }
-
     function submitReview() {
-      let score = 0;
-      let answered = 0;
-      const wrong = [];
-      activeQuestions.forEach((item, index) => {
-        const selected = document.querySelector(`input[name="r${index}"]:checked`);
-        if (!selected) return;
+      let score = 0, answered = 0;
+      const analysis = [];
+
+      activeReviewQuestions.forEach((item, i) => {
+        const sel = document.querySelector(`input[name="rev${i}"]:checked`);
+        if (!sel) return;
         answered++;
-        if (Number(selected.value) === item.answer) {
-          score++;
-        } else {
-          wrong.push({
-            question: item.q,
-            chosen: item.options[Number(selected.value)],
-            correct: item.options[item.answer],
-            explanation: `The correct answer is "${item.options[item.answer]}" because it checks the real concept. Your selected answer does not match the condition in the question, so revise this point before moving forward.`
-          });
-        }
+        const chosen = Number(sel.value);
+        const isCorrect = chosen === item.answer;
+        if (isCorrect) score++;
+        analysis.push({
+          num: i + 1,
+          question: item.q,
+          userAnswer: item.options[chosen],
+          correctAnswer: item.options[item.answer],
+          isCorrect,
+          concept: item.concept || ''
+        });
       });
 
-      const result = document.getElementById('reviewResult');
-      if (answered < activeQuestions.length) {
-        result.style.color = '#fbbf24';
-        result.textContent = `Please answer all questions. Completed ${answered}/5.`;
+      const resultEl = document.getElementById('reviewResult');
+      if (answered < activeReviewQuestions.length) {
+        resultEl.style.color = '#fbbf24';
+        resultEl.textContent = `Please answer all questions. Answered: ${answered}/${activeReviewQuestions.length}.`;
         return;
       }
 
-      const percent = Math.round((score / activeQuestions.length) * 100);
-      const plan = currentPlan();
-      const passed = percent >= 80;
+      const plan    = currentPlan();
+      const total   = activeReviewQuestions.length;
+      const pct     = Math.round((score / total) * 100);
+      const passed  = pct >= 80;
+
       plan.reviews[activeReviewIndex].status = passed ? 'passed' : 'failed';
-      plan.reviews[activeReviewIndex].score = percent;
-      plan.reviews[activeReviewIndex].wrong = wrong;
-      if (passed && plan.reviews[activeReviewIndex + 1] && plan.reviews[activeReviewIndex + 1].status === 'locked') {
-        plan.reviews[activeReviewIndex + 1].status = 'available';
+      plan.reviews[activeReviewIndex].score  = pct;
+      plan.reviews[activeReviewIndex].wrong  = analysis.filter(a => !a.isCorrect)
+        .map(a => ({ question: a.question, chosen: a.userAnswer, correct: a.correctAnswer, concept: a.concept }));
+
+      if (passed) {
+        const nextR = plan.reviews[activeReviewIndex + 1];
+        if (nextR && nextR.status === 'locked') nextR.status = 'available';
+        const lastR = plan.reviews[plan.reviews.length - 1];
+        if (lastR && plan.reviews.slice(0, -1).every(r => r.status === 'passed')) lastR.status = 'available';
       }
       savePlan(plan);
 
-      result.style.color = passed ? '#86efac' : '#fca5a5';
-      result.innerHTML = passed
-        ? `Passed ${percent}%. Next review unlocked.`
-        : `Score ${percent}%. Later reviews stay locked until you pass this review. ${wrong.map(item => `
-            <div class="explain">
-              <strong>${item.question}</strong><br>
-              Your answer: ${item.chosen}<br>
-              Correct answer: ${item.correct}<br>
-              ${item.explanation}
+      const perfMsg =
+        pct === 100 ? 'Perfect score! Flawless review performance.' :
+        pct >= 90   ? 'Excellent mastery of the covered modules.' :
+        pct >= 80   ? 'Solid pass — the next review is now unlocked.' :
+        pct >= 60   ? 'Close! A few more correct answers would have passed.' :
+                      'Review the explanations below and retry — you can do this.';
+
+      const wrong = analysis.filter(a => !a.isCorrect);
+      const weakAreas = ddGetWeakAreas(wrong);
+      const circumference = 207.3; // 2π × 33
+
+      const qaHtml = analysis.map(item => {
+        if (item.isCorrect) {
+          return `<div class="dd-qa ok">
+            <div class="dd-qa-top">
+              <span class="dd-qa-num">Q${item.num}</span>
+              <span class="dd-qa-st ok">✅ Correct</span>
             </div>
-          `).join('')}`;
+            <div class="dd-qa-q">${item.question}</div>
+            <div class="dd-qa-ans c"><span class="dd-ans-lbl">Your Answer:</span>${item.correctAnswer}</div>
+            <div class="dd-ok-note">✓ Correct — this is the right understanding.</div>
+          </div>`;
+        }
+        return `<div class="dd-qa bad">
+          <div class="dd-qa-top">
+            <span class="dd-qa-num">Q${item.num}</span>
+            <span class="dd-qa-st bad">❌ Wrong</span>
+          </div>
+          <div class="dd-qa-q">${item.question}</div>
+          <div class="dd-qa-ans w"><span class="dd-ans-lbl">Your Answer:</span>${item.userAnswer}</div>
+          <div class="dd-qa-ans c"><span class="dd-ans-lbl">Correct Answer:</span>${item.correctAnswer}</div>
+          <div class="dd-exp">
+            <div class="dd-exp-h">📖 EXPLANATION</div>
+            <div class="dd-exp-b">The correct answer is <em>"${item.correctAnswer}"</em>. Your answer does not apply the right concept for this question. ${item.concept ? `<div class="concept-note" style="margin-top:6px;">📌 Concept: ${item.concept}</div>` : ''}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+      resultEl.innerHTML = `<div class="dd-result">
+        <div class="dd-score-card ${passed ? 'pass' : 'fail'}">
+          <div class="dd-circ">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="33" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="10"/>
+              <circle cx="50" cy="50" r="33" fill="none"
+                stroke="${passed ? '#22c55e' : '#f87171'}" stroke-width="10"
+                stroke-linecap="round"
+                stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
+                id="revArc"
+                style="transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset 1.1s ease;"/>
+            </svg>
+            <div class="dd-circ-center">
+              <div class="dd-circ-num ${passed ? 'pass' : 'fail'}" id="revNum">0</div>
+              <div class="dd-circ-den">/${total}</div>
+            </div>
+          </div>
+          <div class="dd-score-right">
+            <div class="dd-badge ${passed ? 'pass' : 'fail'}">${passed ? '✅ PASSED' : '❌ FAILED'}</div>
+            <div class="dd-pct">${pct}%</div>
+            <div class="dd-perf">${perfMsg}</div>
+            <div class="dd-stat-row">
+              <div class="dd-stat g"><span class="dv">${score}</span>Correct</div>
+              <div class="dd-stat r"><span class="dv">${total - score}</span>Wrong</div>
+              <div class="dd-stat b"><span class="dv">${pct}%</span>Accuracy</div>
+            </div>
+          </div>
+        </div>
+
+        ${passed ? `<div class="dd-banner ok">
+          <span>🎉 ${activeReviewIndex + 1 < plan.reviews.length ? 'Next review unlocked!' : '🏆 Course complete — outstanding!'}</span>
+        </div>` : `<div class="dd-banner warn">
+          <span>⚠️ You need 80% to pass. Study the explanations below, then retry.</span>
+        </div>`}
+
+        ${weakAreas.length ? `<div class="weak-section" style="margin-bottom:12px;">
+          <h4>⚠️ Weak Areas</h4>
+          ${weakAreas.map(w => `<span class="weak-tag">${w}</span>`).join('')}
+          <div class="rev-tip" style="margin-top:8px;">💡 Re-read the module content covering these areas before retrying.</div>
+        </div>` : ''}
+
+        <div class="dd-qa-section">
+          <div class="dd-qa-title">📋 Question-by-Question Analysis</div>
+          ${qaHtml}
+        </div>
+
+        <div class="actions" style="margin-top:14px;">
+          ${passed
+            ? `<button class="btn-green" onclick="closeQuiz()">✓ Continue</button>`
+            : `<button class="btn-primary" onclick="startReview(${activeReviewIndex})">↩ Retry Review</button>
+               <button onclick="closeQuiz()">Close</button>`
+          }
+        </div>
+      </div>`;
+
+      setTimeout(() => {
+        const arc = document.getElementById('revArc');
+        const num = document.getElementById('revNum');
+        if (arc) arc.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+        if (num) {
+          let c = 0;
+          const iv = setInterval(() => { c++; num.textContent = c; if (c >= score) clearInterval(iv); }, 1000 / Math.max(score, 1));
+        }
+      }, 120);
+
       renderPlan(plan);
     }
+
+    function ddGetWeakAreas(wrongItems) {
+      const areas = new Set();
+      wrongItems.forEach(w => {
+        const q = (w.question || '').toLowerCase();
+        if (q.includes('first step') || q.includes('meaning') || q.includes('important')) areas.add('Foundational Understanding');
+        if (q.includes('review') || q.includes('revision') || q.includes('weak')) areas.add('Review Strategy');
+        if (q.includes('wrong') || q.includes('mistake') || q.includes('incorrect')) areas.add('Error Analysis');
+        if (q.includes('explain') || q.includes('reason') || q.includes('why')) areas.add('Conceptual Depth');
+        if (q.includes('habit') || q.includes('strong') || q.includes('best')) areas.add('Learning Habits');
+      });
+      if (areas.size === 0 && wrongItems.length > 0) areas.add('General Understanding');
+      return [...areas].slice(0, 3);
+    }
+
+    function closeQuiz() {
+      document.getElementById('quizPanel').classList.add('hidden');
+      document.getElementById('mockQuizPanel').classList.add('hidden');
+    }
+
+    /* ─────────── MOCK TEST SYSTEM ─────────── */
+    function renderMockPanel(plan) {
+      const completedMods = plan.modules.reduce((acc, m, i) => { if (m.completed) acc.push(i); return acc; }, []);
+      const panel = document.getElementById('mockPanel');
+      panel.style.display = completedMods.length > 0 ? 'block' : 'none';
+
+      const history = plan.mockHistory || [];
+      const best    = history.length ? Math.max(...history.map(h => h.score)) + '%' : '–';
+      document.getElementById('mockAttempts').textContent    = history.length;
+      document.getElementById('mockBestScore').textContent   = best;
+      document.getElementById('mockModulesAvail').textContent = completedMods.length;
+
+      const histEl = document.getElementById('mockHist');
+      if (history.length === 0) { histEl.innerHTML = '<p style="color:var(--text2);font-size:12px;margin-top:8px;">No attempts yet.</p>'; return; }
+      const recent = [...history].reverse().slice(0, 5);
+      histEl.innerHTML = '<p style="color:var(--text2);font-size:12px;margin:10px 0 6px;">Recent Attempts:</p>' +
+        recent.map((h, i) => `
+          <div class="mock-hist-item">
+            <span>#${history.length - i} &nbsp; ${new Date(h.date).toLocaleDateString()}</span>
+            <span>Modules: ${h.modulesUsed.map(x => ['B','CC','Ex','AP','FR'][x]||x).join('+')}</span>
+            <span class="mock-hist-score ${h.score >= 70 ? 'pass':'fail'}">${h.score}% (${h.correct}/${h.total})</span>
+          </div>`).join('');
+    }
+
+    function openMockTest() {
+      const plan = currentPlan();
+      const completedMods = plan.modules.reduce((acc, m, i) => { if (m.completed) acc.push(i); return acc; }, []);
+      if (completedMods.length === 0) return;
+
+      // Difficulty scales with attempt count
+      const attemptNum = (plan.mockHistory || []).length + 1;
+      activeMockQuestions = buildMockQuestions(plan.topic, completedMods, attemptNum);
+
+      const modNames = completedMods.map(i => ['Basics','Core Concepts','Examples','Application Practice','Final Revision'][i]).join(', ');
+      const qHtml = activeMockQuestions.map((item, qi) => `
+        <section class="q">
+          <p>${qi+1}. ${item.q}</p>
+          ${item.options.map((opt, oi) => `<label><input type="radio" name="mock${qi}" value="${oi}"> ${opt}</label>`).join('')}
+        </section>`).join('');
+
+      document.getElementById('mockQuizPanel').classList.remove('hidden');
+      document.getElementById('mockQuizPanel').innerHTML = `
+        <div class="panel" style="border-color:rgba(34,211,238,.35);">
+          <h2>🎯 Mock Test #${attemptNum}</h2>
+          <p class="muted" style="margin-bottom:6px;">10 questions from: <strong style="color:#a5f3fc;">${modNames}</strong></p>
+          <p class="muted" style="margin-bottom:16px;">Attempt ${attemptNum} · Difficulty level ${Math.min(5, Math.ceil(attemptNum / 2))}/5 · Does not affect module unlocks.</p>
+          ${qHtml}
+          <div class="actions" style="margin-top:18px;">
+            <button class="btn-cyan" onclick="submitMockTest(${attemptNum})">Submit Mock Test</button>
+            <button onclick="closeQuiz()">Cancel</button>
+          </div>
+          <div class="result" id="mockResult"></div>
+        </div>`;
+      document.getElementById('mockQuizPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+
+    function buildMockQuestions(topic, completedModuleIndices, attemptNum) {
+      const level = Math.min(5, Math.ceil(attemptNum / 2));
+      const moduleNames = ['Basics','Core Concepts','Examples','Application Practice','Final Revision'];
+      const moduleLabels = ['the foundational basics','the core rules and structure','worked examples and patterns','application to exam scenarios','final revision and mastery'];
+
+      const bank = [];
+      completedModuleIndices.forEach(mi => {
+        const modName  = moduleNames[mi];
+        const modLabel = moduleLabels[mi];
+        const tag = { module: modName };
+
+        // Level 1 — Conceptual / Definition
+        bank.push(
+          { ...tag, q:`What is the primary goal of studying ${topic} — ${modLabel}?`,
+            options:['Build a deep understanding of meaning, structure, and purpose','Memorise the chapter title only','Skip difficult questions to save time','Avoid all examples and go straight to tests'],
+            answer:0, concept:`The primary goal of any learning module is to build genuine understanding — not surface memorisation.` },
+          { ...tag, q:`A student studying ${topic} (${modName}) says "I read it but don't understand it." What should they do next?`,
+            options:['Explain the concept out loud in their own words without notes','Read the same paragraph ten more times silently','Move to the next topic and come back later','Give up and memorise the correct answer directly'],
+            answer:0, concept:`Explaining a concept in your own words is the most reliable test of real understanding.` },
+          { ...tag, q:`Which approach produces the strongest understanding of ${topic} — ${modName}?`,
+            options:['Read, explain, practice, then review mistakes','Read once and memorise key words','Jump straight to practice without reading','Copy examples without thinking through steps'],
+            answer:0, concept:`Read → Explain → Practice → Review mistakes is the most effective learning cycle.` },
+          { ...tag, q:`What should a ${topic} (${modName}) answer always include for full marks?`,
+            options:['Definition, key concept, example, and a clear conclusion','Only the final numerical answer','Only a yes or no response','An unrelated formula from a different chapter'],
+            answer:0, concept:`Complete answers in exams include definition, concept, example, and conclusion.` },
+          { ...tag, q:`Which describes real mastery of ${topic} — ${modName}?`,
+            options:['You can explain it to someone else without looking at notes','You remember which option letter was correct','You can guess the right answer from the question length','You have read it more than five times'],
+            answer:0, concept:`True mastery means you can explain the WHY — not just recall the WHAT.` }
+        );
+
+        // Level 2 — Comparative / Structural
+        if (level >= 2) bank.push(
+          { ...tag, q:`When two answer options in a ${topic} (${modName}) question look similar, what should guide your final choice?`,
+            options:['The specific condition stated in the question itself','The longer of the two options','The option that appears first in the list','The option you have seen before'],
+            answer:0, concept:`The condition in the question always tells you which rule to apply — read it carefully.` },
+          { ...tag, q:`Scenario: You studied ${topic} — ${modName} yesterday but cannot recall it today. What is the most effective action?`,
+            options:['Active recall — try to reconstruct it from memory, then check gaps','Re-read the notes from start to finish again','Skip it and study the next module instead','Watch someone else solve a similar problem'],
+            answer:0, concept:`Active recall (trying to remember without looking) is more effective than passive re-reading.` }
+        );
+
+        // Level 3 — Application
+        if (level >= 3) bank.push(
+          { ...tag, q:`In a complex ${topic} (${modName}) exam question with multiple parts, what is the correct first step?`,
+            options:['Identify all parts of the question before writing anything','Start writing from the first line immediately','Select the formula that seems most familiar','Read only the last sentence of the question'],
+            answer:0, concept:`Identifying all parts of a multi-part question before starting prevents missing sub-questions.` },
+          { ...tag, q:`Which study habit leads to the highest exam scores for ${topic} — ${modName}?`,
+            options:['Targeted review of wrong answers with active correction','Repeating correct answers to reinforce them','Random practice without reviewing mistakes','Studying new topics only, never revisiting old ones'],
+            answer:0, concept:`Targeted correction of errors is the fastest path to improvement in any topic.` }
+        );
+
+        // Level 4 — Scenario-based
+        if (level >= 4) bank.push(
+          { ...tag, q:`Scenario: An exam question asks you to apply ${topic} — ${modName} to an unfamiliar context you have never seen. What is the correct approach?`,
+            options:['Go back to the core definition and apply the fundamental rule to the new context','Skip the question since it is unfamiliar','Use a different formula that you know better','Guess based on which answer sounds most confident'],
+            answer:0, concept:`Unfamiliar contexts test whether you understand the core rule — always apply fundamentals.` }
+        );
+
+        // Level 5 — Analytical / Higher-order
+        if (level >= 5) bank.push(
+          { ...tag, q:`After completing all modules and reviews for ${topic}, what distinguishes a top-scoring student?`,
+            options:['They can create exam questions on the topic and explain why each answer is right or wrong','They have memorised the most answers','They read the textbook more times than others','They only study topics they already understand well'],
+            answer:0, concept:`Creating questions tests the highest level of understanding — if you can question, you truly know.` }
+        );
+      });
+
+      const histKey = `mock-hist-q-${planKey}`;
+      let recentQs = [];
+      try { recentQs = JSON.parse(localStorage.getItem(histKey) || '[]'); } catch {}
+
+      const fresh = bank.filter(q => !recentQs.includes(q.q));
+      const pool  = fresh.length >= 10 ? fresh : bank;
+      const selected = shuffle(pool).slice(0, 10).map(shuffleOptions);
+
+      const updatedHistory = [...selected.map(q => q.q), ...recentQs]
+        .filter((v, i, a) => a.indexOf(v) === i).slice(0, 50);
+      localStorage.setItem(histKey, JSON.stringify(updatedHistory));
+
+      return selected;
+    }
+
+    function submitMockTest(attemptNum) {
+      let correct = 0, answered = 0;
+      const analysis = [];
+      activeMockQuestions.forEach((item, i) => {
+        const sel = document.querySelector(`input[name="mock${i}"]:checked`);
+        if (!sel) return;
+        answered++;
+        const chosen = Number(sel.value);
+        const isCorrect = chosen === item.answer;
+        if (isCorrect) correct++;
+        analysis.push({
+          num: i + 1,
+          question: item.q,
+          userAnswer: item.options[chosen],
+          correctAnswer: item.options[item.answer],
+          isCorrect,
+          concept: item.concept || '',
+          module:  item.module  || ''
+        });
+      });
+
+      const resultEl = document.getElementById('mockResult');
+      if (answered < activeMockQuestions.length) {
+        resultEl.style.color = '#fbbf24';
+        resultEl.textContent = `Please answer all ${activeMockQuestions.length} questions. Answered: ${answered}/${activeMockQuestions.length}.`;
+        return;
+      }
+
+      const plan = currentPlan();
+      const completedMods = plan.modules.reduce((acc, m, i) => { if (m.completed) acc.push(i); return acc; }, []);
+      const total = activeMockQuestions.length;
+      const pct   = Math.round((correct / total) * 100);
+      const pass  = pct >= 70;
+
+      if (!plan.mockHistory) plan.mockHistory = [];
+      plan.mockHistory.push({ attemptNum, date: new Date().toISOString(), modulesUsed: completedMods, score: pct, correct, total });
+      savePlan(plan);
+
+      const wrong = analysis.filter(a => !a.isCorrect);
+
+      // Weak areas from module tags
+      const weakModules = [...new Set(wrong.map(w => w.module).filter(Boolean))];
+      const weakConceptAreas = ddGetWeakAreas(wrong);
+      const allWeak = [...new Set([...weakModules, ...weakConceptAreas])].slice(0, 5);
+
+      const weakHtml = allWeak.length ? `
+        <div class="weak-section" style="margin-bottom:12px;">
+          <h4>⚠️ Weak Areas Identified</h4>
+          ${allWeak.map(w => `<span class="weak-tag">${w}</span>`).join('')}
+          <div class="rev-tip" style="margin-top:8px;">
+            💡 <strong>Revision tip:</strong> Re-open the module cards for these areas and re-read the
+            Key Points and Formulas sections. Focus on the <em>why</em> behind each rule, not just the answer.
+          </div>
+        </div>` : '';
+
+      const perfMsg =
+        pct === 100 ? 'Perfect score! Flawless mock test performance.' :
+        pct >= 90   ? 'Excellent mastery — you are well prepared.' :
+        pct >= 70   ? `Passed with ${pct}%. Review wrong answers to push higher.` :
+        pct >= 50   ? 'Almost there. Study the explanations below and retry.' :
+                      'Keep practising — each attempt builds your understanding.';
+
+      const suggestionHtml = pct < 60 ? `
+        <div class="rev-tip" style="margin-bottom:12px;">
+          📚 <strong>Improvement Plan:</strong> Before retrying, re-open the module cards for your weak areas
+          and re-read the Key Points and Formulas sections. Write a one-sentence explanation of each concept
+          in your own words, then attempt again.
+        </div>` : pct < 80 ? `
+        <div class="rev-tip" style="margin-bottom:12px;">
+          🎯 <strong>Good Progress (${pct}%):</strong> For the wrong answers below, focus on understanding
+          <em>why</em> the correct option is right. Once you can explain it without notes, your score will
+          jump significantly on the next attempt.
+        </div>` : pct < 90 ? `
+        <div class="rev-tip" style="margin-bottom:12px;">
+          🌟 <strong>Strong Performance (${pct}%):</strong> To push past 90%, review the concept notes for
+          each wrong answer. The gap between 80% and 95% is always in the details you almost-but-not-quite
+          remembered.
+        </div>` : `
+        <div class="rev-tip" style="margin-bottom:12px;">
+          🏆 <strong>Excellent Mastery (${pct}%):</strong> You have a thorough grasp of ${plan.topic}.
+          The next attempt will be at a higher difficulty level — challenge yourself further.
+        </div>`;
+
+      const circumference = 207.3; // 2π × 33
+
+      const qaHtml = analysis.map(item => {
+        if (item.isCorrect) {
+          return `<div class="dd-qa ok">
+            <div class="dd-qa-top">
+              <span class="dd-qa-num">Q${item.num}</span>
+              <span class="dd-qa-st ok">✅ Correct</span>
+            </div>
+            <div class="dd-qa-q">${item.question}</div>
+            <div class="dd-qa-ans c"><span class="dd-ans-lbl">Your Answer: </span>${item.correctAnswer}</div>
+            <div class="dd-ok-note">✓ Correct — this is the right understanding.</div>
+          </div>`;
+        }
+        return `<div class="dd-qa bad">
+          <div class="dd-qa-top">
+            <span class="dd-qa-num">Q${item.num}</span>
+            <span class="dd-qa-st bad">❌ Wrong</span>
+          </div>
+          <div class="dd-qa-q">${item.question}</div>
+          <div class="dd-qa-ans w"><span class="dd-ans-lbl">Your Answer: </span>${item.userAnswer}</div>
+          <div class="dd-qa-ans c"><span class="dd-ans-lbl">Correct Answer: </span>${item.correctAnswer}</div>
+          <div class="dd-exp">
+            <div class="dd-exp-h">📖 EXPLANATION</div>
+            <div class="dd-exp-b">The correct answer is <em>"${item.correctAnswer}"</em>. Your answer does not apply the right concept here.${item.concept ? `<div class="concept-note" style="margin-top:6px;">📌 Concept: ${item.concept}</div>` : ''}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+      resultEl.innerHTML = `<div class="dd-result">
+        <div class="dd-score-card ${pass ? 'pass' : 'fail'}">
+          <div class="dd-circ">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="33" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="10"/>
+              <circle cx="50" cy="50" r="33" fill="none"
+                stroke="${pass ? '#22c55e' : '#f87171'}" stroke-width="10"
+                stroke-linecap="round"
+                stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"
+                id="mockArc"
+                style="transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset 1.1s ease;"/>
+            </svg>
+            <div class="dd-circ-center">
+              <div class="dd-circ-num ${pass ? 'pass' : 'fail'}" id="mockNum">0</div>
+              <div class="dd-circ-den">/${total}</div>
+            </div>
+          </div>
+          <div class="dd-score-right">
+            <div class="dd-badge ${pass ? 'pass' : 'fail'}">${pass ? '✅ PASSED' : '❌ FAILED'}</div>
+            <div class="dd-pct">${pct}%</div>
+            <div class="dd-perf">${perfMsg}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px;">Attempt #${attemptNum} &nbsp;·&nbsp; Difficulty ${Math.min(5, Math.ceil(attemptNum / 2))}/5</div>
+            <div class="dd-stat-row">
+              <div class="dd-stat g"><span class="dv">${correct}</span>Correct</div>
+              <div class="dd-stat r"><span class="dv">${total - correct}</span>Wrong</div>
+              <div class="dd-stat b"><span class="dv">${pct}%</span>Accuracy</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dd-banner ${pass ? 'ok' : 'warn'}">
+          <span>${pass ? '🎉 Great performance! Mock tests are always available — keep practicing.' : '⚠️ You need 70% to pass. Study the explanations below, then retry.'}</span>
+        </div>
+
+        ${weakHtml}
+        ${suggestionHtml}
+
+        <div class="dd-qa-section">
+          <div class="dd-qa-title">📋 Question-by-Question Analysis</div>
+          ${qaHtml}
+        </div>
+
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn-cyan" onclick="openMockTest()">🔄 Try Again (Difficulty ${Math.min(5, Math.ceil((attemptNum + 1) / 2))}/5)</button>
+          <button onclick="closeQuiz()">Done</button>
+        </div>
+      </div>`;
+
+      setTimeout(() => {
+        const arc = document.getElementById('mockArc');
+        const num = document.getElementById('mockNum');
+        if (arc) arc.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+        if (num) {
+          let c = 0;
+          const iv = setInterval(() => { c++; num.textContent = c; if (c >= correct) clearInterval(iv); }, 1000 / Math.max(correct, 1));
+        }
+      }, 120);
+
+      renderMockPanel(plan);
+    }
+
+    /* ─────────── UTILITIES ─────────── */
+    function moduleText(index, topic) {
+      return ['Build meaning, keywords, and the base idea of ','Study rules, structure, and relationships in ',
+        'Work through solved examples and identify patterns for ','Apply to mixed and exam-style situations: ',
+        'Revise weak points and prepare for assessments on '][index] + topic;
+    }
+
+    function shuffle(items) {
+      const a = [...items];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function shuffleOptions(q) {
+      const correct = q.options[q.answer];
+      const opts    = shuffle(q.options);
+      return { ...q, options: opts, answer: opts.indexOf(correct) };
+    }
+
+    function esc(text) { return text.replace(/'/g, "\\'"); }
 
     function resetPlan() {
       localStorage.removeItem(planKey);
       document.getElementById('planPanel').classList.add('hidden');
       document.getElementById('setupPanel').classList.remove('hidden');
       document.getElementById('quizPanel').classList.add('hidden');
+      document.getElementById('mockQuizPanel').classList.add('hidden');
       document.getElementById('topicSearch').value = '';
-      document.getElementById('daysInput').value = '';
+      document.getElementById('daysInput').value   = '';
+      renderTopics(allTopics);
     }
   </script>
 </body>

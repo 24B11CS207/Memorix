@@ -49,7 +49,8 @@
     <p class="sub" id="sub"></p>
     <section class="card" id="lesson"></section>
     <div class="actions">
-      <button class="primary" onclick="goTest()">Take Test</button>
+      <button class="primary" id="markLearnedBtn" onclick="markAsLearned()">Mark as Learned</button>
+      <button id="takeTestBtn" onclick="goTest()" disabled>Take Test</button>
       <a class="back" href="topics-page.html">Back to Modules</a>
     </div>
   </main>
@@ -104,18 +105,20 @@
     ];
 
     const lesson = modulePlans[moduleIndex] || modulePlans[0];
+    const learnedKey = `learned-${selectedPath}-${selectedSubject}-${topic}-${moduleIndex}`;
     const safeTopic = escapeHtml(topic);
     const safeSubject = escapeHtml(selectedSubject);
     const safePath = escapeHtml(selectedPath);
+    const topicDetails = buildTopicDetails(topic, selectedSubject, moduleIndex);
     document.getElementById('title').textContent = `Module ${moduleIndex + 1}: ${topic} ${moduleNames[moduleIndex] || ''}`;
     document.getElementById('sub').textContent = `${selectedPath} > ${selectedSubject}`;
     document.getElementById('lesson').innerHTML = `
       <div class="hero">
         <div class="block">
           <h2>Big Explanation</h2>
-          <p class="lead">${safeTopic} is an important part of ${safeSubject} because it helps you understand a pattern, solve questions, and explain ideas clearly.</p>
-          <p>${escapeHtml(lesson.depth)}</p>
-          <p>For this level, focus on: <strong>${escapeHtml(lesson.angle)}</strong>. A good answer should not sound like memorized lines only. It should show meaning, structure, example, and correct use.</p>
+          <p class="lead">${topicDetails.lead}</p>
+          <p>${topicDetails.explanation}</p>
+          <p>For this level, focus on: <strong>${escapeHtml(lesson.angle)}</strong>. ${topicDetails.focus}</p>
           <div class="tag-row">
             <span class="tag">${safeSubject}</span>
             <span class="tag">Module ${moduleIndex + 1}</span>
@@ -139,12 +142,15 @@
       <div class="block">
         <h2>Detailed Notes</h2>
         <ol class="step-list">
-          <li><strong>Meaning:</strong> ${safeTopic} should first be understood in simple language. Ask: what is it, what does it describe, and why does it matter in ${safeSubject}?</li>
-          <li><strong>Parts:</strong> Break ${safeTopic} into smaller pieces such as terms, rules, steps, causes, effects, formulas, examples, or diagrams.</li>
-          <li><strong>Connections:</strong> Link the topic with what you already know. Most exam questions check relationships, not isolated facts.</li>
-          <li><strong>Use:</strong> Practice where to apply the idea. A strong student can identify ${safeTopic} even when the question uses different wording.</li>
-          <li><strong>Check:</strong> After answering, verify whether your explanation includes the keyword, correct logic, and a complete conclusion.</li>
+          ${topicDetails.notes.map(note => `<li>${note}</li>`).join('')}
         </ol>
+      </div>
+
+      <div class="block">
+        <h2>Key Concepts</h2>
+        <ul>
+          ${topicDetails.keyConcepts.map(point => `<li>${point}</li>`).join('')}
+        </ul>
       </div>
 
       <div class="block">
@@ -169,11 +175,7 @@
       <div class="block">
         <h2>Common Mistakes</h2>
         <ul>
-          <li>Reading the topic only once and thinking it is mastered.</li>
-          <li>Memorizing definitions without understanding the keywords.</li>
-          <li>Skipping diagrams, formulas, labels, or step order.</li>
-          <li>Solving examples by copying instead of explaining each step.</li>
-          <li>Not reviewing wrong answers after practice.</li>
+          ${topicDetails.mistakes.map(mistake => `<li>${mistake}</li>`).join('')}
         </ul>
       </div>
 
@@ -188,6 +190,72 @@
         </ul>
       </div>
     `;
+
+    if (localStorage.getItem(learnedKey) === 'yes') {
+      enableTestButton();
+    }
+
+    function buildTopicDetails(topicName, subjectName, index) {
+      const t = escapeHtml(topicName);
+      const s = escapeHtml(subjectName);
+      const moduleLabel = escapeHtml(moduleNames[index] || 'Learning');
+      const subjectType = subjectName.toLowerCase();
+      const isMath = /math|statistics|aptitude|accounting/.test(subjectType);
+      const isScience = /science|physics|chemistry|botany|zoology|anatomy|physiology|biochemistry|pharmacology/.test(subjectType);
+      const isProgramming = /programming|data structures|dbms|network|electronics|computer/.test(subjectType);
+      const isLanguage = /english|grammar|essay|vocabulary/.test(subjectType);
+
+      const subjectAngle = isMath
+        ? `In ${s}, ${t} is learned by understanding the rule, the given data, the required result, and the steps that connect them.`
+        : isScience
+          ? `In ${s}, ${t} is learned by connecting definition, process, diagram or structure, cause and effect, and real examples.`
+          : isProgramming
+            ? `In ${s}, ${t} is learned by understanding the problem, the logic, the data or commands involved, and the output produced.`
+            : isLanguage
+              ? `In ${s}, ${t} is learned by noticing meaning, usage, sentence pattern, context, and the effect it creates in communication.`
+              : `In ${s}, ${t} is learned by connecting the definition, important points, examples, and exam-style explanation.`;
+
+      const moduleExplanations = [
+        `${subjectAngle} Start by asking what ${t} means, why it is used, and which keywords must appear in a correct answer. Keep the idea simple first: one definition, one small example, and one reason it matters.`,
+        `${subjectAngle} This module focuses on the internal structure of ${t}. Break it into parts, rules, relationships, exceptions, formulas, labels, or conditions. The goal is to know not only what happens, but why it happens.`,
+        `${subjectAngle} Here, ${t} becomes practical. Study solved examples slowly, identify what is given and what is asked, then repeat the method without looking. The example is useful only when you can explain each step.`,
+        `${subjectAngle} Application questions may not mention ${t} directly. You must spot clue words, select the correct concept, avoid traps, and write a complete answer that matches the exact condition in the question.`,
+        `${subjectAngle} Final revision compresses everything about ${t} into active recall. You should be able to define it, list key points, give examples, explain mistakes, and answer a mixed question without opening notes.`
+      ];
+
+      const notes = [
+        `<strong>Meaning:</strong> Write the meaning of ${t} in simple words, then add the exact keyword that makes the answer correct in ${s}.`,
+        `<strong>Core idea:</strong> Identify the main rule, process, formula, structure, or usage pattern behind ${t}.`,
+        `<strong>Example link:</strong> Connect ${t} to one textbook example and one new example so you do not depend on memorized wording.`,
+        `<strong>Question clue:</strong> Notice the words in the question that tell you ${t} is being tested.`,
+        `<strong>Answer check:</strong> Before submitting, confirm your answer includes the concept, reason, example or step, and conclusion.`
+      ];
+
+      const keyConcepts = [
+        `${t} belongs to ${s}, so every answer should use subject-specific language instead of a vague general sentence.`,
+        `A strong ${moduleLabel} answer explains both the idea and the condition where it applies.`,
+        `The safest study pattern is: understand ${t}, explain it aloud, solve one example, then test yourself.`,
+        `When two options look similar, choose the one that directly matches the clue or condition in the question.`,
+        `Progress is real when you can explain why the correct answer is right and why the wrong answers are wrong.`
+      ];
+
+      const mistakes = [
+        `Reading ${t} once and assuming the topic is complete.`,
+        `Memorizing the definition of ${t} without understanding the keywords.`,
+        `Skipping examples, diagrams, formulas, labels, commands, or answer structure related to ${t}.`,
+        `Choosing an answer because it sounds familiar instead of checking the exact question condition.`,
+        `Not reviewing wrong answers after practice, which makes the same mistake repeat in the test.`
+      ];
+
+      return {
+        lead: `${t} is an important topic in ${s}. This page explains it through the current module level so you can learn first, mark it as learned, and only then take the test.`,
+        explanation: moduleExplanations[index] || moduleExplanations[0],
+        focus: `A good answer for ${t} should show meaning, key concept, related example, and correct use in ${s}.`,
+        notes,
+        keyConcepts,
+        mistakes
+      };
+    }
 
     function escapeHtml(value) {
       return String(value).replace(/[&<>"']/g, char => ({
@@ -303,8 +371,22 @@
       ];
     }
 
+    function enableTestButton() {
+      const markBtn = document.getElementById('markLearnedBtn');
+      const testBtn = document.getElementById('takeTestBtn');
+      markBtn.textContent = 'Learned';
+      markBtn.disabled = true;
+      testBtn.disabled = false;
+      testBtn.classList.add('primary');
+    }
+
+    function markAsLearned() {
+      localStorage.setItem(learnedKey, 'yes');
+      enableTestButton();
+    }
+
     function goTest() {
-      localStorage.setItem(`learned-${selectedPath}-${selectedSubject}-${topic}-${moduleIndex}`, 'yes');
+      if (localStorage.getItem(learnedKey) !== 'yes') return;
       window.location.href = 'module-test.html';
     }
   </script>
