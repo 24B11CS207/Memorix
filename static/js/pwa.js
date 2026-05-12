@@ -1,9 +1,6 @@
-(function () {
-  if (!('serviceWorker' in navigator)) return;
-
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('/service-worker.js').catch(function () {
-      // The app still works normally if the browser blocks service workers.
-    });
+// Unregister any previously installed service workers
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    registrations.forEach(function(reg) { reg.unregister(); });
   });
-})();
+}

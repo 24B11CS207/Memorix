@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3b9eff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Memorix">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/img/memorix-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/img/memorix-icon.svg">
+  <title>Memorix - Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #070816;
+      --panel: rgba(18, 20, 40, 0.72);
+      --panel2: rgba(10, 16, 34, 0.78);
+      --line: rgba(255, 255, 255, 0.1);
+      --purple: #7c5cfc;
+      --purple2: #a78bfa;
+      --blue: #38bdf8;
+      --cyan: #22d3ee;
+      --green: #22c55e;
+      --yellow: #f59e0b;
+      --red: #f87171;
+      --text: #ffffff;
+      --muted: #9ca3af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+    html { min-height: 100%; overflow-y: auto; }
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 10%, rgba(124, 92, 252, 0.18), transparent 24%),
+        radial-gradient(circle at 88% 18%, rgba(56, 189, 248, 0.14), transparent 24%),
+        linear-gradient(135deg, #060816, #11132b, #1a1040);
+      overflow-x: hidden;
+    }
+
+    nav {
+      position: fixed;
+      inset: 0 0 auto;
+      height: 75px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 60px;
+      background: rgba(7, 8, 22, 0.72);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--purple2), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links { display: flex; gap: 30px; align-items: center; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 15px;
+      transition: color 0.25s ease, transform 0.25s ease;
+    }
+    .nav-links a:hover, .nav-links a.active { color: #fff; transform: translateY(-2px); }
+
+    .nav-actions { display: flex; align-items: center; gap: 14px; }
+    .ai-tutor-btn, .logout-btn, .back-btn {
+      min-height: 45px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 22px;
+      border-radius: 14px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .ai-tutor-btn, .back-btn {
+      border: 1px solid rgba(56, 189, 248, 0.38);
+      background: rgba(56, 189, 248, 0.11);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.18);
+    }
+    .logout-btn {
+      border: 0;
+      background: linear-gradient(135deg, var(--purple), #4f46e5);
+      box-shadow: 0 0 25px rgba(124, 92, 252, 0.45);
+    }
+    .ai-tutor-btn:hover, .logout-btn:hover, .back-btn:hover { transform: translateY(-3px); }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 120px 0 48px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      gap: 22px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .headline, .filters, .metric, .chart-card, .empty, .topic-row {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(18px);
+    }
+
+    .headline {
+      min-height: 250px;
+      padding: 34px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .headline::after {
+      content: '';
+      position: absolute;
+      right: -80px;
+      bottom: -90px;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34, 211, 238, 0.2), transparent 64%);
+      pointer-events: none;
+    }
+    .eyebrow { color: var(--cyan); font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    h1 { margin-top: 10px; font-size: clamp(36px, 6vw, 64px); line-height: 1; }
+    .lead { max-width: 690px; margin-top: 16px; color: #cbd5e1; font-size: 17px; line-height: 1.7; }
+
+    .filters {
+      border-radius: 8px;
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+    .filters label { color: #dbeafe; font-size: 13px; font-weight: 600; }
+    select {
+      width: 100%;
+      min-height: 44px;
+      margin-top: 6px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.26);
+      background: rgba(7, 11, 24, 0.88);
+      color: #fff;
+      outline: none;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .metric { border-radius: 8px; padding: 18px; }
+    .metric small { display: block; color: var(--muted); margin-bottom: 8px; }
+    .metric strong { font-size: 30px; line-height: 1; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin: 28px 0 14px;
+    }
+    .section-head h2 { font-size: 26px; }
+    .section-head p { color: var(--muted); max-width: 620px; line-height: 1.6; }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+      gap: 16px;
+    }
+    .chart-card { border-radius: 8px; padding: 20px; min-height: 330px; }
+    .chart-card h3 { font-size: 18px; margin-bottom: 6px; }
+    .chart-card p { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+    .chart-wrap { position: relative; height: 250px; }
+
+    .topic-list { display: grid; gap: 12px; margin-top: 16px; }
+    .topic-row {
+      border-radius: 8px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 150px;
+      gap: 16px;
+      align-items: center;
+    }
+    .topic-row h3 { font-size: 16px; margin-bottom: 4px; }
+    .topic-row p { color: var(--muted); font-size: 13px; }
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), var(--purple2));
+    }
+    .badge {
+      justify-self: end;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.12);
+      color: #bfdbfe;
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .empty {
+      border-radius: 8px;
+      padding: 24px;
+      color: #cbd5e1;
+      line-height: 1.7;
+    }
+
+    @media(max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hero, .chart-grid, .metrics { grid-template-columns: 1fr; }
+      .headline { min-height: 220px; padding: 26px; }
+    }
+
+    @media(max-width: 560px) {
+      .logo { font-size: 24px; }
+      .nav-actions { gap: 8px; }
+      .ai-tutor-btn, .logout-btn { min-height: 40px; padding: 0 13px; font-size: 13px; }
+      main { width: min(100% - 24px, 1180px); padding-top: 104px; }
+      .topic-row { grid-template-columns: 1fr; }
+      .badge { justify-self: start; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Memorix</div>
+    <div class="nav-links">
+      <a href="dashboard.html">Home</a>
+      <a href="classes.html">Categories</a>
+      <a href="classes.html">Education</a>
+      <a href="dashboard.html#about">About</a>
+      <a class="active" href="analytics.html">Analytics</a>
+    </div>
+    <div class="nav-actions">
+      <a href="ai-tutor.html" class="ai-tutor-btn">AI Tutor</a>
+      <button class="logout-btn" type="button" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="headline">
+        <div class="eyebrow">Learning Analytics</div>
+        <h1>Topic Progress Graphs</h1>
+        <p class="lead">Track Instant Learning and Deep Dive progress by class, subject, and topic. Each graph updates from your saved module tests, reviews, mocks, and completed modules.</p>
+      </div>
+      <aside class="filters">
+        <div>
+          <label for="classFilter">Class or Path</label>
+          <select id="classFilter"></select>
+        </div>
+        <div>
+          <label for="subjectFilter">Subject</label>
+          <select id="subjectFilter"></select>
+        </div>
+        <div>
+          <label for="topicFilter">Topic</label>
+          <select id="topicFilter"></select>
+        </div>
+      </aside>
+    </section>
+
+    <section class="metrics" id="metrics"></section>
+
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>Instant Learning</h2>
+          <p>Module completion and module test scores for the selected class and topic.</p>
+        </div>
+        <a class="back-btn" href="classes.html">Add Progress</a>
+      </div>
+      <div class="chart-grid">
+        <article class="chart-card">
+          <h3>Module Progress</h3>
+          <p>Line graph for learned modules, unlocked modules, and best score for each module.</p>
+          <div class="chart-wrap"><canvas id="instantModuleChart"></canvas></div>
+        </article>
+        <article class="chart-card">
+          <h3>Test Attempts</h3>
+          <p>Scores from every saved attempt for this topic.</p>
+          <div class="chart-wrap"><canvas id="instantAttemptChart"></canvas></div>
+        </article>
+      </div>
+      <div id="instantEmpty" class="empty" style="display:none;">No Instant Learning progress found for this filter yet. Complete a module lesson or test to see the graph here.</div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>Deep Dive</h2>
+          <p>Course progress, review performance, and mock practice for the selected topic.</p>
+        </div>
+        <a class="back-btn" href="deep-dive.html">Open Deep Dive</a>
+      </div>
+      <div class="chart-grid">
+        <article class="chart-card">
+          <h3>Deep Dive Completion</h3>
+          <p>Line graph for completed modules and passed reviews across the scheduled course.</p>
+          <div class="chart-wrap"><canvas id="deepCompletionChart"></canvas></div>
+        </article>
+        <article class="chart-card">
+          <h3>Reviews and Mocks</h3>
+          <p>Review scores and mock test scores over time.</p>
+          <div class="chart-wrap"><canvas id="deepScoreChart"></canvas></div>
+        </article>
+      </div>
+      <div id="deepEmpty" class="empty" style="display:none;">No Deep Dive plan found for this filter yet. Create a Deep Dive schedule to see this graph.</div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>Topics Overview</h2>
+          <p>Every topic found in your browser progress for the selected class and subject.</p>
+        </div>
+      </div>
+      <div class="topic-list" id="topicList"></div>
+    </section>
+  </main>
+
+  <script>
+    'use strict';
+
+    const user = JSON.parse(localStorage.getItem('eduUser') || 'null');
+    if (!user || !user.email) window.location.href = 'index.html';
+
+    const moduleNames = ['Basics', 'Core Concepts', 'Examples', 'Application', 'Final Revision'];
+    const charts = {};
+
+    const store = collectProgress();
+    const filters = {
+      className: document.getElementById('classFilter'),
+      subject: document.getElementById('subjectFilter'),
+      topic: document.getElementById('topicFilter')
+    };
+
+    initFilters();
+    renderAll();
+
+    Object.values(filters).forEach(select => select.addEventListener('change', () => {
+      syncDependentFilters(select.id);
+      renderAll();
+    }));
+
+    function collectProgress() {
+      const records = new Map();
+
+      const ensure = (className, subject, topic) => {
+        const key = `${className}||${subject}||${topic}`;
+        if (!records.has(key)) {
+          records.set(key, {
+            className,
+            subject,
+            topic,
+            instant: { learned: Array(5).fill(false), unlocked: 0, attempts: Array.from({ length: 5 }, () => []) },
+            deep: null
+          });
+        }
+        return records.get(key);
+      };
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+
+        if (key.startsWith('learned-')) {
+          const parts = splitProgressKey(key, 'learned-', true);
+          if (parts) ensure(parts.className, parts.subject, parts.topic).instant.learned[parts.moduleIndex] = value === 'yes';
+        }
+
+        if (key.startsWith('unlocked-')) {
+          const parts = splitProgressKey(key, 'unlocked-', false);
+          if (parts) ensure(parts.className, parts.subject, parts.topic).instant.unlocked = Number(value || 0);
+        }
+
+        if (key.startsWith('test-attempts-')) {
+          const parts = splitProgressKey(key, 'test-attempts-', true);
+          if (parts) {
+            let attempts = [];
+            try { attempts = JSON.parse(value || '[]'); } catch {}
+            ensure(parts.className, parts.subject, parts.topic).instant.attempts[parts.moduleIndex] = attempts;
+          }
+        }
+
+        if (key.startsWith('deep-dive-plan-')) {
+          const parts = splitPathSubjectKey(key, 'deep-dive-plan-');
+          if (parts) {
+            try {
+              const plan = JSON.parse(value || '{}');
+              if (plan && plan.topic) {
+                ensure(parts.className, parts.subject, plan.topic).deep = plan;
+              }
+            } catch {}
+          }
+        }
+      }
+
+      return [...records.values()].sort((a, b) =>
+        `${a.className} ${a.subject} ${a.topic}`.localeCompare(`${b.className} ${b.subject} ${b.topic}`)
+      );
+    }
+
+    function splitProgressKey(key, prefix, hasModule) {
+      const raw = key.slice(prefix.length).split('-');
+      if (raw.length < (hasModule ? 4 : 3)) return null;
+      const moduleIndex = hasModule ? Number(raw.pop()) : null;
+      if (hasModule && (Number.isNaN(moduleIndex) || moduleIndex < 0 || moduleIndex > 4)) return null;
+      return {
+        className: raw.shift(),
+        subject: raw.shift(),
+        topic: raw.join('-'),
+        moduleIndex
+      };
+    }
+
+    function splitPathSubjectKey(key, prefix) {
+      const raw = key.slice(prefix.length).split('-');
+      if (raw.length < 2) return null;
+      return { className: raw.shift(), subject: raw.join('-') };
+    }
+
+    function initFilters() {
+      populateSelect(filters.className, unique(store.map(item => item.className)), 'All classes');
+      syncDependentFilters();
+    }
+
+    function syncDependentFilters(changedId) {
+      const classValue = filters.className.value;
+      const subjectSource = store.filter(item => !classValue || item.className === classValue);
+      const prevSubject = filters.subject.value;
+      populateSelect(filters.subject, unique(subjectSource.map(item => item.subject)), 'All subjects');
+      if (changedId !== 'classFilter' && [...filters.subject.options].some(option => option.value === prevSubject)) {
+        filters.subject.value = prevSubject;
+      }
+
+      const subjectValue = filters.subject.value;
+      const topicSource = subjectSource.filter(item => !subjectValue || item.subject === subjectValue);
+      const prevTopic = filters.topic.value;
+      populateSelect(filters.topic, unique(topicSource.map(item => item.topic)), 'All topics');
+      if (changedId !== 'classFilter' && changedId !== 'subjectFilter' && [...filters.topic.options].some(option => option.value === prevTopic)) {
+        filters.topic.value = prevTopic;
+      }
+    }
+
+    function populateSelect(select, values, allLabel) {
+      select.innerHTML = `<option value="">${allLabel}</option>` + values.map(value =>
+        `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+      ).join('');
+    }
+
+    function filteredRecords() {
+      return store.filter(item =>
+        (!filters.className.value || item.className === filters.className.value) &&
+        (!filters.subject.value || item.subject === filters.subject.value) &&
+        (!filters.topic.value || item.topic === filters.topic.value)
+      );
+    }
+
+    function renderAll() {
+      const rows = filteredRecords();
+      renderMetrics(rows);
+      renderInstant(rows);
+      renderDeep(rows);
+      renderTopicList(rows);
+    }
+
+    function renderMetrics(rows) {
+      const topics = rows.length;
+      const instantTopics = rows.filter(row => instantPercent(row) > 0).length;
+      const deepTopics = rows.filter(row => row.deep).length;
+      const avg = topics ? Math.round(rows.reduce((sum, row) => sum + overallPercent(row), 0) / topics) : 0;
+      document.getElementById('metrics').innerHTML = [
+        ['Topics Tracked', topics],
+        ['Instant Topics', instantTopics],
+        ['Deep Dive Plans', deepTopics],
+        ['Average Progress', `${avg}%`]
+      ].map(([label, value]) => `<div class="metric"><small>${label}</small><strong>${value}</strong></div>`).join('');
+    }
+
+    function renderInstant(rows) {
+      const hasInstant = rows.some(row => instantPercent(row) > 0 || row.instant.attempts.some(list => list.length));
+      document.getElementById('instantEmpty').style.display = hasInstant ? 'none' : 'block';
+
+      const labels = moduleNames;
+      const selected = rows[0] || null;
+      const divisor = Math.max(1, rows.length);
+      const learnedCounts = labels.map((_, i) => Math.round((rows.filter(row => row.instant.learned[i]).length / divisor) * 100));
+      const unlockedCounts = labels.map((_, i) => Math.round((rows.filter(row => row.instant.unlocked >= i + 1).length / divisor) * 100));
+      const bestScores = labels.map((_, i) => {
+        const scores = rows.flatMap(row => row.instant.attempts[i].map(attempt => Number(attempt.pct || 0)));
+        return scores.length ? Math.max(...scores) : 0;
+      });
+
+      drawChart('instantModuleChart', {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Learned %', data: learnedCounts, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.16)', fill: false, tension: 0.35, pointRadius: 4 },
+            { label: 'Unlocked %', data: unlockedCounts, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.16)', fill: false, tension: 0.35, pointRadius: 4 },
+            { label: 'Best score %', data: bestScores, borderColor: '#a78bfa', backgroundColor: 'rgba(167, 139, 250, 0.18)', fill: true, tension: 0.35, pointRadius: 4 }
+          ]
+        },
+        options: percentOptions()
+      });
+
+      const attempts = rows.flatMap(row => row.instant.attempts.flatMap((list, moduleIndex) =>
+        list.map((attempt, attemptIndex) => ({
+          label: `${row.topic} M${moduleIndex + 1}.${attemptIndex + 1}`,
+          score: Number(attempt.pct || 0)
+        }))
+      ));
+
+      drawChart('instantAttemptChart', {
+        type: 'line',
+        data: {
+          labels: attempts.map(item => item.label),
+          datasets: [{ label: selected ? `${selected.topic} scores` : 'Scores', data: attempts.map(item => item.score), borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.18)', fill: true, tension: 0.35, pointRadius: 4 }]
+        },
+        options: percentOptions()
+      });
+    }
+
+    function renderDeep(rows) {
+      const deepRows = rows.filter(row => row.deep);
+      document.getElementById('deepEmpty').style.display = deepRows.length ? 'none' : 'block';
+      const labels = deepRows.map(row => row.topic);
+      const modulePct = deepRows.map(row => {
+        const total = row.deep.modules?.length || 5;
+        const done = (row.deep.modules || []).filter(item => item.completed).length;
+        return total ? Math.round((done / total) * 100) : 0;
+      });
+      const reviewPct = deepRows.map(row => {
+        const total = row.deep.reviews?.length || 0;
+        const done = (row.deep.reviews || []).filter(item => item.status === 'passed').length;
+        return total ? Math.round((done / total) * 100) : 0;
+      });
+
+      drawChart('deepCompletionChart', {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Modules complete %', data: modulePct, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.16)', fill: false, tension: 0.35, pointRadius: 4 },
+            { label: 'Reviews passed %', data: reviewPct, borderColor: '#7c5cfc', backgroundColor: 'rgba(124, 92, 252, 0.18)', fill: true, tension: 0.35, pointRadius: 4 }
+          ]
+        },
+        options: percentOptions()
+      });
+
+      const scoreItems = deepRows.flatMap(row => {
+        const reviews = (row.deep.reviews || [])
+          .filter(review => review.score !== null && review.score !== undefined)
+          .map((review, index) => ({ label: `${row.topic} R${index + 1}`, score: Number(review.score || 0), type: 'Review' }));
+        const mocks = (row.deep.mockHistory || [])
+          .map((mock, index) => ({ label: `${row.topic} M${index + 1}`, score: Number(mock.score || 0), type: 'Mock' }));
+        return [...reviews, ...mocks];
+      });
+
+      drawChart('deepScoreChart', {
+        type: 'line',
+        data: {
+          labels: scoreItems.map(item => item.label),
+          datasets: [{ label: 'Score %', data: scoreItems.map(item => item.score), borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.16)', fill: true, tension: 0.35, pointRadius: 4 }]
+        },
+        options: percentOptions()
+      });
+    }
+
+    function renderTopicList(rows) {
+      const list = document.getElementById('topicList');
+      if (!rows.length) {
+        list.innerHTML = '<div class="empty">No saved progress matches these filters yet.</div>';
+        return;
+      }
+      list.innerHTML = rows.map(row => {
+        const instant = instantPercent(row);
+        const deep = deepPercent(row);
+        const overall = overallPercent(row);
+        return `<article class="topic-row">
+          <div>
+            <h3>${escapeHtml(row.topic)}</h3>
+            <p>${escapeHtml(row.className)} / ${escapeHtml(row.subject)} / Instant ${instant}% / Deep Dive ${deep}%</p>
+            <div class="bar"><span style="width:${overall}%"></span></div>
+          </div>
+          <div class="badge">${overall}% overall</div>
+        </article>`;
+      }).join('');
+    }
+
+    function instantPercent(row) {
+      const learned = row.instant.learned.filter(Boolean).length;
+      const scoreAverage = average(row.instant.attempts.flatMap(list => list.map(attempt => Number(attempt.pct || 0))));
+      const moduleProgress = Math.max(learned, row.instant.unlocked) / 5 * 100;
+      return Math.round(scoreAverage ? (moduleProgress * 0.55 + scoreAverage * 0.45) : moduleProgress);
+    }
+
+    function deepPercent(row) {
+      if (!row.deep) return 0;
+      const modules = row.deep.modules || [];
+      const reviews = row.deep.reviews || [];
+      const moduleDone = modules.length ? modules.filter(item => item.completed).length / modules.length * 100 : 0;
+      const reviewDone = reviews.length ? reviews.filter(item => item.status === 'passed').length / reviews.length * 100 : 0;
+      const mockBoost = Math.min((row.deep.mockHistory || []).length * 5, 15);
+      return Math.min(100, Math.round(moduleDone * 0.55 + reviewDone * 0.35 + mockBoost));
+    }
+
+    function overallPercent(row) {
+      const instant = instantPercent(row);
+      const deep = deepPercent(row);
+      if (instant && deep) return Math.round((instant + deep) / 2);
+      return Math.max(instant, deep);
+    }
+
+    function drawChart(id, config) {
+      const canvas = document.getElementById(id);
+      if (!window.Chart || !canvas) return;
+      if (charts[id]) charts[id].destroy();
+      charts[id] = new Chart(canvas, config);
+    }
+
+    function axisOptions({ countMax = 5, scoreAxis = false } = {}) {
+      const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#e5e7eb' } } },
+        scales: {
+          x: { ticks: { color: '#cbd5e1' }, grid: { display: false } },
+          count: { beginAtZero: true, max: countMax, ticks: { color: '#cbd5e1', precision: 0 }, grid: { color: 'rgba(255,255,255,0.06)' } }
+        }
+      };
+      if (scoreAxis) {
+        options.scales.score = { beginAtZero: true, max: 100, position: 'right', ticks: { color: '#cbd5e1' }, grid: { display: false } };
+      }
+      return options;
+    }
+
+    function percentOptions() {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#e5e7eb' } } },
+        scales: {
+          y: { beginAtZero: true, max: 100, ticks: { color: '#cbd5e1', callback: value => `${value}%` }, grid: { color: 'rgba(255,255,255,0.06)' } },
+          x: { ticks: { color: '#cbd5e1', maxRotation: 45, minRotation: 0 }, grid: { display: false } }
+        }
+      };
+    }
+
+    function unique(values) {
+      return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    }
+
+    function average(values) {
+      return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function logout() {
+      localStorage.removeItem('eduUser');
+      window.location.href = 'index.html';
+    }
+  </script>
+  <script src="/static/js/pwa.js"></script>
+</body>
+</html>
